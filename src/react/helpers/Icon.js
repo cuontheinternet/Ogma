@@ -9,7 +9,7 @@ const PropTypes = require('prop-types');
 
 const {BulmaSizes} = require('../../typedef');
 
-class Icon extends React.Component {
+export default class Icon extends React.Component {
 
     static propTypes = {
         size: PropTypes.oneOf(BulmaSizes),
@@ -40,5 +40,3 @@ class Icon extends React.Component {
     }
 
 }
-
-module.exports = Icon;
