@@ -3,9 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "bluebird": "^3.5.4",
+    "classnames": "^2.2.6",
+    "node-sass": "^4.12.0",
+    "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1"
+    "react-notifications": "^1.4.3",
+    "react-router-dom": "^5.0.0",
+    "react-scripts": "3.0.1",
+    "sweetalert2": "^8.11.6"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -13,6 +20,16 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "author": {
+    "name": "Timur Kuzhagaliyev",
+    "email": "tim.kuzh@gmail.com",
+    "url": "https://foxypanda.me/"
+  },
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/TimboKZ/ogma-frontend/issues"
+  },
+  "homepage": "https://github.com/TimboKZ/ogma-frontend#readme",
   "eslintConfig": {
     "extends": "react-app"
   },
