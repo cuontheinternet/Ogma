@@ -11,10 +11,10 @@ import ReactDOM from 'react-dom';
 import 'react-notifications/lib/notifications.css';
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 
-import * as serviceWorker from './util/serviceWorker';
-import App from './react/App';
 import './index.scss';
+import App from './react/App';
 import DataManager from './util/DataManager';
+import * as serviceWorker from './util/serviceWorker';
 
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
@@ -32,7 +32,6 @@ const socketInitPromise = new Promise(resolve => {
             resolve(socket);
         }
     });
-
     socket.on('disconnect', () => {
         NotificationManager.warning('Lost connection to server!');
     });

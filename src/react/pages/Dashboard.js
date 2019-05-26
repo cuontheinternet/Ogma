@@ -5,11 +5,18 @@
  */
 
 import React from 'react';
+import ErrorHandler from '../../util/ErrorHandler';
 
 class Dashboard extends React.Component {
 
     handleCreateEnvClick() {
-        window.dataManager.createNewEnvironment();
+        window.showGlobalLoader('Creating environment...');
+        window.dataManager.createNewEnvironment()
+            .then(() => window.hideGlobalLoader())
+            .catch(error => {
+                window.hideGlobalLoader();
+                return ErrorHandler.handleMiscError(error);
+            })
     }
 
     render() {
