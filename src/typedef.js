@@ -9,28 +9,6 @@
  * @property {boolean} localClient
  */
 
-/**
- * @enum {string} Setting
- */
-const Setting = {
-    lastPageHash: 'lastPageHash',
-};
-
-/**
- * @enum {string} EnvProperty
- */
-const EnvProperty = {
-    id: 'id',
-    name: 'name',
-    root: 'root',
-    icon: 'icon',
-    colour: 'colour',
-    dbFile: 'dbFile',
-    isHidden: 'isHidden',
-};
-
-const HomeRoutePath = '/home';
-
 const Colours = [
     '#b71c1c',
     '#d32f2f',

@@ -35,7 +35,7 @@ export default class App extends React.Component {
                 showLoader: false,
                 loaderText: 'Loading...',
             });
-        }
+        };
     }
 
     render() {
@@ -47,14 +47,12 @@ export default class App extends React.Component {
                     spinner>
 
                     <div className="app-wrapper">
-                        <div className="container">
-                            <div className="columns">
-                                <div className="column is-narrow"><Sidebar/></div>
-                                <div className="column">
-                                    <div className="box">
-                                        <Route path="/" exact component={Dashboard}/>
-                                        <Route path="/settings" component={GlobalSettings}/>
-                                    </div>
+                        <div className="columns">
+                            <div className="column is-narrow"><Sidebar/></div>
+                            <div className="column">
+                                <div className="box">
+                                    <Route path="/" exact component={Dashboard}/>
+                                    <Route path="/settings" component={GlobalSettings}/>
                                 </div>
                             </div>
                         </div>

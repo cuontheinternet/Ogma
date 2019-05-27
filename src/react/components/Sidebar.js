@@ -23,7 +23,7 @@ class Sidebar extends React.Component {
         return (
             <div className="sidebar">
                 <div className="sidebar-logo">
-                    <img src={OgmaIcon}/>Ogma <span>{this.localClient ? 'Local' : 'Web'}</span>
+                    <img src={OgmaIcon} alt="Ogma Logo"/>Ogma <span>{this.localClient ? 'Local' : 'Web'}</span>
                 </div>
                 <aside className="menu">
                     <p className="menu-label">General</p>

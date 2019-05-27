@@ -23,10 +23,6 @@ export default class Icon extends React.Component {
         wrapper: true, // Enables Bulma wrapper for the icon
     };
 
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         if (this.props.wrapper) {
             let className = 'icon';

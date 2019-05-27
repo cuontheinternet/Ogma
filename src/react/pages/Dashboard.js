@@ -10,7 +10,7 @@ import ErrorHandler from '../../util/ErrorHandler';
 class Dashboard extends React.Component {
 
     handleCreateEnvClick() {
-        window.showGlobalLoader('Creating environment...');
+        window.showGlobalLoader('Creating collection...');
         window.dataManager.createNewEnvironment()
             .then(() => window.hideGlobalLoader())
             .catch(error => {

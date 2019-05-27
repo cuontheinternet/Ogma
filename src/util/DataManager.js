@@ -6,7 +6,6 @@
 
 import Promise from 'bluebird';
 
-import ModalUtil from './ModalUtil';
 import {UserFriendlyError} from './ErrorHandler';
 
 class DataManager {
@@ -31,8 +30,15 @@ class DataManager {
         return new Promise((resolve, reject) => {
 
             // Setup callback logic
-            const callback = result => {
-                resolve(result);
+            const callback = response => {
+                if (response.error) {
+                    reject(new UserFriendlyError({
+                        title: 'Server-side error',
+                        message: `Server has encountered an error: "${response.error}"`,
+                    }));
+                } else {
+                    resolve(response.result);
+                }
             };
 
             // Send request to server
@@ -48,8 +54,7 @@ class DataManager {
         return Promise.resolve()
             .then(() => {
                 if (this.localClient) {
-                    return this.requestSocketAction({name: 'create-environment'})
-                        .then(outcome => console.log(outcome));
+                    return this.requestSocketAction({name: 'create-environment'});
                 } else {
                     throw new UserFriendlyError({
                         title: 'Permission denied',
