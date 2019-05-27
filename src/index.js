@@ -1,4 +1,4 @@
-/* global io */
+/* global io, $ */
 /**
  * @author Timur Kuzhagaliyev <tim.kuzh@gmail.com>
  * @copyright 2019
@@ -41,18 +41,35 @@ const socketInitPromise = new Promise(resolve => {
     });
 });
 
+// Prepare loader reference
+const appLoaderDiv = $('#app-loader');
+
 // Initialize the rest of the app if socket connection succeeded
 socketInitPromise
-    .then(socket => {
+    .then(socket => new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-            // TODO: Add a better error message, preferably render a react component.
-            console.error('Whoops!');
+            reject(new Error('Socket connection was successfully established, but server did not reply to the `hello`' +
+                ' command. Are server and client running the same Ogma version?'));
         }, 2000);
         socket.emit('hello', serverResponse => {
             clearTimeout(timeout);
-            window.dataManager = new DataManager({socket, serverResponse});
-            ReactDOM.render(<App/>, document.getElementById('root'));
+            resolve({socket, serverResponse});
         });
+    }))
+    .then(result => {
+        const {socket, serverResponse} = result;
+        window.dataManager = new DataManager({socket, serverResponse});
+        return window.dataManager.init();
+    })
+    .then(() => {
+        appLoaderDiv.hide();
+        ReactDOM.render(<App/>, document.getElementById('root'));
+    })
+    .catch(error => {
+        console.error(error);
+        const errorDiv = $('#app-loader-message');
+        errorDiv.addClass('error');
+        errorDiv.html(`Startup error: &nbsp;<strong>${error.message}</strong>`);
     });
 
 // Do nothing with server workers since we don't support them yet

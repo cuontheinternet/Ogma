@@ -9,7 +9,7 @@ import ErrorHandler from '../../util/ErrorHandler';
 
 class Dashboard extends React.Component {
 
-    handleCreateEnvClick() {
+    handleCreateEnvClick = () => {
         window.showGlobalLoader('Creating collection...');
         window.dataManager.createNewEnvironment()
             .then(() => window.hideGlobalLoader())
@@ -23,7 +23,7 @@ class Dashboard extends React.Component {
         return <div>
             <h1 className="title">Dashboard</h1>
 
-            <button className="button" onClick={() => this.handleCreateEnvClick()}>Create collection</button>
+            <button className="button" onClick={this.handleCreateEnvClick}>Create collection</button>
         </div>;
     };
 

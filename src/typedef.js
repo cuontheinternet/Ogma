@@ -9,7 +9,7 @@
  * @property {boolean} localClient
  */
 
-const Colours = [
+export const Colours = [
     '#b71c1c',
     '#d32f2f',
     '#f44336',
@@ -53,4 +53,6 @@ const Colours = [
 ];
 
 export const BulmaSizes = ['small', 'medium', 'large'];
+
+export * from '../../ogma-backend/typedef';
 
