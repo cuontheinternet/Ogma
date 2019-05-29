@@ -8,13 +8,18 @@
 import React from 'react';
 import Promise from 'bluebird';
 import ReactDOM from 'react-dom';
+import {EventEmitter} from 'events';
+import {EventEmitter2} from 'eventemitter2';
 import 'react-notifications/lib/notifications.css';
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 import './index.scss';
 import App from './react/App';
+import {BackendEvents} from './typedef';
 import DataManager from './util/DataManager';
+import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';
+import {UserFriendlyError} from './util/ErrorHandler';
 
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
@@ -47,18 +52,25 @@ const appLoaderDiv = $('#app-loader');
 // Initialize the rest of the app if socket connection succeeded
 socketInitPromise
     .then(socket => new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error('Socket connection was successfully established, but server did not reply to the `hello`' +
-                ' command. Are server and client running the same Ogma version?'));
-        }, 2000);
-        socket.emit('hello', serverResponse => {
-            clearTimeout(timeout);
-            resolve({socket, serverResponse});
+
+        // Setup the event emitter
+        window.backendEmitter = new EventEmitter2({wildcard: true, newListener: false, maxListeners: 20});
+        window.frontendEmitter = new EventEmitter();
+
+        // Setup logic for forwarded event
+        const eventHandler = eventData => window.backendEmitter.emit(eventData.name, ...eventData.args);
+        const errorHandler = errorMessage => new UserFriendlyError({
+            title: 'Server-side error',
+            message: `Server has encountered an error: "${errorMessage}"`,
         });
+        window.ipcModule = new IpcModule({socket, eventHandler, errorHandler});
+        window.ipcModule.getConnectionDetails()
+            .then(connDetails => resolve({socket, connDetails}))
+            .catch(reject);
     }))
     .then(result => {
-        const {socket, serverResponse} = result;
-        window.dataManager = new DataManager({socket, serverResponse});
+        const {socket, connDetails} = result;
+        window.dataManager = new DataManager({socket, connDetails});
         return window.dataManager.init();
     })
     .then(() => {

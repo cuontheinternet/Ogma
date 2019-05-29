@@ -8,11 +8,11 @@ import React from 'react';
 import LoadingOverlay from 'react-loading-overlay';
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 
-import Dashboard from './pages/Dashboard';
+import {FrontendEvents} from '../typedef';
 import Sidebar from './components/Sidebar';
-import {DMEvents} from '../util/DataManager';
-import GlobalSettings from './pages/GlobalSettings';
-import Environment from './pages/Environment';
+import Dashboard from './containers/Dashboard';
+import Environment from './containers/Environment';
+import GlobalSettings from './containers/GlobalSettings';
 
 export default class App extends React.Component {
 
@@ -48,11 +48,11 @@ export default class App extends React.Component {
             }));
         };
 
-        window.dataManager.subscribe(DMEvents.UpdateEnvSummaries, this.updateEnvSummaries);
+        window.dataManager.subscribe(FrontendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
     }
 
     componentWillUnmount() {
-        window.dataManager.unsubscribe(DMEvents.UpdateEnvSummaries, this.updateEnvSummaries);
+        window.dataManager.unsubscribe(FrontendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
     }
 
     render() {

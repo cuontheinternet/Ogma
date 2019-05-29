@@ -8,20 +8,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {NavLink} from 'react-router-dom';
 
+import Icon from './Icon';
 import OgmaIcon from '../../ogma-icon-128.png';
-import Icon from '../helpers/Icon';
 
 class Sidebar extends React.Component {
 
     static propTypes = {
         envSummaries: PropTypes.array.isRequired,
     };
-
-    constructor(props) {
-        super(props);
-
-        this.localClient = window.dataManager.isLocalClient();
-    }
 
     renderCollections() {
         const summaries = this.props.envSummaries;
@@ -32,7 +26,7 @@ class Sidebar extends React.Component {
             const key = `sidebar-coll-${s.id}`;
             const url = `/env/${s.slug}`;
             collections[i] = (
-                <li key={key}><NavLink activeClassName="is-active" to={url} exact>
+                <li key={key}><NavLink activeClassName="is-active" to={url}>
                     <Icon name={s.icon}/>&nbsp; {s.name}
                 </NavLink></li>
             );
@@ -41,10 +35,16 @@ class Sidebar extends React.Component {
     }
 
     render() {
+        const summaries = this.props.envSummaries;
+        
+        let ogmaType = 'Web';
+        if (window.dataManager.isElectron()) ogmaType = 'Electron';
+        else if (window.dataManager.isLocalClient()) ogmaType = 'Local';
+
         return (
             <div className="sidebar">
                 <div className="sidebar-logo">
-                    <img src={OgmaIcon} alt="Ogma Logo"/>Ogma <span>{this.localClient ? 'Local' : 'Web'}</span>
+                    <img src={OgmaIcon} alt="Ogma Logo"/>Ogma <span>{ogmaType}</span>
                 </div>
                 <aside className="menu">
                     <p className="menu-label">General</p>
@@ -56,7 +56,7 @@ class Sidebar extends React.Component {
                             <Icon name="cog"/>&nbsp; Settings
                         </NavLink></li>
                     </ul>
-                    <p className="menu-label">Collections</p>
+                    <p className="menu-label">{summaries.length > 0 ? 'Your collections' : 'No collections to show'}</p>
                     <ul className="menu-list">
                         {this.renderCollections()}
                     </ul>

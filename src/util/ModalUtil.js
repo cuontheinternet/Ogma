@@ -6,9 +6,34 @@
 
 import Swal from 'sweetalert2';
 
-const CustomSwal = Swal.mixin({animation: false});
+const ogmaSwal = Swal.mixin({
+    confirmButtonClass: 'modal-button button is-danger',
+    cancelButtonClass: 'modal-button button',
+    buttonsStyling: false,
+    animation: false,
+    customClass: {
+        popup: 'animated fadeInDown'
+    }
+});
 
 class ModalUtil {
+
+    /**
+     * @param {object} data
+     * @param {string} [data.title]
+     * @param {string} [data.text]
+     * @param {string} [data.confirmButtonText]
+     * @param {string} [data.cancelButtonText]
+     */
+    static confirm(data) {
+        return ogmaSwal.fire({
+            showCancelButton: true,
+            confirmButtonText: 'Confirm',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            ...data,
+        });
+    }
 
     /**
      * @param {object} data
@@ -17,8 +42,8 @@ class ModalUtil {
      * @returns {Promise<SweetAlertResult>}
      */
     static showError(data) {
-        return CustomSwal.fire({
-            title: data.title ||'Error!',
+        return ogmaSwal.fire({
+            title: data.title || 'Error!',
             text: data.message,
             type: 'error',
             confirmButtonText: 'Cool',

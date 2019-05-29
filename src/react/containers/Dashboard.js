@@ -11,7 +11,7 @@ class Dashboard extends React.Component {
 
     handleCreateEnvClick = () => {
         window.showGlobalLoader('Creating collection...');
-        window.dataManager.createNewEnvironment()
+        window.ipcModule.createEnvironment()
             .then(() => window.hideGlobalLoader())
             .catch(error => {
                 window.hideGlobalLoader();

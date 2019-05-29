@@ -4,29 +4,25 @@
  * @license GPL-3.0
  */
 
+import _ from 'lodash';
 import Promise from 'bluebird';
-import {EventEmitter} from 'events';
 
-import {BackendEvents} from '../typedef';
-import ErrorHandler, {UserFriendlyError} from './ErrorHandler';
-
-export const DMEvents = {
-    UpdateEnvSummaries: 'update-env-summaries',
-};
+import ErrorHandler from './ErrorHandler';
+import {BackendEvents, FrontendEvents} from '../typedef';
 
 class DataManager {
 
     /**
      * @param {object} data
      * @param {object} data.socket
-     * @param {HelloResponse} data.serverResponse
+     * @param {ConnectionDetails} data.connDetails
      */
     constructor(data) {
         this.socket = data.socket;
-        this.localClient = data.serverResponse.localClient;
+        this.localClient = data.connDetails.localClient;
 
         this.envSummaries = [];
-        this.emitter = new EventEmitter();
+        this.emitter = window.frontendEmitter;
     }
 
     init() {
@@ -36,44 +32,19 @@ class DataManager {
                 .catch(ErrorHandler.handleMiscError);
         });
 
-        // Setup logic for forwarded event
-        const forwardEventHandlers = {};
-        forwardEventHandlers[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
-        this.socket.on('forward-event', eventInfo => {
-            const eventHandler = forwardEventHandlers[eventInfo.name];
-            if (eventHandler !== undefined) {
-                eventHandler.apply(this, eventInfo.args);
-            }
+        // Setup listeners
+        const listenerMap = {};
+        listenerMap[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
+        listenerMap[BackendEvents.UpdateEnvSummary] = this._setEnvSummary;
+        window.backendEmitter.on('*', function(...args) {
+            const eventName = this.event;
+            const listener = listenerMap[eventName];
+            if (!listener) return;
+            listener(...args);
         });
 
         // Attempt initial sync
         return this._syncBaseState();
-    }
-
-    /**
-     * @param {object} data
-     * @param {string} data.name
-     * @param {*} [data.data]
-     * @returns {Promise<any>}
-     */
-    _requestSocketAction(data) {
-        return new Promise((resolve, reject) => {
-
-            // Setup callback logic
-            const callback = response => {
-                if (response.error) {
-                    reject(new UserFriendlyError({
-                        title: 'Server-side error',
-                        message: `Server has encountered an error: "${response.error}"`,
-                    }));
-                } else {
-                    resolve(response.result);
-                }
-            };
-
-            // Send request to server
-            this.socket.emit('action', data.name, data.data, callback);
-        });
     }
 
     _syncBaseState() {
@@ -82,38 +53,25 @@ class DataManager {
     }
 
     _fetchEnvSummaries() {
-        return this._requestSocketAction({name: 'get-env-summaries'})
+        return window.ipcModule.getEnvSummaries()
             .then(this._setEnvSummaries);
     }
 
-    _setEnvSummaries = (envSummaries) => {
-        this.envSummaries = envSummaries;
-        this.emitter.emit(DMEvents.UpdateEnvSummaries, this.envSummaries);
+    _setEnvSummaries = summary => {
+        this.envSummaries = summary;
+        this.emitter.emit(FrontendEvents.UpdateEnvSummaries, this.envSummaries);
     };
 
-    isLocalClient() {
-        return this.localClient;
-    }
-
-    createNewEnvironment() {
-        return Promise.resolve()
-            .then(() => {
-                if (this.localClient) {
-                    return this._requestSocketAction({name: 'create-environment'});
-                } else {
-                    throw new UserFriendlyError({
-                        title: 'Permission denied',
-                        message: 'Sorry, this action is only available in Local version of Ogma.',
-                    });
-                }
-            });
-    }
-
+    _setEnvSummary = summary => {
+        const index = _.findIndex(this.envSummaries, s => s === summary.id);
+        this.envSummaries.splice(index, 1, summary);
+        this.emitter.emit(FrontendEvents.UpdateEnvSummary, summary);
+        this.emitter.emit(FrontendEvents.UpdateEnvSummaries, this.envSummaries);
+    };
 
     getEnvSummaries() {
         return this.envSummaries;
     }
-
 
     subscribe(event, listener) {
         this.emitter.addListener(event, listener);
@@ -121,6 +79,15 @@ class DataManager {
 
     unsubscribe(event, listener) {
         this.emitter.removeListener(event, listener);
+    }
+
+    isLocalClient() {
+        return this.localClient;
+    }
+
+    // noinspection JSMethodCanBeStatic
+    isElectron() {
+        return navigator.userAgent.includes('Electron/');
     }
 
 }
