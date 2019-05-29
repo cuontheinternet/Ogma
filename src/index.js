@@ -15,7 +15,6 @@ import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 import './index.scss';
 import App from './react/App';
-import {BackendEvents} from './typedef';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';

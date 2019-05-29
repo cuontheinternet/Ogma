@@ -38,7 +38,6 @@ class Environment extends React.Component {
     }
 
     updateEnvSummary = summary => {
-        console.log(summary);
         this.setState(prevState => ({
             ...prevState,
             summary,

@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import Promise from 'bluebird';
 import equal from 'fast-deep-equal';
 import PropTypes from 'prop-types';
 import {GithubPicker} from 'react-color';
@@ -34,23 +33,6 @@ class EnvConfigure extends React.Component {
             icon: summary.icon,
             name: summary.name,
         };
-
-        this.mounted = false;
-    }
-
-    componentDidMount() {
-        this.mounted = true;
-        // const summary = this.props.envSummary;
-        // Promise.resolve(Util.getFriendlyFileSize({filePath: summary.dbFile}))
-        //     .then(friendlySize => this.setState({dbFileSize: TextLoader.finish(friendlySize)}))
-        //     .catch(error => {
-        //         window.errorHandler.handle(error);
-        //         this.setState({dbFileSize: TextLoader.fail()});
-        //     });
-    }
-
-    componentWillUnmount() {
-        this.mounted = false;
     }
 
     componentDidUpdate(prevProps) {
@@ -73,7 +55,9 @@ class EnvConfigure extends React.Component {
         });
     }
 
-    changeValueClick(prop) {
+    changeValueClick(prop, keyCode = null) {
+        if (keyCode && keyCode !== 13) return;
+
         const id = this.state.summary.id;
         const updateData = {id};
         updateData[prop] = this.state[prop];
@@ -148,24 +132,26 @@ class EnvConfigure extends React.Component {
                     <div className="field has-addons">
                         <div className="control">
                             <input className="input" type="text" value={this.state.icon} placeholder="star"
-                                   onChange={event => this.inputValueChange(EnvProperty.icon, event.target.value)}/>
+                                   onChange={event => this.inputValueChange(EnvProperty.icon, event.target.value)}
+                                   onKeyPress={event => this.changeValueClick(EnvProperty.icon, event.which)}/>
                         </div>
                         <div className="control">
-                            <a className="button is-info" onClick={() => this.changeValueClick(EnvProperty.icon)}>
+                            <button className="button is-info" onClick={() => this.changeValueClick(EnvProperty.icon)}>
                                 Update icon
-                            </a>
+                            </button>
                         </div>
                     </div>
 
                     <div className="field has-addons">
                         <div className="control">
                             <input className="input" type="text" value={this.state.name} placeholder="star"
-                                   onChange={event => this.inputValueChange(EnvProperty.name, event.target.value)}/>
+                                   onChange={event => this.inputValueChange(EnvProperty.name, event.target.value)}
+                                   onKeyPress={event => this.changeValueClick(EnvProperty.name, event.which)}/>
                         </div>
                         <div className="control">
-                            <a className="button is-info" onClick={() => this.changeValueClick(EnvProperty.name)}>
+                            <button className="button is-info" onClick={() => this.changeValueClick(EnvProperty.name)}>
                                 Update name
-                            </a>
+                            </button>
                         </div>
                     </div>
 

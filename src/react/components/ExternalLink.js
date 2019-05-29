@@ -24,7 +24,7 @@ export default class ExternalLink extends React.Component {
     };
 
     render() {
-        return <a href={this.props.href} target="_blank" onClick={this.linkClick}>
+        return <a href={this.props.href} target="_blank" rel="noopener noreferrer" onClick={this.linkClick}>
             {this.props.children}
             <Icon name="external-link-alt" wrapper={false}
                   style={{fontSize: '0.6em', marginLeft: 5, verticalAlign: 'middle'}}/>
