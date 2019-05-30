@@ -26,7 +26,7 @@ class Sidebar extends React.Component {
             const key = `sidebar-coll-${s.id}`;
             const url = `/env/${s.slug}`;
             collections[i] = (
-                <li key={key}><NavLink activeClassName="is-active" to={url}>
+                <li key={key}><NavLink activeClassName="is-active disabled-link" to={url}>
                     <Icon name={s.icon}/>&nbsp; {s.name}
                 </NavLink></li>
             );

@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import equal from 'fast-deep-equal';
 import PropTypes from 'prop-types';
+import equal from 'fast-deep-equal';
 import {GithubPicker} from 'react-color';
 import {withRouter} from 'react-router-dom';
 
@@ -39,11 +39,12 @@ class EnvConfigure extends React.Component {
         const summary = this.props.envSummary;
         const summaryChanged = !equal(prevProps.envSummary, summary);
         if (summaryChanged) {
-            this.setState({
+            this.setState(prevState => ({
+                ...prevState,
                 summary,
                 icon: summary.icon,
                 name: summary.name,
-            });
+            }));
         }
     }
 

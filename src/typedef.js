@@ -18,5 +18,13 @@ export const FrontendEvents = {
     UpdateEnvSummary: 'update-env-summary',
 };
 
+export const EnvRoutePaths = {
+    browse: '/browse',
+    search: '/search',
+    tag: '/tag',
+    configure: '/configure',
+};
+export const DefaultEnvRoutePath = EnvRoutePaths.browse;
+
 export * from '../../shared/typedef';
 

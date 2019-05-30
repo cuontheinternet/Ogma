@@ -12,10 +12,9 @@ const {BulmaSizes} = require('../../typedef');
 export default class Icon extends React.Component {
 
     static propTypes = {
-        size: PropTypes.oneOf(BulmaSizes),
         name: PropTypes.string.isRequired,
+        size: PropTypes.oneOf(BulmaSizes),
         wrapper: PropTypes.bool,
-
         style: PropTypes.any,
     };
 

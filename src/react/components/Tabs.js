@@ -62,9 +62,9 @@ export default class Tabs extends React.Component {
 
     optionClick(optionSlug) {
         if (this.props.onOptionChange) this.props.onOptionChange(optionSlug);
-        else console.warn('No option change callback specified for Tabs!');
+        else if (!this.props.useLinks) console.warn('No option change callback specified for Tabs!');
 
-        this.setState({activeOption: optionSlug});
+        if (this.props.useLinks) this.setState({activeOption: optionSlug});
     }
 
     renderOptions() {
@@ -90,8 +90,8 @@ export default class Tabs extends React.Component {
                     throw new Error(`Tabs option '${option.name}' doesn't have 'id' specified!`);
                 isActive = option.id === this.state.activeOption;
                 LinkComponent = 'a';
-                linkProps.onClick = () => this.optionClick(option.id);
             }
+            linkProps.onClick = () => this.optionClick(option.id);
 
             const className = c({
                 'tooltip': option.tooltip,

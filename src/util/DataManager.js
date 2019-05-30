@@ -22,6 +22,7 @@ class DataManager {
         this.localClient = data.connDetails.localClient;
 
         this.envSummaries = [];
+        this.envRoutePathMap = {};
         this.emitter = window.frontendEmitter;
     }
 
@@ -36,7 +37,7 @@ class DataManager {
         const listenerMap = {};
         listenerMap[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
         listenerMap[BackendEvents.UpdateEnvSummary] = this._setEnvSummary;
-        window.backendEmitter.on('*', function(...args) {
+        window.backendEmitter.on('*', function (...args) {
             const eventName = this.event;
             const listener = listenerMap[eventName];
             if (!listener) return;
@@ -63,14 +64,33 @@ class DataManager {
     };
 
     _setEnvSummary = summary => {
-        const index = _.findIndex(this.envSummaries, s => s === summary.id);
-        this.envSummaries.splice(index, 1, summary);
+        const index = _.findIndex(this.envSummaries, s => s.id === summary.id);
+        if (index === -1) this.envSummaries.push(summary);
+        else this.envSummaries[index] = summary;
+
         this.emitter.emit(FrontendEvents.UpdateEnvSummary, summary);
         this.emitter.emit(FrontendEvents.UpdateEnvSummaries, this.envSummaries);
     };
 
     getEnvSummaries() {
         return this.envSummaries;
+    }
+
+    /**
+     * @param {object} data
+     * @param {string} data.id
+     * @param {string} data.path
+     */
+    setEnvRoutePath(data) {
+        this.envRoutePathMap[data.id] = data.path;
+    }
+
+    /**
+     * @param {object} data
+     * @param {string} data.id
+     */
+    getEnvRoutePath(data) {
+        return this.envRoutePathMap[data.id];
     }
 
     subscribe(event, listener) {

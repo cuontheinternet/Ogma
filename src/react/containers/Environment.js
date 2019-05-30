@@ -7,19 +7,13 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Switch, Route} from 'react-router-dom';
+import {Switch, Route, withRouter} from 'react-router-dom';
 
+import EnvTag from './EnvTag';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
-import {FrontendEvents} from '../../typedef';
 import EnvConfigure from '../containers/EnvConfigure';
-
-const TabOptions = [
-    {path: '', exact: true, icon: 'eye', name: 'Browse', comp: null},
-    {path: '/search', exact: false, icon: 'search', name: 'Search'},
-    {path: '/tag', exact: false, icon: 'tag', name: 'Tag', comp: null},
-    {path: '/configure', exact: false, icon: 'cog', name: 'Configure', comp: EnvConfigure},
-];
+import {FrontendEvents, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
 
 class Environment extends React.Component {
 
@@ -35,24 +29,14 @@ class Environment extends React.Component {
         const summary = _.find(summaries, s => s.slug === slug);
 
         this.state = {summary};
-    }
 
-    updateEnvSummary = summary => {
-        this.setState(prevState => ({
-            ...prevState,
-            summary,
-        }));
-    };
-
-    componentDidUpdate(nextProps) {
-        const oldSlug = this.props.match.params.slug;
-        const slug = nextProps.match.params.slug;
-
-        if (slug !== oldSlug) {
-            const summaries = this.props.envSummaries;
-            const summary = _.find(summaries, s => s.slug === slug);
-            this.updateEnvSummary(summary);
-        }
+        this.tabOptions = [
+            {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
+            {path: EnvRoutePaths.search, icon: 'search', name: 'Search'},
+            {path: EnvRoutePaths.tag, icon: 'tag', name: 'Tag', comp: EnvTag},
+            {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},
+        ];
+        for (const option of this.tabOptions) option.id = option.path;
     }
 
     componentDidMount() {
@@ -63,10 +47,32 @@ class Environment extends React.Component {
         window.dataManager.unsubscribe(FrontendEvents.UpdateEnvSummary, this.updateEnvSummary);
     }
 
+    componentWillMount() {
+        const props = this.props;
+
+        // Immediately redirect to correct subroute
+        const parentPath = props.match.url;
+        const summary = _.find(props.envSummaries, s => s.slug === props.match.params.slug);
+        const envRoutePath = window.dataManager.getEnvRoutePath({id: summary.id}) || DefaultEnvRoutePath;
+        props.history.push(`${parentPath}${envRoutePath}`);
+    }
+
+    updateEnvSummary = summary => {
+        this.setState(prevState => ({
+            ...prevState,
+            summary,
+        }));
+    };
+
+    handleRouteChange = routePath => {
+        // Remember the current subroute
+        window.dataManager.setEnvRoutePath({id: this.state.summary.id, path: routePath});
+    };
+
     renderRoutes() {
         const comps = [];
         const parentPath = this.props.match.path;
-        for (const tab of TabOptions) {
+        for (const tab of this.tabOptions) {
             if (!tab.comp) continue;
             const TabComp = tab.comp;
             comps.push(<Route key={`env-router-${tab.path}`} path={`${parentPath}${tab.path}`} exact={tab.exact}
@@ -83,8 +89,8 @@ class Environment extends React.Component {
                 &nbsp;&nbsp;{summary.name}
             </h1>
 
-            <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
-                  location={this.props.location} className="is-boxed"/>
+            <Tabs options={this.tabOptions} useLinks={true} basePath={this.props.match.url}
+                  location={this.props.location} onOptionChange={this.handleRouteChange} className="is-boxed"/>
 
             {this.renderRoutes()}
         </div>;
@@ -92,4 +98,4 @@ class Environment extends React.Component {
 
 }
 
-export default Environment;
+export default withRouter(Environment);
