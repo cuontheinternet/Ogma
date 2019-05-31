@@ -19,7 +19,6 @@
     "react-router-dom": "^5.0.0",
     "react-scripts": "3.0.1",
     "sweetalert2": "^8.11.6",
-    "trie-search": "^1.2.9",
     "upath": "^1.1.2"
   },
   "scripts": {
