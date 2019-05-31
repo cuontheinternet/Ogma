@@ -15,10 +15,15 @@ import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 import './index.scss';
 import App from './react/App';
+import 'file-icons-js/css/style.css';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';
-import {UserFriendlyError} from './util/ErrorHandler';
+import ErrorHandler, {UserFriendlyError} from './util/ErrorHandler';
+
+// Setup error handling functions
+window.handleError = ErrorHandler.handleMiscError;
+window.handleErrorQuiet = ErrorHandler.handleMiscErrorQuiet;
 
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));

@@ -23,15 +23,30 @@ export default class Icon extends React.Component {
     };
 
     render() {
+        let name = this.props.name;
+
+        let iconClass = 's';
+        if (name.charAt(1) === ':') {
+            iconClass = name.charAt(0);
+            name = name.slice(2);
+        }
+
+        let sizeModifier = '';
+        if (name === 'terminal') {
+            sizeModifier = 'fa-xs'
+        }
+
+        const iconClassName = `fa${iconClass} fa-${name} ${sizeModifier}`;
+
         if (this.props.wrapper) {
             let className = 'icon';
             if (this.props.size) className += ` is-${this.props.size}`;
             return <span className={className} style={this.props.style}>
-                <i className={`fas fa-${this.props.name}`}/>
+                <i className={iconClassName}/>
             </span>;
         }
 
-        return <i className={`fas fa-${this.props.name}`} style={this.props.style}/>;
+        return <i className={iconClassName} style={this.props.style}/>;
     }
 
 }

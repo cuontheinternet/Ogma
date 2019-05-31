@@ -25,8 +25,13 @@ class Sidebar extends React.Component {
             const s = summaries[i];
             const key = `sidebar-coll-${s.id}`;
             const url = `/env/${s.slug}`;
+            const props = {
+                activeClassName: 'is-active disabled-link',
+                activeStyle: {backgroundColor: s.color},
+                to: url,
+            };
             collections[i] = (
-                <li key={key}><NavLink activeClassName="is-active disabled-link" to={url}>
+                <li key={key}><NavLink {...props}>
                     <Icon name={s.icon}/>&nbsp; {s.name}
                 </NavLink></li>
             );
@@ -36,7 +41,7 @@ class Sidebar extends React.Component {
 
     render() {
         const summaries = this.props.envSummaries;
-        
+
         let ogmaType = 'Web';
         if (window.dataManager.isElectron()) ogmaType = 'Electron';
         else if (window.dataManager.isLocalClient()) ogmaType = 'Local';

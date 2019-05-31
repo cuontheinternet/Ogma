@@ -9,6 +9,7 @@
     "fast-deep-equal": "^2.0.1",
     "lodash": "^4.17.11",
     "node-sass": "^4.12.0",
+    "path-parse": "^1.0.6",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-color": "^2.17.3",
@@ -17,7 +18,9 @@
     "react-notifications": "^1.4.3",
     "react-router-dom": "^5.0.0",
     "react-scripts": "3.0.1",
-    "sweetalert2": "^8.11.6"
+    "sweetalert2": "^8.11.6",
+    "trie-search": "^1.2.9",
+    "upath": "^1.1.2"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -51,6 +54,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react": "^16.8.19",
     "react-app-rewired": "^2.1.3"
   }
 }

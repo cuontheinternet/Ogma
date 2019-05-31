@@ -6,12 +6,15 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import Icon from './Icon';
 
 export default class Breadcrumbs extends React.Component {
 
     static propTypes = {
         options: PropTypes.arrayOf(PropTypes.shape({
-            title: PropTypes.string.isRequired,
+            id: PropTypes.string,
+            title: PropTypes.string,
+            icon: PropTypes.string,
             onClick: PropTypes.func,
             isActive: PropTypes.func,
         })).isRequired,
@@ -20,8 +23,8 @@ export default class Breadcrumbs extends React.Component {
 
     static defaultProps = {
         options: [
-            {title: 'Breadcrumb #1', onClick: () => console.log('Breadcrumb #1 clicked')},
-            {title: 'Breadcrumb #2', onClick: () => console.log('Breadcrumb #2 clicked')},
+            {id: 1, title: 'Breadcrumb #1', onClick: id => console.log(`Breadcrumb #${id} clicked.`)},
+            {id: 2, title: 'Breadcrumb #2', onClick: id => console.log(`Breadcrumb #${id} clicked.`)},
         ],
         lastIsActive: true,
     };
@@ -32,6 +35,11 @@ export default class Breadcrumbs extends React.Component {
         this.state = {options: this.props.options};
     }
 
+    static getDerivedStateFromProps(props) {
+        return {
+            options: props.options,
+        };
+    }
 
     renderBreadcrumbs() {
         const options = this.state.options;
@@ -44,8 +52,13 @@ export default class Breadcrumbs extends React.Component {
                 className = 'is-active';
             }
 
-            comps[i] = <li key={option.title} className={className}>
-                <button onClick={option.onClick}>{option.title}</button>
+            const key = `${option.id}-${i}`;
+            const onClick = option.onClick ? () => option.onClick(option.id) : null;
+            comps[i] = <li key={key} className={className}>
+                <button onClick={onClick}>
+                    {option.icon && <Icon name={option.icon}/>}
+                    {option.title}
+                </button>
             </li>;
         }
         return comps;

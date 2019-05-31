@@ -26,5 +26,12 @@ export const EnvRoutePaths = {
 };
 export const DefaultEnvRoutePath = EnvRoutePaths.browse;
 
+export const FileView = {
+    List: 'list',
+    SmallThumb: 'small-thumb',
+    MediumThumb: 'medium-thumb',
+    LargeThumb: 'large-thumb',
+};
+
 export * from '../../shared/typedef';
 

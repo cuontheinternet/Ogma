@@ -44,9 +44,6 @@ export default class Tabs extends React.Component {
         super(props);
 
         if (this.props.useLinks) {
-            if (this.props.onOptionChange)
-                console.warn('Both \'useLinks\' and \'onOptionChange\' specified for Tabs component' +
-                    ' - note that the callback will not be called (use React router instead>).');
             if (!this.props.location)
                 console.warn('Property \'location\' was not passed to Tabs component - React router ' +
                     'links will not work correctly.');

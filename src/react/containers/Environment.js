@@ -41,20 +41,19 @@ class Environment extends React.Component {
 
     componentDidMount() {
         window.dataManager.subscribe(FrontendEvents.UpdateEnvSummary, this.updateEnvSummary);
+
+        // Immediately redirect to correct subroute if one isn't specified
+        const props = this.props;
+        const parentPath = props.match.url;
+        if (this.props.location.pathname === parentPath) {
+            const summary = _.find(props.envSummaries, s => s.slug === props.match.params.slug);
+            const envRoutePath = window.dataManager.getEnvRoutePath({id: summary.id}) || DefaultEnvRoutePath;
+            props.history.push(`${parentPath}${envRoutePath}`);
+        }
     }
 
     componentWillUnmount() {
         window.dataManager.unsubscribe(FrontendEvents.UpdateEnvSummary, this.updateEnvSummary);
-    }
-
-    componentWillMount() {
-        const props = this.props;
-
-        // Immediately redirect to correct subroute
-        const parentPath = props.match.url;
-        const summary = _.find(props.envSummaries, s => s.slug === props.match.params.slug);
-        const envRoutePath = window.dataManager.getEnvRoutePath({id: summary.id}) || DefaultEnvRoutePath;
-        props.history.push(`${parentPath}${envRoutePath}`);
     }
 
     updateEnvSummary = summary => {
