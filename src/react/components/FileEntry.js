@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import Promise from 'bluebird';
 import PropTypes from 'prop-types';
 
 import Icon from './Icon';
@@ -17,6 +18,7 @@ export default class FileEntry extends React.Component {
         file: PropTypes.object.isRequired,
         view: PropTypes.oneOf(Object.values(FileView)),
         showExtension: PropTypes.bool,
+        collapseLongNames: PropTypes.bool,
 
         onSingleClick: PropTypes.func,
         onDoubleClick: PropTypes.func,
@@ -25,6 +27,7 @@ export default class FileEntry extends React.Component {
     static defaultProps = {
         view: FileView.MediumThumb,
         showExtension: true,
+        collapseLongNames: false,
     };
 
     constructor(props) {
@@ -63,23 +66,36 @@ export default class FileEntry extends React.Component {
 
     render() {
         const file = this.state.file;
-        const name = <div className="file-entry-name">
-            <span className="file-entry-name-icon">{this.renderIcon(false)}</span>
-            {file.name}
-            {this.props.showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
-        </div>;
+
+        // Prepare file name
+        let name = file.name;
+        if (this.props.collapseLongNames) {
+            const length = name.length;
+            const extLength = this.props.showExtension ? file.ext.length : 0;
+            if (length + extLength > 65) {
+                const collapse = <span className="file-entry-name-collapse">&lt;...&gt;</span>;
+                name = <span>
+                    {name.slice(0, 30)}
+                    {collapse}
+                    {name.slice(length - 24 + extLength)}
+                </span>;
+            }
+        }
 
         const style = {
             backgroundColor: ColorsDark[this.state.icon.colorCode],
         };
         const className = `file-entry ${this.props.view}`;
         return <div className={className} onClick={this.handleClick} style={style}>
-            {!file.isDirectory && <div className="file-entry-thumbnail"
-                                       style={{}}/>}
+            {!file.isDirectory && <div className="file-entry-thumbnail" style={{}}/>}
             <div className="file-entry-icon">
                 <div className="file-entry-icon-content">{this.renderIcon(true)}</div>
             </div>
-            {name}
+            <div className="file-entry-name">
+                <span className="file-entry-name-icon">{this.renderIcon(false)}</span>
+                {name}
+                {this.props.showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
+            </div>
         </div>;
     };
 

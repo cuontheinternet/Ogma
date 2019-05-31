@@ -8,19 +8,34 @@ import {ColorsLight} from '../typedef';
 import ExactTrie from '../../../shared/ExactTrie';
 
 export const FolderIconData = {name: 'folder', colorCode: 0};
-const FileIconData = {name: 'file', colorCode: 0};
+const FileIconData = {name: 'file', colorCode: 32};
 const IconsToExtensions = {
-    'cube': ['3ds', 'obj', 'ply'],
+    'balance-scale': ['license'],
+    'code': ['ipynb'],
+    'cogs': ['sfk', 'ini', 'toml', 'iml'],
+    'cube': ['3ds', 'obj', 'ply', 'fbx'],
     'database': ['json', 'sql'],
+    'file-alt': ['txt', 'md', 'nfo', 'readme'],
     'file-archive': ['zip', 'rar', 'tar', 'tar.gz'],
     'file-image': ['png', 'jpg', 'jpeg', 'svg', 'tiff'],
     'file-pdf': ['pdf'],
-    'film': ['avi', 'mp4', 'mkv', 'flv', 'webm'],
-    'file-code': ['js', 'html', 'php'],
+    'file-word': ['doc', 'docx', 'odt'],
+    'film': ['avi', 'mp4', 'mkv', 'flv', 'webm', 'wmv', 'vob', 'mov', 'swf'],
+    'file-code': ['html', 'php', 'css', 'xml'],
+    'info-circle': ['bib'],
+    'key': ['pem', 'pub'],
+    'lock': ['lock', 'lock.json', 'shrinkwrap.json'],
+    'music': ['mp3', 'aac', 'ogg', 'm4a', 'flac', 'wav'],
     'terminal': ['run', 'sh'],
+    'trash': ['.Trashes'],
 
-    'b:ubuntu': ['deb'],
+    'b:adobe': ['psd'],
+    'b:git': ['gitignore'],
     'b:linux': ['AppImage'],
+    'b:node-js': ['js', 'jsx', 'ts', 'tsx'],
+    'b:php': ['php'],
+    'b:python': ['py'],
+    'b:ubuntu': ['deb'],
 };
 
 const step = 7;

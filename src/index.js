@@ -11,11 +11,11 @@ import ReactDOM from 'react-dom';
 import {EventEmitter} from 'events';
 import {EventEmitter2} from 'eventemitter2';
 import 'react-notifications/lib/notifications.css';
+import 'bulma-extensions/dist/css/bulma-extensions.min.css';
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 
-import './index.scss';
+import './scss/index.scss';
 import App from './react/App';
-import 'file-icons-js/css/style.css';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';

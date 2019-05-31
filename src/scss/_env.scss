@@ -1,0 +1,42 @@
+
+.env {
+    &-icon {
+        display: inline-block;
+        padding: 0.2em 0.4em;
+        border-radius: 6px;
+        font-size: 0.9em;
+        color: #fff;
+    }
+    &-tag {
+        &-top-bar {
+            margin: -1.5rem 0 0 0 !important;
+            padding: 8px 0;
+
+            .level-left {
+                max-width: calc(100% - 120px);
+                .level-item {
+                    max-width: calc(100% - 30px);
+                }
+            }
+
+            .breadcrumb li {
+                a, button {
+                    padding-right: 5px;
+                    padding-left: 5px;
+                }
+                &:first-child {
+                    a, button {
+                        padding-left: 0;
+                    }
+                }
+                &.is-active {
+                    a, button {
+                        pointer-events: none;
+                        cursor: default;
+                        color: #363636;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -8,6 +8,12 @@ const React = require('react');
 const PropTypes = require('prop-types');
 
 const {BulmaSizes} = require('../../typedef');
+const ExactTrie = require('../../../../shared/ExactTrie');
+
+const SizeModifiers = ['xs', 'sm'];
+const IconSizeTrie = new ExactTrie({ignoreCase: false});
+IconSizeTrie.put('music', 1);
+IconSizeTrie.put('terminal', 0);
 
 export default class Icon extends React.Component {
 
@@ -32,8 +38,9 @@ export default class Icon extends React.Component {
         }
 
         let sizeModifier = '';
-        if (name === 'terminal') {
-            sizeModifier = 'fa-xs'
+        let sizeModifierIndex = IconSizeTrie.get(name);
+        if (sizeModifierIndex !== undefined) {
+            sizeModifier = `fa-${SizeModifiers[sizeModifierIndex]}`;
         }
 
         const iconClassName = `fa${iconClass} fa-${name} ${sizeModifier}`;

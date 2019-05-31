@@ -11,8 +11,16 @@ import equal from 'fast-deep-equal';
 
 import Icon from '../components/Icon';
 import ModalUtil from '../../util/ModalUtil';
+import Checkbox from '../components/Checkbox';
 import FileEntry from '../components/FileEntry';
 import Breadcrumbs from '../components/Breadcrumbs';
+
+const Options = {
+    CollapseLong: 'collapse-long',
+    FoldersFirst: 'folders-first',
+    ShowExtensions: 'show-exts',
+    ShowHidden: 'show-hidden',
+};
 
 export default class EnvTag extends React.Component {
 
@@ -25,32 +33,36 @@ export default class EnvTag extends React.Component {
         super(props);
 
         const summary = this.props.envSummary;
-        const initPath = this.props.location.hash.slice(1) || '/';
+        const uriHash = this.props.location.hash.slice(1);
+        const initPath = decodeURI(uriHash) || '/';
         this.state = {
             summary,
             rootDirName: path.basename(summary.path),
 
             files: [],
             path: initPath,
+            levelUpDisabled: true,
+
+            optionState: {
+                [Options.CollapseLong]: false,
+                [Options.FoldersFirst]: true,
+                [Options.ShowExtensions]: true,
+                [Options.ShowHidden]: true,
+            },
         };
         this.state.breadcrumbs = this.pathToBreadcrumbs(this.state.path);
-    }
 
-    changePath = newPath => {
-        const normPath = path.normalize(newPath);
-        const s = this.state.summary;
-        window.ipcModule.getEnvDirectoryContents({id: s.id, path: normPath})
-            .then(files => {
-                this.setState(prevState => ({
-                    ...prevState,
-                    files,
-                    path: normPath,
-                    breadcrumbs: this.pathToBreadcrumbs(normPath),
-                }));
-                this.props.history.push(`#${normPath}`);
-            })
-            .catch(window.handleError);
-    };
+        this.optionCheckboxes = [
+            {id: Options.CollapseLong, name: 'Collapse long names'},
+            {id: Options.FoldersFirst, name: 'Show folders first'},
+            {id: Options.ShowExtensions, name: 'Show extensions'},
+            {id: Options.ShowHidden, name: 'Show hidden files'},
+        ];
+        this.optionButtons = [
+            {icon: 'sync-alt', name: 'Refresh directory', callback: () => null},
+            {icon: 'folder-minus', name: 'Clear file cache', callback: () => null},
+        ];
+    }
 
     componentDidMount() {
         this.changePath(this.state.path);
@@ -59,19 +71,30 @@ export default class EnvTag extends React.Component {
     componentDidUpdate(prevProps) {
         const summary = this.props.envSummary;
         const summaryChanged = !equal(prevProps.envSummary, summary);
-        if (summaryChanged) {
-            this.setState(prevState => ({
-                ...prevState,
-                summary,
-            }));
-        }
+        if (summaryChanged) this.setState({summary});
     }
+
+    changePath = newPath => {
+        const normPath = path.normalize(newPath);
+        const s = this.state.summary;
+        window.ipcModule.getEnvDirectoryContents({id: s.id, path: normPath})
+            .then(files => {
+                this.setState({
+                    files,
+                    path: normPath,
+                    levelUpDisabled: normPath === '/',
+                    breadcrumbs: this.pathToBreadcrumbs(normPath),
+                });
+                this.props.history.push(`#${normPath}`);
+            })
+            .catch(window.handleError);
+    };
 
     pathToBreadcrumbs(normPath) {
         const pathParts = normPath === '/' ? [] : normPath.split('/').slice(1);
         const onClick = this.changePath;
         const breadcrumbs = new Array(pathParts.length + 1);
-        breadcrumbs[0] = {id: '/', icon: 'folder-open', title: this.state.rootDirName, onClick};
+        breadcrumbs[0] = {id: '/', title: this.state.rootDirName, onClick};
 
         let currPath = '';
         for (let i = 0; i < pathParts.length; ++i) {
@@ -81,6 +104,15 @@ export default class EnvTag extends React.Component {
         }
         return breadcrumbs;
     }
+
+    handleCheckboxChange = (id, value) => {
+        this.setState({
+            optionState: {
+                ...this.state.optionState,
+                [id]: value,
+            },
+        });
+    };
 
     handleFileClick = file => {
         if (file.name === '..') this.changePath(path.join(this.state.path, file.base));
@@ -92,19 +124,67 @@ export default class EnvTag extends React.Component {
         if (file.isDirectory) {
             this.changePath(relPath);
         } else if (window.dataManager.isLocalClient()) {
-            window.ipcModule.openEnvFile({id: s.id, path: relPath})
+            return window.ipcModule.openEnvFile({id: s.id, path: relPath})
                 .catch(window.handleError);
         } else {
             ModalUtil.showError({message: 'Opening files in the browser is not supported yet.'});
         }
     };
 
+    renderOptionCheckboxes() {
+        const checkboxes = this.optionCheckboxes;
+        const comps = new Array(checkboxes.length);
+        for (let i = 0; i < checkboxes.length; i++) {
+            const checkbox = checkboxes[i];
+            const key = `${this.props.envSummary.id}-${checkbox.id}`;
+            comps[i] = <div key={key} className="dropdown-item">
+                <div className="field">
+                    <Checkbox id={checkbox.id} name={checkbox.name} checked={this.state.optionState[checkbox.id]}
+                              onChange={this.handleCheckboxChange}/>
+                </div>
+            </div>;
+        }
+        return comps;
+    }
+
+    renderOptionButtons() {
+        const buttons = this.optionButtons;
+        const comps = new Array(buttons.length);
+        for (let i = 0; i < buttons.length; i++) {
+            const button = buttons[i];
+            const key = `${this.props.envSummary.id}-${button.name}`;
+            comps[i] = <button key={key} className="dropdown-item" onClick={button.callback}>
+                <Icon name={button.icon} wrapper={false}/>&nbsp;&nbsp;&nbsp;<span>{button.name}</span>
+            </button>;
+        }
+        return comps;
+    }
+
     renderFiles() {
         const files = this.state.files;
+
+        if (files.length === 0) {
+            return <div className="file-nothing">
+                No files to show.
+            </div>
+        }
+
+        const compare = (fileA, fileB) => {
+            if (this.state.optionState[Options.FoldersFirst]) {
+                if (fileA.isDirectory && !fileB.isDirectory) return -1;
+                if (!fileA.isDirectory && fileB.isDirectory) return 1;
+            }
+
+            return fileA.name.localeCompare(fileB.name);
+        };
+        files.sort(compare);
+
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
             comps[i] = <FileEntry key={file.id} file={file}
+                                  showExtension={this.state.optionState[Options.ShowExtensions]}
+                                  collapseLongNames={this.state.optionState[Options.CollapseLong]}
                                   onSingleClick={this.handleFileClick}
                                   onDoubleClick={this.handleFileDoubleClick}/>;
         }
@@ -118,6 +198,12 @@ export default class EnvTag extends React.Component {
             <div className="level env-tag-top-bar">
                 <div className="level-left">
                     <div className="level-item">
+                        <button className="button" disabled={this.state.levelUpDisabled}
+                                onClick={() => this.changePath(path.join(this.state.path, '..'))}>
+                            <Icon name="level-up-alt"/>
+                        </button>
+                    </div>
+                    <div className="level-item breadcrumbs-level-item">
                         <Breadcrumbs options={this.state.breadcrumbs}/>
                     </div>
                 </div>
@@ -131,7 +217,9 @@ export default class EnvTag extends React.Component {
                             </div>
                             <div className="dropdown-menu" id="dropdown-menu" role="menu">
                                 <div className="dropdown-content">
+                                    {this.renderOptionCheckboxes()}
                                     <hr className="dropdown-divider"/>
+                                    {this.renderOptionButtons()}
                                 </div>
                             </div>
                         </div>
