@@ -6,7 +6,7 @@
 
 import ExactTrie from 'exact-trie';
 
-import {ColorsLight} from '../typedef';
+import {ColorsLight, VideoExtensions, ImageExtensions} from '../typedef';
 
 export const FolderIconData = {name: 'folder', colorCode: 0};
 const FileIconData = {name: 'file', colorCode: 32};
@@ -19,10 +19,10 @@ const IconsToExtensions = {
     'file-alt': ['txt', 'md', 'nfo'],
     'file-archive': ['zip', 'rar', 'tar', 'tar.gz'],
     'file-excel': ['csv', 'xls', 'xlsx'],
-    'file-image': ['png', 'jpg', 'jpeg', 'svg', 'tiff'],
+    'file-image': ImageExtensions,
     'file-pdf': ['pdf'],
     'file-word': ['doc', 'docx', 'odt'],
-    'film': ['avi', 'mp4', 'mkv', 'flv', 'webm', 'wmv', 'vob', 'mov', 'swf'],
+    'film': VideoExtensions,
     'file-code': ['html', 'php', 'css', 'xml'],
     'info-circle': ['bib', 'readme'],
     'key': ['pem', 'pub'],
@@ -41,7 +41,7 @@ const IconsToExtensions = {
     'b:ubuntu': ['deb'],
 };
 
-const step = 7;
+const step = 5;
 let colourIndex = 0;
 
 const exactTrie = new ExactTrie();
