@@ -11,9 +11,9 @@ const ogmaSwal = Swal.mixin({
     cancelButtonClass: 'modal-button button',
     buttonsStyling: false,
     animation: false,
-    customClass: {
-        popup: 'animated fadeInDown'
-    }
+    // customClass: {
+    //     popup: 'animated fadeIn'
+    // }
 });
 
 class ModalUtil {

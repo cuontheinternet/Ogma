@@ -17,13 +17,14 @@ export default class Tabs extends React.Component {
     static propTypes = {
         size: PropTypes.oneOf(BulmaSizes),
         useLinks: PropTypes.bool,
+        fullwidth: PropTypes.bool,
         basePath: PropTypes.string,
         className: PropTypes.string,
         onOptionChange: PropTypes.func,
 
-        activeOption: PropTypes.string,
+        activeOption: PropTypes.any,
         options: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.string,
+            id: PropTypes.any,
             path: PropTypes.string,
             exact: PropTypes.bool,
             name: PropTypes.string,
@@ -37,6 +38,7 @@ export default class Tabs extends React.Component {
 
     static defaultProps = {
         useLinks: false,
+        fullwidth: false,
         basePath: '',
     };
 
@@ -57,11 +59,11 @@ export default class Tabs extends React.Component {
         };
     }
 
-    optionClick(optionSlug) {
-        if (this.props.onOptionChange) this.props.onOptionChange(optionSlug);
+    optionClick(id) {
+        if (this.props.onOptionChange) this.props.onOptionChange(id);
         else if (!this.props.useLinks) console.warn('No option change callback specified for Tabs!');
 
-        if (this.props.useLinks) this.setState({activeOption: optionSlug});
+        this.setState({activeOption: id});
     }
 
     renderOptions() {
@@ -73,6 +75,8 @@ export default class Tabs extends React.Component {
             let isActive;
             let LinkComponent;
             const linkProps = {};
+            if (option.disabled) linkProps['disabled'] = true;
+
             if (this.props.useLinks) {
                 if (typeof option.path !== 'string')
                     throw new Error(`Tabs option '${option.name}' either doesn't have 'path' specified, `
@@ -83,10 +87,11 @@ export default class Tabs extends React.Component {
                 linkProps.to = linkPath;
                 if (option.exact) linkProps.exact = 'true';
             } else {
-                if (!option.id)
+                if (option.id === undefined) {
                     throw new Error(`Tabs option '${option.name}' doesn't have 'id' specified!`);
+                }
                 isActive = option.id === this.state.activeOption;
-                LinkComponent = 'a';
+                LinkComponent = 'button';
             }
             linkProps.onClick = () => this.optionClick(option.id);
 
@@ -116,6 +121,7 @@ export default class Tabs extends React.Component {
             'tabs': true,
             [sizeClass]: this.props.size,
             [this.props.className]: true,
+            'is-fullwidth': this.props.fullwidth,
         });
         return (
             <div className={className} style={{overflow: 'visible'}}>

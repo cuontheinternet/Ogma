@@ -1,6 +1,7 @@
 @import 'bulma-fixes';
 @import 'env';
 @import 'files';
+@import 'context-menu';
 
 #root > ._loading_overlay_wrapper {
     height: 100%;
@@ -8,6 +9,12 @@
 
 .app-wrapper {
     padding: 20px;
+}
+
+.text-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -76,5 +83,7 @@ button {
     margin: 0 10px;
 }
 
-
-// Adjust Bulma styling
+.fadeIn {
+    -webkit-animation-duration: 0.2s;
+    animation-duration: 0.2s;
+}

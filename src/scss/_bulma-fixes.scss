@@ -28,3 +28,46 @@
 .is-checkradio[type=checkbox] + label {
     font-size: inherit;
 }
+
+.tabs {
+    li {
+        &.is-active {
+            button {
+                border-bottom-color: #3273dc;
+                background-color: #f9f9f9;
+                pointer-events: none;
+                cursor: default;
+                color: #3273dc;
+            }
+        }
+    }
+
+    &.is-fullwidth {
+        button {
+            width: 100%;
+        }
+    }
+
+    button[disabled], a[disabled] {
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    button {
+        border-bottom-color: #dbdbdb;
+        border-bottom-style: solid;
+        border-bottom-width: 1px;
+        justify-content: center;
+        margin-bottom: -1px;
+        vertical-align: top;
+        align-items: center;
+        padding: .5em 1em;
+        color: #4a4a4a;
+        display: flex;
+
+        &:hover {
+            border-bottom-color: #363636;
+            color: #363636;
+        }
+    }
+}

@@ -47,6 +47,7 @@ export default class EnvTag extends React.Component {
             files: [],
             selection: {},
             path: initPath,
+            contextFile: null,
             levelUpDisabled: true,
 
             optionState: {
@@ -68,8 +69,6 @@ export default class EnvTag extends React.Component {
             {icon: 'sync-alt', name: 'Refresh directory', callback: () => null},
             {icon: 'folder-minus', name: 'Clear file cache', callback: () => null},
         ];
-
-        this.globalContextHandlers = prepareContextMenuHandlers({id: TagContextMenuId});
     }
 
     componentDidMount() {
@@ -144,11 +143,15 @@ export default class EnvTag extends React.Component {
         if (file.isDirectory) {
             this.changePath(relPath);
         } else if (window.dataManager.isLocalClient()) {
-            return window.ipcModule.openEnvFile({id: s.id, path: relPath})
+            return window.ipcModule.openFile({id: s.id, path: relPath})
                 .catch(window.handleError);
         } else {
             ModalUtil.showError({message: 'Opening files in the browser is not supported yet.'});
         }
+    };
+
+    handleContextMenuShow = data => {
+        this.setState({contextFile: data});
     };
 
     renderOptionCheckboxes() {
@@ -207,29 +210,33 @@ export default class EnvTag extends React.Component {
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
+            const handlers = prepareContextMenuHandlers({id: TagContextMenuId, data: file});
             comps[i] = <FileEntry key={file.hash} file={file} basePath={state.path} envSummary={state.summary}
                                   showExtension={state.optionState[Options.ShowExtensions]}
                                   collapseLongNames={state.optionState[Options.CollapseLong]}
                                   onSingleClick={this.handleFileClick} selected={!!state.selection[file.hash]}
-                                  onDoubleClick={this.handleFileDoubleClick}/>;
+                                  onDoubleClick={this.handleFileDoubleClick}
+                                  handlers={handlers}/>;
         }
 
         return comps;
     }
 
     render() {
+        const state = this.state;
+
         return <div>
 
             <div className="level env-tag-top-bar">
                 <div className="level-left">
                     <div className="level-item">
-                        <button className="button" disabled={this.state.levelUpDisabled}
-                                onClick={() => this.changePath(path.join(this.state.path, '..'))}>
+                        <button className="button" disabled={state.levelUpDisabled}
+                                onClick={() => this.changePath(path.join(state.path, '..'))}>
                             <Icon name="level-up-alt"/>
                         </button>
                     </div>
                     <div className="level-item breadcrumbs-level-item">
-                        <Breadcrumbs options={this.state.breadcrumbs}/>
+                        <Breadcrumbs options={state.breadcrumbs}/>
                     </div>
                 </div>
                 <div className="level-right">
@@ -252,13 +259,17 @@ export default class EnvTag extends React.Component {
                 </div>
             </div>
 
-            <div {...this.globalContextHandlers} className="file-explorer">
+            <div className="file-explorer">
                 {this.renderFiles()}
             </div>
 
-            <ContextMenuWrapper id={TagContextMenuId}>
-                <TagContextMenu/>
+            <ContextMenuWrapper id={TagContextMenuId} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
+                <TagContextMenu id={TagContextMenuId} file={state.contextFile}
+                                envSummary={state.summary} selection={state.selection}/>
             </ContextMenuWrapper>
+
+            {/*<br/>*/}
+            {/*<TagContextMenu file={state.contextFile} selection={state.selection}/>*/}
 
         </div>;
     }

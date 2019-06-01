@@ -7,13 +7,21 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Switch, Route, withRouter} from 'react-router-dom';
+import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 
 import EnvTag from './EnvTag';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
-import {FrontendEvents, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
+import {FrontendEvents, IndexRoutePath, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
+
+const TabOptions = [
+    {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
+    {path: EnvRoutePaths.search, icon: 'search', name: 'Search'},
+    {path: EnvRoutePaths.tag, icon: 'tag', name: 'Tag', comp: EnvTag},
+    {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},
+];
+for (const option of TabOptions) option.id = option.path;
 
 class Environment extends React.Component {
 
@@ -29,14 +37,6 @@ class Environment extends React.Component {
         const summary = _.find(summaries, s => s.slug === slug);
 
         this.state = {summary};
-
-        this.tabOptions = [
-            {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
-            {path: EnvRoutePaths.search, icon: 'search', name: 'Search'},
-            {path: EnvRoutePaths.tag, icon: 'tag', name: 'Tag', comp: EnvTag},
-            {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},
-        ];
-        for (const option of this.tabOptions) option.id = option.path;
     }
 
     componentDidMount() {
@@ -71,7 +71,7 @@ class Environment extends React.Component {
     renderRoutes() {
         const comps = [];
         const parentPath = this.props.match.path;
-        for (const tab of this.tabOptions) {
+        for (const tab of TabOptions) {
             if (!tab.comp) continue;
             const TabComp = tab.comp;
             comps.push(<Route key={`env-router-${tab.path}`} path={`${parentPath}${tab.path}`} exact={tab.exact}
@@ -82,13 +82,16 @@ class Environment extends React.Component {
 
     render() {
         const summary = this.state.summary;
+
+        if (!summary) return <Redirect to={IndexRoutePath}/>;
+
         return <div className="env">
             <h1 className="title">
                 <EnvIcon color={summary.color} icon={summary.icon}/>
                 &nbsp;&nbsp;{summary.name}
             </h1>
 
-            <Tabs options={this.tabOptions} useLinks={true} basePath={this.props.match.url}
+            <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
                   location={this.props.location} onOptionChange={this.handleRouteChange} className="is-boxed"/>
 
             {this.renderRoutes()}

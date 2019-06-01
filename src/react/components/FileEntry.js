@@ -4,14 +4,14 @@
  * @license GPL-3.0
  */
 
-import path from 'path';
 import React from 'react';
 import PropTypes from 'prop-types';
 import VisibilitySensor from 'react-visibility-sensor';
 
 import Icon from './Icon';
-import {FileView, ColorsLight, ColorsDark} from '../../typedef';
+import WindowUtil from '../../util/WindowUtil';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
+import {FileView, ColorsLight, ColorsDark, ThumbnailState} from '../../typedef';
 
 export default class FileEntry extends React.Component {
 
@@ -24,6 +24,8 @@ export default class FileEntry extends React.Component {
         showExtension: PropTypes.bool,
         collapseLongNames: PropTypes.bool,
         singleAndDoubleClickExclusive: PropTypes.bool,
+
+        handlers: PropTypes.object,
 
         selected: PropTypes.bool,
         onSingleClick: PropTypes.func,
@@ -46,8 +48,7 @@ export default class FileEntry extends React.Component {
         const file = props.file;
         this.state = {
             file,
-            thumbUrl: null,
-            relPath: path.join(props.basePath, file.base),
+            thumbBgImage: null,
             icon: file.isDirectory ? FolderIconData : getIconData(file),
         };
 
@@ -63,27 +64,37 @@ export default class FileEntry extends React.Component {
         };
     }
 
-    handleVisibilityChange = isVisible => {
+    loadThumbnail = () => {
+        const file = this.state.file;
+        const summary = this.props.envSummary;
+        const url = `${window.serverHost}/static/env/${summary.slug}/thumbs/${file.hash}.jpg`;
+        return WindowUtil.loadImage(url)
+            .then(() => this.setState({thumbBgImage: `url('${url}')`}));
+    };
 
-        // TODO: Implement some sort of extension check to make sure we don't request thumbnails of text files and such.
+    handleVisibilityChange = isVisible => {
+        const file = this.state.file;
+        const summary = this.props.envSummary;
 
         if (!isVisible) return;
         else if (this.thumbLoaded) return;
         this.thumbLoaded = true;
 
-        const f = this.state.file;
-        if (f.isDirectory) return;
+        console.warn(file);
 
-        const s = this.props.envSummary;
-        Promise.resolve()
-            .then(() => window.ipcModule.getEnvFileThumbnail({id: s.id, path: this.state.relPath}))
-            .then(thumbName => {
-                if (!thumbName) return;
-                this.setState({
-                    thumbUrl: `url('${window.serverHost}/static/env/${s.slug}/thumbs/${thumbName}')`,
+        if (file.thumb === ThumbnailState.Impossible) return;
+
+        let promise;
+        if (file.thumb === ThumbnailState.Ready) promise = this.loadThumbnail();
+        if (file.thumb === ThumbnailState.Possible) {
+            promise = Promise.resolve()
+                .then(() => window.ipcModule.getFileThumbnail({id: summary.id, path: file.nixPath}))
+                .then(thumbName => {
+                    if (!thumbName) return;
+                    return this.loadThumbnail();
                 });
-            })
-            .catch(window.handleErrorQuiet);
+        }
+        promise.catch(window.handleErrorQuiet);
     };
 
     handleClick = event => {
@@ -134,17 +145,17 @@ export default class FileEntry extends React.Component {
 
         const wrapperStyle = {backgroundColor: ColorsDark[this.state.icon.colorCode]};
 
-        const thumbUrl = this.state.thumbUrl;
-        const thumbStyle = {backgroundImage: thumbUrl};
+        const thumbBgImage = this.state.thumbBgImage;
+        const thumbStyle = {backgroundImage: thumbBgImage};
 
         const className = `file-entry ${this.props.view} ${props.selected ? 'selected' : ''}`;
         return (
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
                               onChange={this.handleVisibilityChange}>
-                <div className={className} onClick={this.handleClick} style={wrapperStyle}>
+                <div {...this.props.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
 
-                    {<div className={`file-entry-thumbnail ${thumbUrl ? '' : 'hidden'}`} style={thumbStyle}/>}
+                    {<div className={`file-entry-thumbnail ${thumbBgImage ? '' : 'hidden'}`} style={thumbStyle}/>}
 
                     {props.selected && <div className={`file-entry-selected`}/>}
 

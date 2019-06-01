@@ -12,12 +12,16 @@ class Dashboard extends React.Component {
     handleCreateEnvClick = () => {
         window.showGlobalLoader('Creating collection...');
         window.ipcModule.createEnvironment()
-            .then(() => window.hideGlobalLoader())
+            .then(summary => {
+                window.hideGlobalLoader();
+                const url = `/env/${summary.slug}`;
+                this.props.history.push(url);
+            })
             .catch(error => {
                 window.hideGlobalLoader();
                 return ErrorHandler.handleMiscError(error);
-            })
-    }
+            });
+    };
 
     render() {
         return <div>

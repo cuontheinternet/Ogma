@@ -1,0 +1,33 @@
+
+.context-menu {
+    box-shadow: 0 2px 3px rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .1);
+    background-color: #f2f2f2;
+    display: inline-block;
+    border-radius: 3px;
+    overflow: hidden;
+    width: 250px;
+
+    .tabs {
+        margin: 0;
+
+        button[disabled] {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+    }
+
+    .dropdown {
+        &-menu {
+            position: static;
+            padding: 0;
+        }
+        &-content {
+            border-radius: 0;
+            box-shadow: none;
+            padding: 0;
+        }
+        &-divider {
+            margin: 0;
+        }
+    }
+}
