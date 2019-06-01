@@ -2,6 +2,9 @@
 .file {
     &-explorer {
         border: solid 1px #dbdbdb;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
         padding: 3px;
     }
     &-nothing {
@@ -18,17 +21,36 @@
         font-size: 0.8rem;
         overflow: hidden;
 
-        &-thumbnail, &-icon {
+        &-thumbnail, &-selected, &-icon {
             position: absolute;
             height: 100%;
             width: 100%;
         }
 
         &-thumbnail {
+            -webkit-transition: opacity 0.2s ease-out;
+            transition: opacity 0.2s ease-in;
+
+            background-color: rgba(0, 0, 0, 0.5);
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
+            background-image: none;
+            opacity: 0.9;
             z-index: 1;
+
+            &.hidden {
+                opacity: 0
+            }
+        }
+
+        &-selected {
+            $color1: #09f;
+            $color2: #006ebd;
+            background: repeating-linear-gradient(45deg, $color1, $color1 10px, $color2 10px, $color2 20px);
+
+            opacity: 0.4;
+            z-index: 3;
         }
 
         &-icon {
@@ -63,12 +85,20 @@
             }
         }
 
+
+        &.selected &-name {
+            color: #09f !important;
+            * {
+                color: #0089de !important;
+            }
+        }
+
         &-name {
             background-color: rgba(0, 0, 0, 0.8);
             position: relative;
             padding: 4px 8px;
             color: #fff;
-            z-index: 3;
+            z-index: 4;
 
             &-icon {
                 margin-right: 5px;

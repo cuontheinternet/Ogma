@@ -5,10 +5,10 @@
  */
 
 const React = require('react');
+const ExactTrie = require('exact-trie');
 const PropTypes = require('prop-types');
 
 const {BulmaSizes} = require('../../typedef');
-const ExactTrie = require('../../../../shared/ExactTrie');
 
 const SizeModifiers = ['xs', 'sm'];
 const IconSizeTrie = new ExactTrie({ignoreCase: false});

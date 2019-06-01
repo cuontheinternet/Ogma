@@ -21,31 +21,23 @@ export default class App extends React.Component {
         this.state = {
             showLoader: false,
             loaderText: 'Loading...',
-            envSummaries: window.dataManager.getEnvSummaries(),
+            summaries: window.dataManager.getEnvSummaries(),
         };
     }
 
-    updateEnvSummaries = (envSummaries) => {
-        this.setState(prevState => ({
-            ...prevState,
-            envSummaries,
-        }));
+    updateEnvSummaries = envSummaries => {
+        this.setState({summaries: envSummaries});
     };
 
     componentDidMount() {
         window.showGlobalLoader = text => {
-            this.setState(prevState => ({
-                ...prevState,
+            this.setState({
                 showLoader: true,
                 loaderText: text,
-            }));
+            });
         };
         window.hideGlobalLoader = () => {
-            this.setState(prevState => ({
-                ...prevState,
-                showLoader: false,
-                loaderText: 'Loading...',
-            }));
+            this.setState({showLoader: false});
         };
 
         window.dataManager.subscribe(FrontendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
@@ -56,7 +48,7 @@ export default class App extends React.Component {
     }
 
     render() {
-        const summaries = this.state.envSummaries;
+        const summaries = this.state.summaries;
         return (
             <Router>
                 <LoadingOverlay

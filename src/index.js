@@ -21,6 +21,9 @@ import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';
 import ErrorHandler, {UserFriendlyError} from './util/ErrorHandler';
 
+// Setup base URL
+window.serverHost = 'http://localhost:10548';
+
 // Setup error handling functions
 window.handleError = ErrorHandler.handleMiscError;
 window.handleErrorQuiet = ErrorHandler.handleMiscErrorQuiet;
@@ -30,7 +33,7 @@ ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
 
 // Socket.IO connection logic
 const socketInitPromise = new Promise(resolve => {
-    const socket = io.connect('http://localhost:10548');
+    const socket = io.connect(window.serverHost);
 
     let firstConnection = true;
     socket.on('connect', () => {

@@ -4,16 +4,19 @@
  * @licence GPL-3.0
  */
 
+import _ from 'lodash';
 import path from 'path';
 import React from 'react';
 import PropTypes from 'prop-types';
 import equal from 'fast-deep-equal';
+import {ContextMenuWrapper, prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
 import ModalUtil from '../../util/ModalUtil';
 import Checkbox from '../components/Checkbox';
 import FileEntry from '../components/FileEntry';
 import Breadcrumbs from '../components/Breadcrumbs';
+import TagContextMenu from '../components/TagContextMenu';
 
 const Options = {
     CollapseLong: 'collapse-long',
@@ -21,6 +24,8 @@ const Options = {
     ShowExtensions: 'show-exts',
     ShowHidden: 'show-hidden',
 };
+
+const TagContextMenuId = 'tag-context-menu';
 
 export default class EnvTag extends React.Component {
 
@@ -40,6 +45,7 @@ export default class EnvTag extends React.Component {
             rootDirName: path.basename(summary.path),
 
             files: [],
+            selection: {},
             path: initPath,
             levelUpDisabled: true,
 
@@ -62,6 +68,8 @@ export default class EnvTag extends React.Component {
             {icon: 'sync-alt', name: 'Refresh directory', callback: () => null},
             {icon: 'folder-minus', name: 'Clear file cache', callback: () => null},
         ];
+
+        this.globalContextHandlers = prepareContextMenuHandlers({id: TagContextMenuId});
     }
 
     componentDidMount() {
@@ -81,6 +89,7 @@ export default class EnvTag extends React.Component {
             .then(files => {
                 this.setState({
                     files,
+                    selection: {},
                     path: normPath,
                     levelUpDisabled: normPath === '/',
                     breadcrumbs: this.pathToBreadcrumbs(normPath),
@@ -114,8 +123,19 @@ export default class EnvTag extends React.Component {
         });
     };
 
-    handleFileClick = file => {
-        if (file.name === '..') this.changePath(path.join(this.state.path, file.base));
+    handleFileClick = (file, event) => {
+        const hash = file.hash;
+
+        if (event.ctrlKey || event.shiftKey) {
+            this.setState(prevState => ({
+                selection: {
+                    ...prevState.selection,
+                    [hash]: !prevState.selection[hash],
+                },
+            }));
+        } else {
+            this.setState(prevState => ({selection: {[hash]: !prevState.selection[hash]}}));
+        }
     };
 
     handleFileDoubleClick = file => {
@@ -161,16 +181,21 @@ export default class EnvTag extends React.Component {
     }
 
     renderFiles() {
-        const files = this.state.files;
+        const state = this.state;
+        let files = state.files;
 
         if (files.length === 0) {
             return <div className="file-nothing">
                 No files to show.
-            </div>
+            </div>;
+        }
+
+        if (!state.optionState[Options.ShowHidden]) {
+            files = _.filter(files, f => !f.name.startsWith('.'));
         }
 
         const compare = (fileA, fileB) => {
-            if (this.state.optionState[Options.FoldersFirst]) {
+            if (state.optionState[Options.FoldersFirst]) {
                 if (fileA.isDirectory && !fileB.isDirectory) return -1;
                 if (!fileA.isDirectory && fileB.isDirectory) return 1;
             }
@@ -182,10 +207,10 @@ export default class EnvTag extends React.Component {
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
-            comps[i] = <FileEntry key={file.id} file={file}
-                                  showExtension={this.state.optionState[Options.ShowExtensions]}
-                                  collapseLongNames={this.state.optionState[Options.CollapseLong]}
-                                  onSingleClick={this.handleFileClick}
+            comps[i] = <FileEntry key={file.hash} file={file} basePath={state.path} envSummary={state.summary}
+                                  showExtension={state.optionState[Options.ShowExtensions]}
+                                  collapseLongNames={state.optionState[Options.CollapseLong]}
+                                  onSingleClick={this.handleFileClick} selected={!!state.selection[file.hash]}
                                   onDoubleClick={this.handleFileDoubleClick}/>;
         }
 
@@ -227,9 +252,13 @@ export default class EnvTag extends React.Component {
                 </div>
             </div>
 
-            <div className="file-explorer">
+            <div {...this.globalContextHandlers} className="file-explorer">
                 {this.renderFiles()}
             </div>
+
+            <ContextMenuWrapper id={TagContextMenuId}>
+                <TagContextMenu/>
+            </ContextMenuWrapper>
 
         </div>;
     }
