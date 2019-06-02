@@ -11,27 +11,27 @@ import {hideAllContextMenus} from 'react-context-menu-wrapper';
 
 import Tabs from './Tabs';
 import Icon from './Icon';
+import {FilePropType} from '../../typedef';
 import WindowUtil from '../../util/WindowUtil';
 
 const ContextTabs = {
     Tag: 0,
-    Selection: 1,
-    File: 2,
+    File: 1,
 };
 
 const BaseTabOptions = [
-    {id: ContextTabs.Tag, icon: 'tag', name: 'Tag'},
-    {id: ContextTabs.Selection, icon: 'copy', name: 'Selection'},
+    {id: ContextTabs.Tag, icon: 'tag', name: 'Tags'},
     {id: ContextTabs.File, icon: 'file', name: 'File'},
 ];
 
 export default class TagContextMenu extends React.Component {
 
     static propTypes = {
-        id: PropTypes.string,
-        file: PropTypes.object,
-        envSummary: PropTypes.object.isRequired,
+        id: PropTypes.string.isRequired,
+        file: FilePropType,
+        changePath: PropTypes.func.isRequired,
         selection: PropTypes.object.isRequired,
+        envSummary: PropTypes.object.isRequired,
     };
 
     constructor(props) {
@@ -49,34 +49,29 @@ export default class TagContextMenu extends React.Component {
     }
 
     static getDerivedStateFromProps(props, state) {
-        const pFile = props.file;
+        const file = props.file;
+        if (!file) return null;
 
         const tagTab = state.tabOptions[0];
-        const selectionTab = state.tabOptions[1];
-        const fileTab = state.tabOptions[2];
+        const fileTab = state.tabOptions[1];
 
         const selectionSize = WindowUtil.objectLength(props.selection, null, val => val === true);
-        selectionTab.name = `Selection (${selectionSize})`;
-        selectionTab.disabled = selectionSize === 0;
+        const isMult = selectionSize > 1;
 
-        if (pFile) {
-            if (pFile.isDirectory) {
-                fileTab.icon = 'folder';
-                fileTab.name = 'Folder';
-            } else {
-                fileTab.icon = 'file';
-                fileTab.name = 'File';
-            }
-            fileTab.disabled = false;
+        if (file.isDir) {
+            fileTab.icon = isMult ? 'folder-plus' : 'folder';
+            fileTab.name = 'Folder';
         } else {
-            fileTab.disabled = true;
+            fileTab.icon = isMult ? 'file-medical' : 'file';
+            fileTab.name = 'File';
         }
+        if (isMult) fileTab.name += `s (${selectionSize})`;
 
         return {
             file: props.file,
             summary: props.envSummary,
             selection: props.selection,
-            tabOptions: [tagTab, selectionTab, fileTab],
+            tabOptions: [tagTab, fileTab],
         };
     }
 
@@ -131,22 +126,25 @@ export default class TagContextMenu extends React.Component {
         const s = this.state.summary;
         const ipc = window.ipcModule;
         const file = this.state.file;
-        const openData = {id: s.id, path: file.nixPath};
+        const isDir = file.isDir;
+        const fileReqData = {id: s.id, path: file.nixPath};
 
         const openContent = <React.Fragment>Open <strong>{file.base}</strong></React.Fragment>;
+        const openFunc = isDir ? () => this.props.changePath(file.nixPath) : () => ipc.openFile(fileReqData);
         const buttons = [
             {
-                icon: 'envelope-open-text',
-                name: openContent,
-                onClick: this.getHandler(() => ipc.openFile(openData), true),
+                icon: 'envelope-open-text', name: openContent,
+                onClick: this.getHandler(openFunc, true),
             },
             {
-                icon: 'external-link-alt',
-                name: 'Show in files',
-                onClick: this.getHandler(() => ipc.openInExplorer(openData), true),
+                icon: 'external-link-alt', name: 'Show in files',
+                onClick: this.getHandler(() => ipc.openInExplorer(fileReqData), true),
             },
             {icon: 'i-cursor', name: 'Rename', onClick: null},
-            {icon: 'trash', name: 'Move to trash', onClick: null},
+            {
+                icon: 'trash', name: 'Move to trash',
+                onClick: this.getHandler(() => ipc.removeFile(fileReqData), true),
+            },
         ];
         return <div className="dropdown-menu" id="dropdown-menu" role="menu">
             <div className="dropdown-content">

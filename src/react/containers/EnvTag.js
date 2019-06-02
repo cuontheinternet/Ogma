@@ -84,7 +84,7 @@ export default class EnvTag extends React.Component {
     changePath = newPath => {
         const normPath = path.normalize(newPath);
         const s = this.state.summary;
-        window.ipcModule.getEnvDirectoryContents({id: s.id, path: normPath})
+        window.ipcModule.getDirectoryContents({id: s.id, path: normPath})
             .then(files => {
                 this.setState({
                     files,
@@ -140,7 +140,7 @@ export default class EnvTag extends React.Component {
     handleFileDoubleClick = file => {
         const s = this.props.envSummary;
         const relPath = path.join(this.state.path, file.base);
-        if (file.isDirectory) {
+        if (file.isDir) {
             this.changePath(relPath);
         } else if (window.dataManager.isLocalClient()) {
             return window.ipcModule.openFile({id: s.id, path: relPath})
@@ -199,8 +199,8 @@ export default class EnvTag extends React.Component {
 
         const compare = (fileA, fileB) => {
             if (state.optionState[Options.FoldersFirst]) {
-                if (fileA.isDirectory && !fileB.isDirectory) return -1;
-                if (!fileA.isDirectory && fileB.isDirectory) return 1;
+                if (fileA.isDir && !fileB.isDir) return -1;
+                if (!fileA.isDir && fileB.isDir) return 1;
             }
 
             return fileA.name.localeCompare(fileB.name);
@@ -264,7 +264,7 @@ export default class EnvTag extends React.Component {
             </div>
 
             <ContextMenuWrapper id={TagContextMenuId} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={TagContextMenuId} file={state.contextFile}
+                <TagContextMenu id={TagContextMenuId} file={state.contextFile} changePath={this.changePath}
                                 envSummary={state.summary} selection={state.selection}/>
             </ContextMenuWrapper>
 

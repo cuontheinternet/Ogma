@@ -11,12 +11,12 @@ import VisibilitySensor from 'react-visibility-sensor';
 import Icon from './Icon';
 import WindowUtil from '../../util/WindowUtil';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
-import {FileView, ColorsLight, ColorsDark, ThumbnailState} from '../../typedef';
+import {FileView, ColorsLight, ColorsDark, ThumbnailState, FilePropType} from '../../typedef';
 
 export default class FileEntry extends React.Component {
 
     static propTypes = {
-        file: PropTypes.object.isRequired,
+        file: FilePropType.isRequired,
         basePath: PropTypes.string.isRequired,
         envSummary: PropTypes.object.isRequired,
         view: PropTypes.oneOf(Object.values(FileView)),
@@ -49,7 +49,7 @@ export default class FileEntry extends React.Component {
         this.state = {
             file,
             thumbBgImage: null,
-            icon: file.isDirectory ? FolderIconData : getIconData(file),
+            icon: file.isDir ? FolderIconData : getIconData(file),
         };
 
         this.clickCount = 0;
@@ -79,8 +79,6 @@ export default class FileEntry extends React.Component {
         if (!isVisible) return;
         else if (this.thumbLoaded) return;
         this.thumbLoaded = true;
-
-        console.warn(file);
 
         if (file.thumb === ThumbnailState.Impossible) return;
 
