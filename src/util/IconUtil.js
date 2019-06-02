@@ -6,7 +6,7 @@
 
 import ExactTrie from 'exact-trie';
 
-import {ColorsLight, VideoExtensions, ImageExtensions} from '../typedef';
+import {ColorsLight, VideoExtensions, ImageExtensions, AudioExtensions} from '../typedef';
 
 export const FolderIconData = {name: 'folder', colorCode: 0};
 const FileIconData = {name: 'file', colorCode: 32};
@@ -27,7 +27,8 @@ const IconsToExtensions = {
     'info-circle': ['bib', 'readme'],
     'key': ['pem', 'pub'],
     'lock': ['lock', 'lock.json', 'shrinkwrap.json'],
-    'music': ['mp3', 'aac', 'ogg', 'm4a', 'flac', 'wav'],
+    'music': AudioExtensions,
+    'running': ['swf'],
     'terminal': ['run', 'sh'],
     'trash': ['.Trashes'],
     'users': ['authors', 'contributors'],
