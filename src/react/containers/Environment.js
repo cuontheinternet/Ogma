@@ -5,6 +5,7 @@
  */
 
 import _ from 'lodash';
+import path from 'path';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
@@ -13,7 +14,7 @@ import EnvTag from './EnvTag';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
-import {FrontendEvents, IndexRoutePath, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
+import {BackendEvents, IndexRoutePath, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
 
 const TabOptions = [
     {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
@@ -40,20 +41,24 @@ class Environment extends React.Component {
     }
 
     componentDidMount() {
-        window.dataManager.subscribe(FrontendEvents.UpdateEnvSummary, this.updateEnvSummary);
+        window.dataManager.subscribe(BackendEvents.UpdateEnvSummary, this.updateEnvSummary);
 
         // Immediately redirect to correct subroute if one isn't specified
         const props = this.props;
+        const pathName = props.location.pathname;
         const parentPath = props.match.url;
-        if (this.props.location.pathname === parentPath) {
+        if (pathName === parentPath) {
             const summary = _.find(props.envSummaries, s => s.slug === props.match.params.slug);
             const envRoutePath = window.dataManager.getEnvRoutePath({id: summary.id}) || DefaultEnvRoutePath;
             props.history.push(`${parentPath}${envRoutePath}`);
+        } else {
+            const routePath = `/${path.relative(parentPath, pathName)}`;
+            window.dataManager.setEnvRoutePath({id: this.state.summary.id, path: routePath});
         }
     }
 
     componentWillUnmount() {
-        window.dataManager.unsubscribe(FrontendEvents.UpdateEnvSummary, this.updateEnvSummary);
+        window.dataManager.unsubscribe(BackendEvents.UpdateEnvSummary, this.updateEnvSummary);
     }
 
     updateEnvSummary = summary => {

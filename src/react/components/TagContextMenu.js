@@ -4,6 +4,7 @@
  * @license LGPL-3.0
  */
 
+import _ from 'lodash';
 import React from 'react';
 import Promise from 'bluebird';
 import PropTypes from 'prop-types';
@@ -12,7 +13,8 @@ import {hideAllContextMenus} from 'react-context-menu-wrapper';
 import Tabs from './Tabs';
 import Icon from './Icon';
 import {FilePropType} from '../../typedef';
-import WindowUtil from '../../util/WindowUtil';
+import ModalUtil from '../../util/ModalUtil';
+import Util from '../../util/Util';
 
 const ContextTabs = {
     Tag: 0,
@@ -37,12 +39,10 @@ export default class TagContextMenu extends React.Component {
     constructor(props) {
         super(props);
 
-        this.tabOptionsTemplate = WindowUtil.deepClone(BaseTabOptions);
+        this.tabOptionsTemplate = Util.deepClone(BaseTabOptions);
 
         this.state = {
-            file: props.file,
             summary: props.envSummary,
-            selection: props.selection,
             activeTab: ContextTabs.Tag,
             tabOptions: this.tabOptionsTemplate,
         };
@@ -50,25 +50,36 @@ export default class TagContextMenu extends React.Component {
 
     static getDerivedStateFromProps(props, state) {
         const file = props.file;
-        if (!file) return null;
+
+        // const selectionSize = Util.objectLength(props.selection, null, val => !!val);
+        const selectionSize = _.size(props.selection);
+        const isMult = selectionSize > 1;
+
+        let files;
+        if (isMult) files = Object.values(props.selection);
+        else files = [file];
+
+        _.remove(files, f => !f);
+        const firstFile = files[0];
 
         const tagTab = state.tabOptions[0];
         const fileTab = state.tabOptions[1];
 
-        const selectionSize = WindowUtil.objectLength(props.selection, null, val => val === true);
-        const isMult = selectionSize > 1;
-
-        if (file.isDir) {
-            fileTab.icon = isMult ? 'folder-plus' : 'folder';
-            fileTab.name = 'Folder';
-        } else {
-            fileTab.icon = isMult ? 'file-medical' : 'file';
-            fileTab.name = 'File';
+        if (isMult) {
+            fileTab.icon = 'copy';
+            fileTab.name = `Selection (${selectionSize})`;
+        } else if (firstFile) {
+            if (firstFile.isDir) {
+                fileTab.icon = 'folder';
+                fileTab.name = 'Folder';
+            } else {
+                fileTab.icon = 'file';
+                fileTab.name = 'File';
+            }
         }
-        if (isMult) fileTab.name += `s (${selectionSize})`;
 
         return {
-            file: props.file,
+            files,
             summary: props.envSummary,
             selection: props.selection,
             tabOptions: [tagTab, fileTab],
@@ -93,6 +104,8 @@ export default class TagContextMenu extends React.Component {
 
         for (let i = 0; i < buttons.length; ++i) {
             const button = buttons[i];
+            if (!button) continue;
+
             comps[i] = <button key={button.name} className="dropdown-item text-ellipsis" onClick={button.onClick}>
                 <Icon name={button.icon}/> {button.name}
             </button>;
@@ -123,29 +136,71 @@ export default class TagContextMenu extends React.Component {
     }
 
     renderFileOptions() {
+        const files = this.state.files;
+        const fileCount = files.length;
+        if (fileCount === 0) return;
+
         const s = this.state.summary;
         const ipc = window.ipcModule;
-        const file = this.state.file;
-        const isDir = file.isDir;
-        const fileReqData = {id: s.id, path: file.nixPath};
+        const isMult = files.length > 1;
 
-        const openContent = <React.Fragment>Open <strong>{file.base}</strong></React.Fragment>;
-        const openFunc = isDir ? () => this.props.changePath(file.nixPath) : () => ipc.openFile(fileReqData);
-        const buttons = [
-            {
+        const firstFile = files[0];
+        const firstFileReqData = {id: s.id, path: firstFile.nixPath};
+
+        const buttons = new Array(4);
+
+        if (!isMult) {
+            const file = firstFile;
+            const isDir = file.isDir;
+            const openContent = <React.Fragment>Open <strong>{file.base}</strong></React.Fragment>;
+            const openFunc = isDir ? () => this.props.changePath(file.nixPath) : () => ipc.openFile(firstFileReqData);
+            buttons[0] = {
                 icon: 'envelope-open-text', name: openContent,
                 onClick: this.getHandler(openFunc, true),
-            },
-            {
-                icon: 'external-link-alt', name: 'Show in files',
-                onClick: this.getHandler(() => ipc.openInExplorer(fileReqData), true),
-            },
-            {icon: 'i-cursor', name: 'Rename', onClick: null},
-            {
-                icon: 'trash', name: 'Move to trash',
-                onClick: this.getHandler(() => ipc.removeFile(fileReqData), true),
-            },
-        ];
+            };
+            buttons[2] = {icon: 'i-cursor', name: 'Rename', onClick: null};
+        }
+
+        buttons[1] = {
+            icon: 'external-link-alt', name: 'Show in files',
+            onClick: this.getHandler(() => ipc.openInExplorer(firstFileReqData), true),
+        };
+
+        const removeFunc = () => {
+            let removeTitle;
+            let removeText;
+            if (isMult) {
+                removeTitle = `Move ${files.length} files to trash?`;
+
+                const count = 5;
+                const names = _.map(files.slice(0, count), f => Util.truncate(f.base, 40));
+                removeText = `Files are "${names.join('", "')}"`;
+                if (count < fileCount) removeText += ` and ${fileCount - count} others.`;
+                else removeText += '.';
+
+                const hasFolders = _.findIndex(files, f => f.isDir) !== -1;
+                if (hasFolders) removeText += ' Some of them are folders.';
+            } else {
+                const objName = firstFile.isDir ? 'folder' : 'file';
+                removeTitle = `Move ${objName} to trash?`;
+                removeText = `The ${objName} is "${Util.truncate(firstFile.base, 40)}".`;
+            }
+            return ModalUtil.confirm({
+                title: removeTitle,
+                text: removeText,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No, cancel',
+            })
+                .then(result => {
+                    if (!result) return null;
+                    return ipc.removeFiles({id: s.id, paths: _.map(files, f => f.nixPath)});
+                });
+        };
+        buttons[3] = {
+            icon: 'trash', name: 'Move to trash',
+            onClick: this.getHandler(removeFunc, true),
+        };
+
         return <div className="dropdown-menu" id="dropdown-menu" role="menu">
             <div className="dropdown-content">
                 {this.renderDropdownButtons(buttons)}

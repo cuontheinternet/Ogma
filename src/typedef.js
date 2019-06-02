@@ -15,11 +15,6 @@ export const IndexRoutePath = '/';
 
 export const BulmaSizes = ['small', 'medium', 'large'];
 
-export const FrontendEvents = {
-    UpdateEnvSummaries: 'update-env-summaries',
-    UpdateEnvSummary: 'update-env-summary',
-};
-
 export const EnvRoutePaths = {
     browse: '/browse',
     search: '/search',

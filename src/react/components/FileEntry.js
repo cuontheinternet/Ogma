@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 import VisibilitySensor from 'react-visibility-sensor';
 
 import Icon from './Icon';
-import WindowUtil from '../../util/WindowUtil';
+import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
 import {FileView, ColorsLight, ColorsDark, ThumbnailState, FilePropType} from '../../typedef';
 
@@ -68,7 +68,7 @@ export default class FileEntry extends React.Component {
         const file = this.state.file;
         const summary = this.props.envSummary;
         const url = `${window.serverHost}/static/env/${summary.slug}/thumbs/${file.hash}.jpg`;
-        return WindowUtil.loadImage(url)
+        return Util.loadImage(url)
             .then(() => this.setState({thumbBgImage: `url('${url}')`}));
     };
 

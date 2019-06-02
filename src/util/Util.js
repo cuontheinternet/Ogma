@@ -6,7 +6,7 @@
 
 const Promise = require('bluebird');
 
-export default class WindowUtil {
+export default class Util {
 
     static deepClone(object) {
         return JSON.parse(JSON.stringify(object));
@@ -21,6 +21,17 @@ export default class WindowUtil {
             });
             img.src = url;
         });
+    }
+
+    /**
+     * @param {string} string
+     * @param {number} length
+     * @param {string} ellipsis
+     * @returns {string}
+     */
+    static truncate(string, length, ellipsis = '...') {
+        if (string.length < length + 5) return string;
+        else return `${string.substring(0, length)}${ellipsis}`;
     }
 
     static objectLength(object, keyCheck = null, valueCheck = null) {

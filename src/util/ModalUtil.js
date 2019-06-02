@@ -32,7 +32,8 @@ class ModalUtil {
             cancelButtonText: 'Cancel',
             reverseButtons: true,
             ...data,
-        });
+        })
+            .then(result => result.value);
     }
 
     /**

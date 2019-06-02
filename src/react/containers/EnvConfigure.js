@@ -84,7 +84,7 @@ class EnvConfigure extends React.Component {
             cancelButtonText: 'No, cancel',
         })
             .then(result => {
-                if (!result.value) return;
+                if (!result) return;
                 return window.ipcModule.closeEnvironment({id: this.state.summary.id})
                     .then(() => this.props.history.push(IndexRoutePath));
             })

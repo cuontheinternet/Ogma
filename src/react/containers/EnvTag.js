@@ -12,6 +12,7 @@ import equal from 'fast-deep-equal';
 import {ContextMenuWrapper, prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
+import {BackendEvents} from '../../typedef';
 import ModalUtil from '../../util/ModalUtil';
 import Checkbox from '../components/Checkbox';
 import FileEntry from '../components/FileEntry';
@@ -73,6 +74,11 @@ export default class EnvTag extends React.Component {
 
     componentDidMount() {
         this.changePath(this.state.path);
+        window.dataManager.subscribe(BackendEvents.EnvRemoveFiles, this.handleFileDeletion);
+    }
+
+    componentWillUnmount() {
+        window.dataManager.unsubscribe(BackendEvents.EnvRemoveFiles, this.handleFileDeletion);
     }
 
     componentDidUpdate(prevProps) {
@@ -113,6 +119,21 @@ export default class EnvTag extends React.Component {
         return breadcrumbs;
     }
 
+    handleFileDeletion = data => {
+        const s = this.state.summary;
+        if (data.id !== s.id) return;
+
+        const files = this.state.files;
+        const deletedHashes = data.hashes;
+        const deletedFiles = _.pullAllWith(files, deletedHashes, (f, h) => f.hash === h);
+        if (deletedFiles.length === 0) return;
+
+        this.setState({
+            files,
+            selection: {},
+        });
+    };
+
     handleCheckboxChange = (id, value) => {
         this.setState({
             optionState: {
@@ -125,16 +146,19 @@ export default class EnvTag extends React.Component {
     handleFileClick = (file, event) => {
         const hash = file.hash;
 
-        if (event.ctrlKey || event.shiftKey) {
-            this.setState(prevState => ({
-                selection: {
-                    ...prevState.selection,
-                    [hash]: !prevState.selection[hash],
-                },
-            }));
-        } else {
-            this.setState(prevState => ({selection: {[hash]: !prevState.selection[hash]}}));
-        }
+        const mod = event.ctrlKey || event.shiftKey;
+        this.setState(prevState => {
+            const oldSel = prevState.selection;
+            const oldSelSize = _.size(oldSel);
+            const selection = mod ? oldSel : {};
+            if (oldSel[hash] && oldSelSize <= 1) {
+                console.log(oldSelSize);
+                delete selection[hash];
+            } else {
+                selection[hash] = file;
+            }
+            return {selection};
+        });
     };
 
     handleFileDoubleClick = file => {
@@ -151,7 +175,18 @@ export default class EnvTag extends React.Component {
     };
 
     handleContextMenuShow = data => {
-        this.setState({contextFile: data});
+        this.setState(prevState => {
+            const newState = {contextFile: data};
+
+            const oldSel = prevState.selection;
+            const oldSelSize = _.size(oldSel);
+            if (oldSelSize <= 1) {
+                newState.selection = {};
+                newState.selection[data.hash] = data;
+            }
+
+            return newState;
+        });
     };
 
     renderOptionCheckboxes() {

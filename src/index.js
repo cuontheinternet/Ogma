@@ -8,7 +8,6 @@
 import React from 'react';
 import Promise from 'bluebird';
 import ReactDOM from 'react-dom';
-import {EventEmitter} from 'events';
 import {EventEmitter2} from 'eventemitter2';
 import 'react-notifications/lib/notifications.css';
 import 'bulma-extensions/dist/css/bulma-extensions.min.css';
@@ -61,11 +60,10 @@ socketInitPromise
     .then(socket => new Promise((resolve, reject) => {
 
         // Setup the event emitter
-        window.backendEmitter = new EventEmitter2({wildcard: true, newListener: false, maxListeners: 20});
-        window.frontendEmitter = new EventEmitter();
+        window.proxyEmitter = new EventEmitter2({wildcard: true, newListener: false, maxListeners: 20});
 
         // Setup logic for forwarded event
-        const eventHandler = eventData => window.backendEmitter.emit(eventData.name, ...eventData.args);
+        const eventHandler = eventData => window.proxyEmitter.emit(eventData.name, ...eventData.args);
         const errorHandler = errorMessage => new UserFriendlyError({
             title: 'Server-side error',
             message: `Server has encountered an error: "${errorMessage}"`,

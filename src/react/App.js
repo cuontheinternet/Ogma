@@ -8,7 +8,7 @@ import React from 'react';
 import LoadingOverlay from 'react-loading-overlay';
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 
-import {FrontendEvents} from '../typedef';
+import {BackendEvents} from '../typedef';
 import Sidebar from './components/Sidebar';
 import Dashboard from './containers/Dashboard';
 import Environment from './containers/Environment';
@@ -40,11 +40,11 @@ export default class App extends React.Component {
             this.setState({showLoader: false});
         };
 
-        window.dataManager.subscribe(FrontendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
+        window.dataManager.subscribe(BackendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
     }
 
     componentWillUnmount() {
-        window.dataManager.unsubscribe(FrontendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
+        window.dataManager.unsubscribe(BackendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
     }
 
     render() {

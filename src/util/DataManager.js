@@ -8,7 +8,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 
 import ErrorHandler from './ErrorHandler';
-import {BackendEvents, FrontendEvents} from '../typedef';
+import {BackendEvents} from '../typedef';
 
 class DataManager {
 
@@ -23,7 +23,7 @@ class DataManager {
 
         this.envSummaries = [];
         this.envRoutePathMap = {};
-        this.emitter = window.frontendEmitter;
+        this.emitter = window.proxyEmitter;
     }
 
     init() {
@@ -37,7 +37,7 @@ class DataManager {
         const listenerMap = {};
         listenerMap[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
         listenerMap[BackendEvents.UpdateEnvSummary] = this._setEnvSummary;
-        window.backendEmitter.on('*', function (...args) {
+        this.emitter.on('*', function (...args) {
             const eventName = this.event;
             const listener = listenerMap[eventName];
             if (!listener) return;
@@ -60,16 +60,12 @@ class DataManager {
 
     _setEnvSummaries = summary => {
         this.envSummaries = summary;
-        this.emitter.emit(FrontendEvents.UpdateEnvSummaries, this.envSummaries);
     };
 
     _setEnvSummary = summary => {
         const index = _.findIndex(this.envSummaries, s => s.id === summary.id);
         if (index === -1) this.envSummaries.push(summary);
         else this.envSummaries[index] = summary;
-
-        this.emitter.emit(FrontendEvents.UpdateEnvSummary, summary);
-        this.emitter.emit(FrontendEvents.UpdateEnvSummaries, this.envSummaries);
     };
 
     getEnvSummaries() {
