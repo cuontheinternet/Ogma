@@ -6,6 +6,7 @@
 
 import _ from 'lodash';
 import path from 'path';
+import upath from 'upath';
 import React from 'react';
 import PropTypes from 'prop-types';
 import equal from 'fast-deep-equal';
@@ -43,7 +44,7 @@ export default class EnvTag extends React.Component {
         const initPath = decodeURI(uriHash) || '/';
         this.state = {
             summary,
-            rootDirName: path.basename(summary.path),
+            rootDirName: upath.basename(summary.path),
 
             files: [],
             selection: {},
@@ -304,7 +305,8 @@ export default class EnvTag extends React.Component {
             </ContextMenuWrapper>
 
             {/*<br/>*/}
-            {/*<TagContextMenu file={state.contextFile} selection={state.selection}/>*/}
+            {/*<TagContextMenu id={TagContextMenuId} file={state.contextFile} changePath={this.changePath}*/}
+            {/*                envSummary={state.summary} selection={state.selection}/>*/}
 
         </div>;
     }

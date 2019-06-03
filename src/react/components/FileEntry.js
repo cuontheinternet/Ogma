@@ -12,6 +12,7 @@ import Icon from './Icon';
 import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
 import {FileView, ColorsLight, ColorsDark, ThumbnailState, FilePropType} from '../../typedef';
+import TagGroup from './TagGroup';
 
 export default class FileEntry extends React.Component {
 
@@ -146,16 +147,20 @@ export default class FileEntry extends React.Component {
         const thumbBgImage = this.state.thumbBgImage;
         const thumbStyle = {backgroundImage: thumbBgImage};
 
-        const className = `file-entry ${this.props.view} ${props.selected ? 'selected' : ''}`;
+        const className = `file-entry ${props.view} ${props.selected ? 'selected' : ''}`;
         return (
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
                               onChange={this.handleVisibilityChange}>
-                <div {...this.props.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
+                <div {...props.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
 
                     {<div className={`file-entry-thumbnail ${thumbBgImage ? '' : 'hidden'}`} style={thumbStyle}/>}
 
                     {props.selected && <div className={`file-entry-selected`}/>}
+
+                    <div className="file-entry-tags">
+                        <TagGroup envSummary={props.envSummary} tagIds={file.tagIds}/>
+                    </div>
 
                     <div className="file-entry-icon">
                         <div className="file-entry-icon-content">{this.renderIcon(true)}</div>
@@ -166,6 +171,7 @@ export default class FileEntry extends React.Component {
                         {name}
                         {props.showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
                     </div>
+
                 </div>
             </VisibilitySensor>
         );

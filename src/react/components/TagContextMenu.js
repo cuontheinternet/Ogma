@@ -6,15 +6,17 @@
 
 import _ from 'lodash';
 import React from 'react';
+import Denque from 'denque';
 import Promise from 'bluebird';
 import PropTypes from 'prop-types';
+import ReactTags from 'react-tag-autocomplete';
 import {hideAllContextMenus} from 'react-context-menu-wrapper';
 
 import Tabs from './Tabs';
 import Icon from './Icon';
-import {FilePropType} from '../../typedef';
-import ModalUtil from '../../util/ModalUtil';
 import Util from '../../util/Util';
+import {EnvSummaryPropType, FilePropType} from '../../typedef';
+import ModalUtil from '../../util/ModalUtil';
 
 const ContextTabs = {
     Tag: 0,
@@ -33,7 +35,7 @@ export default class TagContextMenu extends React.Component {
         file: FilePropType,
         changePath: PropTypes.func.isRequired,
         selection: PropTypes.object.isRequired,
-        envSummary: PropTypes.object.isRequired,
+        envSummary: EnvSummaryPropType.isRequired,
     };
 
     constructor(props) {
@@ -45,7 +47,23 @@ export default class TagContextMenu extends React.Component {
             summary: props.envSummary,
             activeTab: ContextTabs.Tag,
             tabOptions: this.tabOptionsTemplate,
+
+            tags: [
+                // {id: 1, name: 'Apples'},
+                // {id: 2, name: 'Pears'},
+            ],
+            suggestions: [
+                {id: 3, name: 'Bananas'},
+                {id: 4, name: 'Mangos'},
+                {id: 5, name: 'Lemons'},
+                {id: 6, name: 'Apricots'},
+            ],
         };
+
+        this.tagAddQueue = new Denque();
+        this.tagDeleteQueue = new Denque();
+        this.debouncedCommitTagAddition = _.debounce(this.commitTagAddition, 1200);
+        this.debouncedCommitTagDeletion = _.debounce(this.commitTagDeletion, 1200);
     }
 
     static getDerivedStateFromProps(props, state) {
@@ -90,6 +108,42 @@ export default class TagContextMenu extends React.Component {
         this.setState({activeTab: contextTab});
     };
 
+    commitTagAddition = () => {
+        const queue = this.tagAddQueue;
+        this.tagAddQueue = new Denque();
+
+        const id = this.state.summary.id;
+
+        const tagNames = new Array(queue.length);
+        for (let i = 0; i < queue.length; ++i) {
+            tagNames[i] = queue.pop().name;
+        }
+
+        const paths = _.map(this.state.files, f => f.nixPath);
+        window.ipcModule.addTagsToFiles({id, tagNames, paths})
+            .catch(window.handleError);
+    };
+
+    commitTagDeletion = () => {
+    };
+
+    handleTagAddition = tag => {
+        const tags = [].concat(this.state.tags, tag);
+        this.setState({tags});
+
+        this.tagAddQueue.push(tag);
+        this.debouncedCommitTagAddition();
+    };
+
+    handleTagDeletion = tagIndex => {
+        const tags = this.state.tags.slice(0);
+        const tag = tags.splice(tagIndex, 1)[0];
+        this.setState({tags});
+
+        this.tagDeleteQueue.push(tag);
+        this.debouncedCommitTagDeletion();
+    };
+
     getHandler(promiseFunc, hideMenu = false) {
         return () => {
             if (hideMenu) hideAllContextMenus();
@@ -115,34 +169,35 @@ export default class TagContextMenu extends React.Component {
     }
 
     renderTagOptions() {
-        return <div className="dropdown-menu" id="dropdown-menu" role="menu">
-            <div className="dropdown-content">
-                <div className="dropdown-item">
-                    <p>Tagging functionality will be here very <em>very</em> <strong>soon(tm)</strong>.</p>
-                </div>
-            </div>
-        </div>;
-    }
+        const files = this.state.files;
+        const fileCount = files.length;
+        if (fileCount === 0) return null;
 
-    renderSelectionOptions() {
-        const buttons = [
-            {icon: 'question', name: 'Do something with selection...', onClick: null},
-        ];
-        return <div className="dropdown-menu" id="dropdown-menu" role="menu">
-            <div className="dropdown-content">
-                {this.renderDropdownButtons(buttons)}
-            </div>
-        </div>;
+        const hasFolders = _.findIndex(files, f => f.isDir) !== -1;
+
+        if (hasFolders) {
+            return <div className="dropdown-item">
+                <p><Icon name="exclamation-triangle"/> Your selection contains folders. Folder tagging is not supported
+                    yet.</p>
+            </div>;
+        }
+
+        return <React.Fragment>
+            <ReactTags tags={this.state.tags} suggestions={this.state.suggestions}
+                       handleDelete={this.handleTagDeletion} handleAddition={this.handleTagAddition} minQueryLength={1}
+                       allowNew={true} allowBackspace={false} placeholder="Add tag"/>
+        </React.Fragment>;
     }
 
     renderFileOptions() {
         const files = this.state.files;
         const fileCount = files.length;
-        if (fileCount === 0) return;
+        if (fileCount === 0) return null;
 
         const s = this.state.summary;
         const ipc = window.ipcModule;
         const isMult = files.length > 1;
+        const hasFolders = _.findIndex(files, f => f.isDir) !== -1;
 
         const firstFile = files[0];
         const firstFileReqData = {id: s.id, path: firstFile.nixPath};
@@ -178,7 +233,6 @@ export default class TagContextMenu extends React.Component {
                 if (count < fileCount) removeText += ` and ${fileCount - count} others.`;
                 else removeText += '.';
 
-                const hasFolders = _.findIndex(files, f => f.isDir) !== -1;
                 if (hasFolders) removeText += ' Some of them are folders.';
             } else {
                 const objName = firstFile.isDir ? 'folder' : 'file';
@@ -201,30 +255,15 @@ export default class TagContextMenu extends React.Component {
             onClick: this.getHandler(removeFunc, true),
         };
 
-        return <div className="dropdown-menu" id="dropdown-menu" role="menu">
-            <div className="dropdown-content">
-                {this.renderDropdownButtons(buttons)}
-            </div>
-        </div>;
+        return this.renderDropdownButtons(buttons);
     }
 
     render() {
         const state = this.state;
 
         let tabContent;
-        switch (state.activeTab) {
-            case ContextTabs.Tag:
-                tabContent = this.renderTagOptions();
-                break;
-            case ContextTabs.Selection:
-                tabContent = this.renderSelectionOptions();
-                break;
-            case ContextTabs.File:
-                tabContent = this.renderFileOptions();
-                break;
-            default:
-                tabContent = <div>Invalid context tab option!</div>;
-        }
+        if (state.activeTab === ContextTabs.Tag) tabContent = this.renderTagOptions();
+        else if (state.activeTab === ContextTabs.File) tabContent = this.renderFileOptions();
 
         return (
             <div className="context-menu dropdown is-active">
@@ -232,7 +271,18 @@ export default class TagContextMenu extends React.Component {
                 <Tabs options={state.tabOptions} size="small" activeOption={state.activeTab}
                       fullwidth={true} onOptionChange={this.handleTabChange}/>
 
-                {tabContent}
+
+                <div className="dropdown-menu" id="dropdown-menu" role="menu">
+                    <div className="dropdown-content">
+                        {tabContent}
+
+                        {!tabContent && tabContent === null &&
+                        <div className="dropdown-item"><Icon name="eye-slash"/> Tab content hidden.</div>}
+
+                        {!tabContent && tabContent !== null &&
+                        <div className="dropdown-item"><Icon name="radiation-alt"/> Invalid context tab option!</div>}
+                    </div>
+                </div>
 
             </div>
         );

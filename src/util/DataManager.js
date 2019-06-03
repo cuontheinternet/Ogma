@@ -6,9 +6,10 @@
 
 import _ from 'lodash';
 import Promise from 'bluebird';
+import ExactTrie from 'exact-trie';
 
-import ErrorHandler from './ErrorHandler';
 import {BackendEvents} from '../typedef';
+import ErrorHandler from './ErrorHandler';
 
 class DataManager {
 
@@ -24,6 +25,8 @@ class DataManager {
         this.envSummaries = [];
         this.envRoutePathMap = {};
         this.emitter = window.proxyEmitter;
+
+        this.allTagMaps = {};
     }
 
     init() {
@@ -50,16 +53,18 @@ class DataManager {
 
     _syncBaseState() {
         return Promise.resolve()
-            .then(() => this._fetchEnvSummaries());
+            .then(() => this._fetchEnvSummaries())
+            .then(() => this._fetchAllTags());
     }
 
     _fetchEnvSummaries() {
-        return window.ipcModule.getEnvSummaries()
+        return window.ipcModule.getSummaries()
             .then(this._setEnvSummaries);
     }
 
     _setEnvSummaries = summary => {
         this.envSummaries = summary;
+        // TODO: Delete tag maps and such if an environment is deleted.
     };
 
     _setEnvSummary = summary => {
@@ -71,6 +76,26 @@ class DataManager {
     getEnvSummaries() {
         return this.envSummaries;
     }
+
+    _fetchAllTags() {
+        const envIds = _.map(this.envSummaries, s => s.id);
+        const promises = _.map(envIds, id => window.ipcModule.getAllTags({id}));
+        return Promise.all(promises)
+            .then(allAllTags => _.zipWith(envIds, allAllTags, (envId, allTags) => this._setAllTags(envId, allTags)));
+    }
+
+    _setAllTags = (envId, allTags) => {
+        console.log(allTags);
+        const tagMap = {};
+        for (const tag of allTags) {
+            tagMap[tag.id] = tag;
+        }
+        this.allTagMaps[envId] = tagMap;
+    };
+
+    getTagDetails = (envId, tagId) => {
+        return this.allTagMaps[envId][tagId];
+    };
 
     /**
      * @param {object} data
@@ -89,14 +114,6 @@ class DataManager {
         return this.envRoutePathMap[data.id];
     }
 
-    subscribe(event, listener) {
-        this.emitter.addListener(event, listener);
-    }
-
-    unsubscribe(event, listener) {
-        this.emitter.removeListener(event, listener);
-    }
-
     isLocalClient() {
         return this.localClient;
     }
@@ -104,6 +121,14 @@ class DataManager {
     // noinspection JSMethodCanBeStatic
     isElectron() {
         return navigator.userAgent.includes('Electron/');
+    }
+
+    subscribe(event, listener) {
+        this.emitter.addListener(event, listener);
+    }
+
+    unsubscribe(event, listener) {
+        this.emitter.removeListener(event, listener);
     }
 
 }

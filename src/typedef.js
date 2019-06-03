@@ -23,6 +23,15 @@ export const EnvRoutePaths = {
 };
 export const DefaultEnvRoutePath = EnvRoutePaths.browse;
 
+export const EnvSummaryPropType = PropTypes.shape({
+    id: PropTypes.string,
+    path: PropTypes.string,
+    slug: PropTypes.string,
+    name: PropTypes.string,
+    icon: PropTypes.string,
+    color: PropTypes.string,
+});
+
 export const FileView = {
     List: 'list',
     SmallThumb: 'small-thumb',
@@ -38,6 +47,7 @@ export const FilePropType = PropTypes.shape({
     name: PropTypes.string,
     isDir: PropTypes.boolean,
     thumb: PropTypes.number,
+    tagIds: PropTypes.arrayOf(PropTypes.string),
 });
 
 export * from '../../shared/typedef';

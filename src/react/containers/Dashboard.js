@@ -14,6 +14,8 @@ class Dashboard extends React.Component {
         window.ipcModule.createEnvironment()
             .then(summary => {
                 window.hideGlobalLoader();
+                if (!summary) return null;
+                
                 const url = `/env/${summary.slug}`;
                 this.props.history.push(url);
             })

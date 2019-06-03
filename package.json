@@ -6,6 +6,7 @@
     "bluebird": "^3.5.4",
     "bulma-extensions": "^6.2.7",
     "classnames": "^2.2.6",
+    "denque": "^1.4.1",
     "eventemitter2": "^5.0.1",
     "exact-trie": "^1.0.1",
     "fast-deep-equal": "^2.0.1",
@@ -21,6 +22,7 @@
     "react-notifications": "^1.4.3",
     "react-router-dom": "^5.0.0",
     "react-scripts": "3.0.1",
+    "react-tag-autocomplete": "^5.11.1",
     "react-visibility-sensor": "^5.0.2",
     "sweetalert2": "^8.11.6",
     "upath": "^1.1.2"

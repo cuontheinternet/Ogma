@@ -1,0 +1,26 @@
+
+.tag-group {
+    padding: 1px;
+
+    &-tag {
+        $color1: #666;
+        $color2: #555;
+        background: repeating-linear-gradient(45deg, $color1, $color1 10px, $color2 10px, $color2 20px);
+
+        box-shadow: inset rgba(0, 0, 0, 0.2) 0 0 0 1px;
+        background-color: #999;
+        display: inline-block;
+        border-radius: 3px;
+        font-weight: bold;
+        padding: 1px 4px;
+        margin: 1px;
+        color: #fff;
+
+        &.bad {
+            $color1: #780a0a;
+            $color2: #95170c;
+            background: repeating-linear-gradient(45deg, $color1, $color1 10px, $color2 10px, $color2 20px);
+        }
+    }
+
+}
