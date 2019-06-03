@@ -15,8 +15,8 @@ import {hideAllContextMenus} from 'react-context-menu-wrapper';
 import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
-import {EnvSummaryPropType, FilePropType} from '../../typedef';
 import ModalUtil from '../../util/ModalUtil';
+import {EnvSummaryPropType, FilePropType, FrontendEvents} from '../../typedef';
 
 const ContextTabs = {
     Tag: 0,
@@ -52,18 +52,21 @@ export default class TagContextMenu extends React.Component {
                 // {id: 1, name: 'Apples'},
                 // {id: 2, name: 'Pears'},
             ],
-            suggestions: [
-                {id: 3, name: 'Bananas'},
-                {id: 4, name: 'Mangos'},
-                {id: 5, name: 'Lemons'},
-                {id: 6, name: 'Apricots'},
-            ],
+            suggestions: window.dataManager.getAllTags({id: props.envSummary.id}),
         };
 
         this.tagAddQueue = new Denque();
         this.tagDeleteQueue = new Denque();
         this.debouncedCommitTagAddition = _.debounce(this.commitTagAddition, 1200);
         this.debouncedCommitTagDeletion = _.debounce(this.commitTagDeletion, 1200);
+    }
+
+    componentDidMount() {
+        window.dataManager.subscribe(FrontendEvents.NewAllTags, this.handleNewAllTags);
+    }
+
+    componentWillUnmount() {
+        window.dataManager.unsubscribe(FrontendEvents.NewAllTags, this.handleNewAllTags);
     }
 
     static getDerivedStateFromProps(props, state) {
@@ -103,6 +106,11 @@ export default class TagContextMenu extends React.Component {
             tabOptions: [tagTab, fileTab],
         };
     }
+
+    handleNewAllTags = data => {
+        if (data.id !== this.state.summary.id) return;
+        this.setState({suggestions: data.allTags});
+    };
 
     handleTabChange = contextTab => {
         this.setState({activeTab: contextTab});

@@ -15,7 +15,7 @@ import EnvIcon from '../components/EnvIcon';
 import ModalUtil from '../../util/ModalUtil';
 import ErrorHandler from '../../util/ErrorHandler';
 import ExternalLink from '../components/ExternalLink';
-import {EnvProperty, IndexRoutePath, Colors} from '../../typedef';
+import {EnvProperty, IndexRoutePath, Colors, KeyCode} from '../../typedef';
 
 class EnvConfigure extends React.Component {
 
@@ -57,7 +57,7 @@ class EnvConfigure extends React.Component {
     }
 
     changeValueClick(prop, keyCode = null) {
-        if (keyCode && keyCode !== 13) return;
+        if (keyCode && keyCode !== KeyCode.Enter) return;
 
         const id = this.state.summary.id;
         const updateData = {id};

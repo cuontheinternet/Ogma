@@ -10,14 +10,15 @@ import upath from 'upath';
 import React from 'react';
 import PropTypes from 'prop-types';
 import equal from 'fast-deep-equal';
-import {ContextMenuWrapper, prepareContextMenuHandlers} from 'react-context-menu-wrapper';
+import {ContextMenuWrapper, hideAllContextMenus, prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
+import Util from '../../util/Util';
 import Icon from '../components/Icon';
-import {BackendEvents} from '../../typedef';
 import ModalUtil from '../../util/ModalUtil';
 import Checkbox from '../components/Checkbox';
 import FileEntry from '../components/FileEntry';
 import Breadcrumbs from '../components/Breadcrumbs';
+import {BackendEvents, KeyCode} from '../../typedef';
 import TagContextMenu from '../components/TagContextMenu';
 
 const Options = {
@@ -47,6 +48,7 @@ export default class EnvTag extends React.Component {
             rootDirName: upath.basename(summary.path),
 
             files: [],
+            fileMap: {},
             selection: {},
             path: initPath,
             contextFile: null,
@@ -75,10 +77,14 @@ export default class EnvTag extends React.Component {
 
     componentDidMount() {
         this.changePath(this.state.path);
+        document.addEventListener('keydown', this.handleKeyPress, false);
+        window.dataManager.subscribe(BackendEvents.EnvTagFiles, this.handleFileTagging);
         window.dataManager.subscribe(BackendEvents.EnvRemoveFiles, this.handleFileDeletion);
     }
 
     componentWillUnmount() {
+        document.removeEventListener('keydown', this.handleKeyPress, false);
+        window.dataManager.unsubscribe(BackendEvents.EnvTagFiles, this.handleFileTagging);
         window.dataManager.unsubscribe(BackendEvents.EnvRemoveFiles, this.handleFileDeletion);
     }
 
@@ -95,6 +101,7 @@ export default class EnvTag extends React.Component {
             .then(files => {
                 this.setState({
                     files,
+                    fileMap: Util.arrayToObject(files, f => f.hash),
                     selection: {},
                     path: normPath,
                     levelUpDisabled: normPath === '/',
@@ -120,6 +127,29 @@ export default class EnvTag extends React.Component {
         return breadcrumbs;
     }
 
+    handleKeyPress = event => {
+        if (event.keyCode === KeyCode.Esc) {
+            hideAllContextMenus();
+        }
+    };
+
+    handleFileTagging = data => {
+        const s = this.state.summary;
+        if (data.id !== s.id) return;
+
+        const files = this.state.files;
+        const fileMap = this.state.fileMap;
+        const taggedHashes = data.hashes;
+        for (let i = 0; i < taggedHashes.length; ++i) {
+            const file = fileMap[taggedHashes[i]];
+            if (!file) continue;
+            file.entityId = data.entityIds[i];
+            file.tagIds = _.union(file.tagIds, data.tagIds);
+        }
+
+        this.setState({files, fileMap});
+    };
+
     handleFileDeletion = data => {
         const s = this.state.summary;
         if (data.id !== s.id) return;
@@ -129,8 +159,12 @@ export default class EnvTag extends React.Component {
         const deletedFiles = _.pullAllWith(files, deletedHashes, (f, h) => f.hash === h);
         if (deletedFiles.length === 0) return;
 
+        const fileMap = this.state.fileMap;
+        for (const delFile of deletedFiles) delete fileMap[delFile.hash];
+
         this.setState({
             files,
+            fileMap,
             selection: {},
         });
     };

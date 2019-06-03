@@ -6,9 +6,8 @@
 
 import _ from 'lodash';
 import Promise from 'bluebird';
-import ExactTrie from 'exact-trie';
 
-import {BackendEvents} from '../typedef';
+import {BackendEvents, FrontendEvents} from '../typedef';
 import ErrorHandler from './ErrorHandler';
 
 class DataManager {
@@ -27,6 +26,7 @@ class DataManager {
         this.emitter = window.proxyEmitter;
 
         this.allTagMaps = {};
+        this.allTagArrays = {};
     }
 
     init() {
@@ -40,6 +40,7 @@ class DataManager {
         const listenerMap = {};
         listenerMap[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
         listenerMap[BackendEvents.UpdateEnvSummary] = this._setEnvSummary;
+        listenerMap[BackendEvents.EnvAddTags] = this._addNewTags;
         this.emitter.on('*', function (...args) {
             const eventName = this.event;
             const listener = listenerMap[eventName];
@@ -85,13 +86,31 @@ class DataManager {
     }
 
     _setAllTags = (envId, allTags) => {
-        console.log(allTags);
         const tagMap = {};
         for (const tag of allTags) {
             tagMap[tag.id] = tag;
         }
         this.allTagMaps[envId] = tagMap;
+        this.allTagArrays[envId] = allTags;
     };
+
+    _addNewTags = data => {
+        const tagMap = this.allTagMaps[data.id];
+        const tagArray = this.allTagArrays[data.id];
+        for (const tag of data.tags) {
+            if (tagMap[tag.id]) tagArray.push(tag);
+            tagMap[tag.id] = tag;
+        }
+        this.emitter.emit(FrontendEvents.NewAllTags, {id: data.id, allTags: tagArray});
+    };
+
+    /**
+     * @param {object} data
+     * @param {string} data.id
+     */
+    getAllTags(data) {
+        return this.allTagArrays[data.id];
+    }
 
     getTagDetails = (envId, tagId) => {
         return this.allTagMaps[envId][tagId];

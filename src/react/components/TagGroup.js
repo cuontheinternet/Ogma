@@ -6,6 +6,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import {EnvSummaryPropType} from '../../typedef';
 
 export default class TagGroup extends React.Component {
@@ -15,13 +16,13 @@ export default class TagGroup extends React.Component {
         tagIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
 
-    constructor(props) {
-        super(props);
-    }
-
     renderTags() {
         const summary = this.props.envSummary;
         const tagIds = this.props.tagIds;
+        if (tagIds.length === 0) return;
+
+        console.log(tagIds);
+
         const comps = new Array(tagIds.length);
         for (let i = 0; i < tagIds.length; ++i) {
             const tagId = tagIds[i];

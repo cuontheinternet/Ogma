@@ -11,6 +11,10 @@ import PropTypes from 'prop-types';
  * @property {boolean} localClient
  */
 
+export const FrontendEvents = {
+    NewAllTags: 'fe-new-all-tags',
+};
+
 export const IndexRoutePath = '/';
 
 export const BulmaSizes = ['small', 'medium', 'large'];
@@ -47,8 +51,14 @@ export const FilePropType = PropTypes.shape({
     name: PropTypes.string,
     isDir: PropTypes.boolean,
     thumb: PropTypes.number,
+    entityId: PropTypes.string,
     tagIds: PropTypes.arrayOf(PropTypes.string),
 });
+
+export const KeyCode = {
+    Enter: 13,
+    Esc: 27,
+};
 
 export * from '../../shared/typedef';
 

@@ -34,6 +34,18 @@ export default class Util {
         else return `${string.substring(0, length)}${ellipsis}`;
     }
 
+    /**
+     * @param {any[]} array
+     * @param {function(any): string} keyFunc
+     */
+    static arrayToObject(array, keyFunc) {
+        const obj = {};
+        for (const elem of array) {
+            obj[keyFunc(elem)] = elem;
+        }
+        return obj;
+    }
+
     static objectLength(object, keyCheck = null, valueCheck = null) {
         const keys = Object.keys(object);
         let length = 0;
