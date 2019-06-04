@@ -297,6 +297,7 @@ export default connect((state, ownProps) => {
     let files = [];
     if (selectedHashes.length === 1) files = [fileMap[ownProps.fileHash]];
     else files = _.map(selectedHashes, h => fileMap[h]);
+    files = _.filter(files, f => !!f);
 
     const tagMap = state.envMap[ownProps.summary.id].tagMap;
     const tags = Object.values(tagMap);

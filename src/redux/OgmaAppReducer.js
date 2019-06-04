@@ -104,7 +104,8 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
         const newEnvMap = {};
         for (let i = 0; i < newSummaries.length; ++i) {
             const summary = newSummaries[i];
-            const env = state.envMap[summary.id] || {
+            const oldEnv = state.envMap[summary.id];
+            const env = oldEnv ? {...oldEnv} : {
                 id: summary.id,
                 subRoute: DefaultEnvRoutePath,
                 tagIds: [],

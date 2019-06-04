@@ -39,6 +39,7 @@ class Environment extends React.Component {
         const pathName = props.location.pathname;
         const parentPath = props.match.url;
         if (pathName === parentPath) {
+            console.log(props.subRoute);
             props.history.push(`${parentPath}${props.subRoute}`);
         } else {
             const hash = props.location.hash;
