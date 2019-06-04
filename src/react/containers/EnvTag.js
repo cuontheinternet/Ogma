@@ -50,6 +50,7 @@ class EnvTag extends React.Component {
         this.summary = context;
 
         this.state = {
+            files: [],
             selection: {},
             contextFileHash: null,
             breadcrumbs: this.pathToBreadcrumbs(props.path),
@@ -77,18 +78,45 @@ class EnvTag extends React.Component {
 
     static getDerivedStateFromProps(props, state) {
         let stateUpdate;
+        let updateFiles = false;
         if (props.path !== state.path) {
             stateUpdate = {
                 path: props.path,
+                fileMap: props.fileMap,
+                fileHashes: props.fileHashes,
                 selection: {},
+                lastSelectionIndex: -1,
                 levelUpDisabled: props.path === '/',
             };
+            updateFiles = true;
         } else {
             stateUpdate = {};
+            if (props.fileHashes !== state.fileHashes) {
+                stateUpdate.fileHashes = props.fileHashes;
+                stateUpdate.lastSelectionIndex = _.clamp(state.lastSelectionIndex, -1, props.fileHashes.length - 1);
+                updateFiles = true;
+            }
+            if (props.fileMap !== state.fileMap) {
+                stateUpdate.fileMap = props.fileMap;
+                updateFiles = true;
+            }
         }
+        if (updateFiles) {
+            let files = Object.values(props.fileMap);
+            if (!state.optionState[Options.ShowHidden]) {
+                files = _.filter(files, f => !f.name.startsWith('.'));
+            }
+            const compare = (fileA, fileB) => {
+                if (state.optionState[Options.FoldersFirst]) {
+                    if (fileA.isDir && !fileB.isDir) return -1;
+                    if (!fileA.isDir && fileB.isDir) return 1;
+                }
 
-        if (props.fileHashes !== state.fileHashes) stateUpdate.fileHashes = props.fileHashes;
-        if (props.fileMap !== state.fileMap) stateUpdate.fileMap = props.fileMap;
+                return fileA.name.localeCompare(fileB.name);
+            };
+            files.sort(compare);
+            stateUpdate.files = files;
+        }
         return stateUpdate;
     }
 
@@ -139,8 +167,21 @@ class EnvTag extends React.Component {
     }
 
     handleKeyPress = event => {
-        if (event.keyCode === KeyCode.Esc) {
-            hideAllContextMenus();
+        const files = this.state.files;
+        switch (event.keyCode) {
+            case KeyCode.Esc:
+                hideAllContextMenus();
+                break;
+            case KeyCode.A:
+                if (event.ctrlKey) {
+                    event.preventDefault();
+                    const selection = {};
+                    for (const file of files) selection[file.hash] = true;
+                    this.setState({selection});
+                }
+                break;
+            default:
+            // Do nothing
         }
     };
 
@@ -153,20 +194,41 @@ class EnvTag extends React.Component {
         });
     };
 
-    handleFileClick = (file, event) => {
+    handleFileClick = (file, event, displayIndex) => {
         const hash = file.hash;
+        const files = this.state.files;
 
-        const mod = event.ctrlKey || event.shiftKey;
+        const ctrlKey = event.ctrlKey;
+        const shiftKey = event.shiftKey;
         this.setState(prevState => {
             const oldSel = prevState.selection;
             const oldSelSize = _.size(oldSel);
-            const selection = mod ? oldSel : {};
-            if (oldSel[hash] && oldSelSize <= 1) {
-                delete selection[hash];
+
+            let selection = {};
+            let newSelectionIndex = displayIndex;
+            const rangeSelection = prevState.lastSelectionIndex !== -1 ? shiftKey : false;
+            if (rangeSelection) {
+                newSelectionIndex = prevState.lastSelectionIndex;
+                let a = prevState.lastSelectionIndex;
+                let b = displayIndex;
+                if (a > b) {
+                    const temp = b;
+                    b = a;
+                    a = temp;
+                }
+                for (let i = a; i < b + 1; ++i) {
+                    selection[files[i].hash] = true;
+                }
             } else {
-                selection[hash] = file;
+                if (ctrlKey) selection = oldSel;
+                if (oldSel[hash] && oldSelSize <= 1) {
+                    delete selection[hash];
+                } else {
+                    selection[hash] = true;
+                }
             }
-            return {selection};
+
+            return {selection, lastSelectionIndex: newSelectionIndex};
         });
     };
 
@@ -190,7 +252,7 @@ class EnvTag extends React.Component {
             const oldSelSize = _.size(oldSel);
             if (oldSelSize <= 1) {
                 newState.selection = {};
-                newState.selection[data.hash] = data;
+                newState.selection[data] = true;
             }
 
             return newState;
@@ -229,35 +291,20 @@ class EnvTag extends React.Component {
     renderFiles() {
         const props = this.props;
         const state = this.state;
-        const fileHashes = props.fileHashes;
+        const files = state.files;
 
-        if (fileHashes.length === 0) {
+        if (files.length === 0) {
             return <div className="file-nothing">
                 No files to show.
             </div>;
         }
-
-        let files = _.map(fileHashes, hash => props.fileMap[hash]);
-        if (!state.optionState[Options.ShowHidden]) {
-            files = _.filter(files, f => !f.name.startsWith('.'));
-        }
-
-        const compare = (fileA, fileB) => {
-            if (state.optionState[Options.FoldersFirst]) {
-                if (fileA.isDir && !fileB.isDir) return -1;
-                if (!fileA.isDir && fileB.isDir) return 1;
-            }
-
-            return fileA.name.localeCompare(fileB.name);
-        };
-        files.sort(compare);
 
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
             const handlers = prepareContextMenuHandlers({id: TagContextMenuId, data: file.hash});
             comps[i] = <FileEntry key={file.hash} fileHash={file.hash} basePath={props.path} summary={this.summary}
-                                  showExtension={state.optionState[Options.ShowExtensions]}
+                                  showExtension={state.optionState[Options.ShowExtensions]} displayIndex={i}
                                   collapseLongNames={state.optionState[Options.CollapseLong]}
                                   onSingleClick={this.handleFileClick} selected={!!state.selection[file.hash]}
                                   onDoubleClick={this.handleFileDoubleClick}

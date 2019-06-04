@@ -17,7 +17,7 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvironmentContext, FilePropType} from '../../typedef';
+import {EnvironmentContext} from '../../typedef';
 
 const ContextTabs = {
     Tag: 0,

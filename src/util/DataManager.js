@@ -7,7 +7,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 
-import {BackendEvents, FrontendEvents, ReduxActions} from '../typedef';
+import {BackendEvents, ReduxActions} from '../typedef';
 import ErrorHandler from './ErrorHandler';
 
 export default class DataManager {

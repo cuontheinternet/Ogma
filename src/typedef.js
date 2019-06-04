@@ -12,10 +12,6 @@ import PropTypes from 'prop-types';
  * @property {boolean} localClient
  */
 
-export const FrontendEvents = {
-    NewAllTags: 'fe-new-all-tags',
-};
-
 /**
  * @typedef {object} ReduxAction
  * @property {string} type
@@ -79,6 +75,7 @@ export const FilePropType = PropTypes.shape({
 });
 
 export const KeyCode = {
+    A: 65,
     Enter: 13,
     Esc: 27,
 };

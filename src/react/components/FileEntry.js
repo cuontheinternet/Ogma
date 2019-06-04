@@ -34,6 +34,7 @@ class FileEntry extends React.Component {
         selected: PropTypes.bool,
         onSingleClick: PropTypes.func,
         onDoubleClick: PropTypes.func,
+        displayIndex: PropTypes.number,
     };
 
     static defaultProps = {
@@ -58,9 +59,9 @@ class FileEntry extends React.Component {
 
         this.clickCount = 0;
         this.thumbLoaded = false;
-        this.triggerSingleClick = event => {
+        this.triggerSingleClick = (event, displayIndex) => {
             this.clickCount = 0;
-            if (this.props.onSingleClick) this.props.onSingleClick(this.props.file, event);
+            if (this.props.onSingleClick) this.props.onSingleClick(this.props.file, event, displayIndex);
         };
         this.triggerDoubleClick = event => {
             this.clickCount = 0;
@@ -100,14 +101,15 @@ class FileEntry extends React.Component {
     };
 
     handleClick = event => {
-        if (event.ctrlKey || event.shiftKey) return this.triggerSingleClick(event);
+        const props = this.props;
+        if (event.ctrlKey || event.shiftKey) return this.triggerSingleClick(event, props.displayIndex);
 
         this.clickCount++;
         if (this.clickCount === 1) {
-            if (this.props.singleAndDoubleClickExclusive) {
-                this.singleClickTimer = setTimeout(() => this.triggerSingleClick(event), 300);
+            if (props.singleAndDoubleClickExclusive) {
+                this.singleClickTimer = setTimeout(() => this.triggerSingleClick(event, props.displayIndex), 300);
             } else {
-                this.triggerSingleClick(event);
+                this.triggerSingleClick(event, props.displayIndex);
                 this.clickCount = 1;
                 setTimeout(() => this.clickCount = 0, 300);
             }
