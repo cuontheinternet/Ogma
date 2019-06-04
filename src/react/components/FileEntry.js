@@ -6,20 +6,23 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 import VisibilitySensor from 'react-visibility-sensor';
 
 import Icon from './Icon';
+import TagGroup from './TagGroup';
 import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
-import {FileView, ColorsLight, ColorsDark, ThumbnailState, FilePropType} from '../../typedef';
-import TagGroup from './TagGroup';
+import {FileView, ColorsLight, ColorsDark, ThumbnailState, EnvironmentContext, FilePropType} from '../../typedef';
 
-export default class FileEntry extends React.Component {
+class FileEntry extends React.Component {
+
+    // noinspection JSUnusedGlobalSymbols
+    static contextType = EnvironmentContext;
 
     static propTypes = {
         file: FilePropType.isRequired,
         basePath: PropTypes.string.isRequired,
-        envSummary: PropTypes.object.isRequired,
         view: PropTypes.oneOf(Object.values(FileView)),
         selection: PropTypes.object,
         showExtension: PropTypes.bool,
@@ -43,12 +46,12 @@ export default class FileEntry extends React.Component {
         selected: false,
     };
 
-    constructor(props) {
+    constructor(props, context) {
         super(props);
+        this.summary = context;
 
         const file = props.file;
         this.state = {
-            file,
             thumbBgImage: null,
             icon: file.isDir ? FolderIconData : getIconData(file),
         };
@@ -66,16 +69,16 @@ export default class FileEntry extends React.Component {
     }
 
     loadThumbnail = () => {
-        const file = this.state.file;
-        const summary = this.props.envSummary;
+        const file = this.props.file;
+        const summary = this.summary;
         const url = `${window.serverHost}/static/env/${summary.slug}/thumbs/${file.hash}.jpg`;
         return Util.loadImage(url)
             .then(() => this.setState({thumbBgImage: `url('${url}')`}));
     };
 
     handleVisibilityChange = isVisible => {
-        const file = this.state.file;
-        const summary = this.props.envSummary;
+        const file = this.props.file;
+        const summary = this.summary;
 
         if (!isVisible) return;
         else if (this.thumbLoaded) return;
@@ -124,7 +127,7 @@ export default class FileEntry extends React.Component {
 
     render() {
         const props = this.props;
-        const file = this.state.file;
+        const file = this.props.file;
 
         // Prepare file name
         let name = file.name;
@@ -159,7 +162,7 @@ export default class FileEntry extends React.Component {
                     {props.selected && <div className={`file-entry-selected`}/>}
 
                     <div className="file-entry-tags">
-                        <TagGroup envSummary={props.envSummary} tagIds={file.tagIds}/>
+                        <TagGroup summary={this.summary} tagIds={file.tagIds}/>
                     </div>
 
                     <div className="file-entry-icon">
@@ -178,3 +181,7 @@ export default class FileEntry extends React.Component {
     };
 
 }
+
+export default connect((state, ownProps) => ({
+    file: state.envMap[ownProps.summary.id].tagTab.fileMap[ownProps.fileHash],
+}))(FileEntry);

@@ -20,14 +20,14 @@ import {EnvProperty, IndexRoutePath, Colors, KeyCode} from '../../typedef';
 class EnvConfigure extends React.Component {
 
     static propTypes = {
-        envSummary: PropTypes.object.isRequired,
+        summary: PropTypes.object.isRequired,
         history: PropTypes.any,
     };
 
     constructor(props) {
         super(props);
 
-        const summary = this.props.envSummary;
+        const summary = this.props.summary;
         this.state = {
             summary,
             icon: summary.icon,
@@ -36,8 +36,8 @@ class EnvConfigure extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        const summary = this.props.envSummary;
-        const summaryChanged = !equal(prevProps.envSummary, summary);
+        const summary = this.props.summary;
+        const summaryChanged = !equal(prevProps.summary, summary);
         if (summaryChanged) {
             this.setState(prevState => ({
                 ...prevState,
@@ -75,7 +75,7 @@ class EnvConfigure extends React.Component {
     };
 
     hideButtonClick() {
-        const summary = this.props.envSummary;
+        const summary = this.state.summary;
 
         ModalUtil.confirm({
             title: `Hide ${summary.name} collection?`,
@@ -92,7 +92,7 @@ class EnvConfigure extends React.Component {
     }
 
     renderStatistics() {
-        const summary = this.props.envSummary;
+        const summary = this.state.summary;
         const stats = [
             {name: 'Collection ID', value: <code>{summary.id}</code>},
             {name: 'Collection path', value: <code>{summary.path}</code>},

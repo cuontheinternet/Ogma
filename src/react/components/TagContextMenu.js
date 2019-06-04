@@ -9,6 +9,7 @@ import React from 'react';
 import Denque from 'denque';
 import Promise from 'bluebird';
 import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 import ReactTags from 'react-tag-autocomplete';
 import {hideAllContextMenus} from 'react-context-menu-wrapper';
 
@@ -16,7 +17,7 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvSummaryPropType, FilePropType, FrontendEvents} from '../../typedef';
+import {EnvironmentContext, EnvSummaryPropType, FilePropType} from '../../typedef';
 
 const ContextTabs = {
     Tag: 0,
@@ -28,45 +29,37 @@ const BaseTabOptions = [
     {id: ContextTabs.File, icon: 'file', name: 'File'},
 ];
 
-export default class TagContextMenu extends React.Component {
+class TagContextMenu extends React.Component {
+
+    // noinspection JSUnusedGlobalSymbols
+    static contextType = EnvironmentContext;
 
     static propTypes = {
         id: PropTypes.string.isRequired,
         file: FilePropType,
         changePath: PropTypes.func.isRequired,
         selection: PropTypes.object.isRequired,
-        envSummary: EnvSummaryPropType.isRequired,
+        summary: EnvSummaryPropType.isRequired,
+        confirmDeletions: PropTypes.bool.isRequired,
     };
 
-    constructor(props) {
+    constructor(props, context) {
         super(props);
+        this.summary = context;
 
         this.tabOptionsTemplate = Util.deepClone(BaseTabOptions);
 
         this.state = {
-            summary: props.envSummary,
             activeTab: ContextTabs.Tag,
             tabOptions: this.tabOptionsTemplate,
 
-            tags: [
-                // {id: 1, name: 'Apples'},
-                // {id: 2, name: 'Pears'},
-            ],
-            suggestions: window.dataManager.getAllTags({id: props.envSummary.id}),
+            tags: [],
         };
 
         this.tagAddQueue = new Denque();
         this.tagDeleteQueue = new Denque();
         this.debouncedCommitTagAddition = _.debounce(this.commitTagAddition, 1200);
         this.debouncedCommitTagDeletion = _.debounce(this.commitTagDeletion, 1200);
-    }
-
-    componentDidMount() {
-        window.dataManager.subscribe(FrontendEvents.NewAllTags, this.handleNewAllTags);
-    }
-
-    componentWillUnmount() {
-        window.dataManager.unsubscribe(FrontendEvents.NewAllTags, this.handleNewAllTags);
     }
 
     static getDerivedStateFromProps(props, state) {
@@ -101,16 +94,10 @@ export default class TagContextMenu extends React.Component {
 
         return {
             files,
-            summary: props.envSummary,
             selection: props.selection,
             tabOptions: [tagTab, fileTab],
         };
     }
-
-    handleNewAllTags = data => {
-        if (data.id !== this.state.summary.id) return;
-        this.setState({suggestions: data.allTags});
-    };
 
     handleTabChange = contextTab => {
         this.setState({activeTab: contextTab});
@@ -120,7 +107,7 @@ export default class TagContextMenu extends React.Component {
         const queue = this.tagAddQueue;
         this.tagAddQueue = new Denque();
 
-        const id = this.state.summary.id;
+        const id = this.summary.id;
 
         const tagNames = new Array(queue.length);
         for (let i = 0; i < queue.length; ++i) {
@@ -191,7 +178,7 @@ export default class TagContextMenu extends React.Component {
         }
 
         return <React.Fragment>
-            <ReactTags tags={this.state.tags} suggestions={this.state.suggestions}
+            <ReactTags tags={this.state.tags} suggestions={this.props.tags}
                        handleDelete={this.handleTagDeletion} handleAddition={this.handleTagAddition} minQueryLength={1}
                        allowNew={true} allowBackspace={false} placeholder="Add tag"/>
         </React.Fragment>;
@@ -202,7 +189,7 @@ export default class TagContextMenu extends React.Component {
         const fileCount = files.length;
         if (fileCount === 0) return null;
 
-        const s = this.state.summary;
+        const s = this.summary;
         const ipc = window.ipcModule;
         const isMult = files.length > 1;
         const hasFolders = _.findIndex(files, f => f.isDir) !== -1;
@@ -247,12 +234,17 @@ export default class TagContextMenu extends React.Component {
                 removeTitle = `Move ${objName} to trash?`;
                 removeText = `The ${objName} is "${Util.truncate(firstFile.base, 40)}".`;
             }
-            return ModalUtil.confirm({
-                title: removeTitle,
-                text: removeText,
-                confirmButtonText: 'Yes',
-                cancelButtonText: 'No, cancel',
-            })
+            return Promise.resolve()
+                .then(() => {
+                    if (!this.props.confirmDeletions) return true;
+
+                    return ModalUtil.confirm({
+                        title: removeTitle,
+                        text: removeText,
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'No, cancel',
+                    });
+                })
                 .then(result => {
                     if (!result) return null;
                     return ipc.removeFiles({id: s.id, paths: _.map(files, f => f.nixPath)});
@@ -297,3 +289,7 @@ export default class TagContextMenu extends React.Component {
     };
 
 }
+
+export default connect((state, ownProps) => ({
+    tags: Object.values(state.envMap[ownProps.summary.id].tagMap),
+}))(TagContextMenu);

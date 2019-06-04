@@ -4,30 +4,26 @@
  * @license GPL-3.0
  */
 
+import _ from 'lodash';
 import React from 'react';
+import {connect} from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 
-import {BackendEvents} from '../typedef';
 import Sidebar from './components/Sidebar';
 import Dashboard from './containers/Dashboard';
 import Environment from './containers/Environment';
 import GlobalSettings from './containers/GlobalSettings';
 
-export default class App extends React.Component {
+class App extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
             showLoader: false,
             loaderText: 'Loading...',
-            summaries: window.dataManager.getEnvSummaries(),
         };
     }
-
-    updateEnvSummaries = envSummaries => {
-        this.setState({summaries: envSummaries});
-    };
 
     componentDidMount() {
         window.showGlobalLoader = text => {
@@ -39,16 +35,10 @@ export default class App extends React.Component {
         window.hideGlobalLoader = () => {
             this.setState({showLoader: false});
         };
-
-        window.dataManager.subscribe(BackendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
-    }
-
-    componentWillUnmount() {
-        window.dataManager.unsubscribe(BackendEvents.UpdateEnvSummaries, this.updateEnvSummaries);
     }
 
     render() {
-        const summaries = this.state.summaries;
+        const summaries = this.props.envSummaries;
         return (
             <Router>
                 <LoadingOverlay
@@ -68,7 +58,9 @@ export default class App extends React.Component {
                                                render={props =>
                                                    <Environment {...props}
                                                                 key={props.match.params.slug}
-                                                                envSummaries={summaries}/>}/>
+                                                                slug={props.match.params.slug}
+                                                                envSummaries={summaries}/>
+                                               }/>
                                     </Switch>
                                 </div>
                             </div>
@@ -80,3 +72,7 @@ export default class App extends React.Component {
         );
     }
 }
+
+export default connect(state => ({
+    envSummaries: _.map(state.envMap, e => e.summary),
+}))(App);

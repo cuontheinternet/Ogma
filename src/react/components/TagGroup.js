@@ -4,35 +4,36 @@
  * @license LGPL-3.0
  */
 
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 
-import {EnvSummaryPropType} from '../../typedef';
+import {EnvironmentContext} from '../../typedef';
 
-export default class TagGroup extends React.Component {
+class TagGroup extends React.Component {
+
+    // noinspection JSUnusedGlobalSymbols
+    static contextType = EnvironmentContext;
 
     static propTypes = {
-        envSummary: EnvSummaryPropType.isRequired,
-        tagIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+        tags: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
 
+    constructor(props) {
+        super(props);
+        this.summary = this.context;
+    }
+
     renderTags() {
-        const summary = this.props.envSummary;
-        const tagIds = this.props.tagIds;
-        if (tagIds.length === 0) return;
+        const tags = this.props.tags;
+        if (tags.length === 0) return;
 
-        console.log(tagIds);
-
-        const comps = new Array(tagIds.length);
-        for (let i = 0; i < tagIds.length; ++i) {
-            const tagId = tagIds[i];
-            const tag = window.dataManager.getTagDetails(summary.id, tagId);
-            if (!tag) {
-                comps[i] = <div key={tagId} className="tag-group-tag bad">Bad tag</div>;
-            } else {
-                const style = {background: tag.color};
-                comps[i] = <div key={tagId} className="tag-group-tag" style={style}>{tag.name}</div>;
-            }
+        const comps = new Array(tags.length);
+        for (let i = 0; i < tags.length; ++i) {
+            const tag = tags[i];
+            const style = {background: tag.color};
+            comps[i] = <div key={tag.id} className="tag-group-tag" style={style}>{tag.name}</div>;
         }
         return comps;
     }
@@ -42,3 +43,7 @@ export default class TagGroup extends React.Component {
     };
 
 }
+
+export default connect((state, ownProps) => ({
+    tags: _.map(ownProps.tagIds, tagId => state.envMap[ownProps.summary.id].tagMap[tagId]),
+}))(TagGroup);

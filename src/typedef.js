@@ -4,6 +4,7 @@
  * @licence GPL-3.0
  */
 
+import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
@@ -15,9 +16,30 @@ export const FrontendEvents = {
     NewAllTags: 'fe-new-all-tags',
 };
 
+/**
+ * @typedef {object} ReduxAction
+ * @property {string} type
+ * @property {string} [envId]
+ * @property {*} data
+ */
+export const ReduxActions = {
+    UpdateSummaries: 'update-summaries',
+    UpdateSummary: 'update-summary',
+    SetAllTags: 'set-all-tags',
+    AddNewTags: 'add-new-tags',
+    TagFiles: 'tag-files',
+
+    UpdateEnvSubRoute: 'update-sub-route',
+
+    TagTabChangeData: 'tagtab-change-data',
+    TagTabRemoveFiles: 'tagtab-remove-files',
+};
+
 export const IndexRoutePath = '/';
 
 export const BulmaSizes = ['small', 'medium', 'large'];
+
+export const EnvironmentContext = React.createContext(null);
 
 export const EnvRoutePaths = {
     browse: '/browse',

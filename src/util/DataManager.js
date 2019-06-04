@@ -7,22 +7,22 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 
-import {BackendEvents, FrontendEvents} from '../typedef';
+import {BackendEvents, FrontendEvents, ReduxActions} from '../typedef';
 import ErrorHandler from './ErrorHandler';
 
-class DataManager {
+export default class DataManager {
 
     /**
      * @param {object} data
      * @param {object} data.socket
+     * @param {object} data.store
      * @param {ConnectionDetails} data.connDetails
      */
     constructor(data) {
         this.socket = data.socket;
+        this.store = data.store;
         this.localClient = data.connDetails.localClient;
 
-        this.envSummaries = [];
-        this.envRoutePathMap = {};
         this.emitter = window.proxyEmitter;
 
         this.allTagMaps = {};
@@ -37,10 +37,13 @@ class DataManager {
         });
 
         // Setup listeners
-        const listenerMap = {};
-        listenerMap[BackendEvents.UpdateEnvSummaries] = this._setEnvSummaries;
-        listenerMap[BackendEvents.UpdateEnvSummary] = this._setEnvSummary;
-        listenerMap[BackendEvents.EnvAddTags] = this._addNewTags;
+        const listenerMap = {
+            [BackendEvents.UpdateEnvSummaries]: this._setEnvSummaries,
+            [BackendEvents.UpdateEnvSummary]: this._setEnvSummary,
+            [BackendEvents.EnvRemoveFiles]: this._removeFiles,
+            [BackendEvents.EnvAddTags]: data => this.dispatch(ReduxActions.AddNewTags, data.id, data.tags),
+            [BackendEvents.EnvTagFiles]: data => this.dispatch(ReduxActions.TagFiles, data.id, data),
+        };
         this.emitter.on('*', function (...args) {
             const eventName = this.event;
             const listener = listenerMap[eventName];
@@ -50,6 +53,19 @@ class DataManager {
 
         // Attempt initial sync
         return this._syncBaseState();
+    }
+
+    dispatch(...args) {
+        const type = args[0];
+        let envId;
+        let data;
+        if (args.length === 2) {
+            data = args[1];
+        } else {
+            envId = args[1];
+            data = args[2];
+        }
+        this.store.dispatch({type, envId, data});
     }
 
     _syncBaseState() {
@@ -63,23 +79,20 @@ class DataManager {
             .then(this._setEnvSummaries);
     }
 
-    _setEnvSummaries = summary => {
-        this.envSummaries = summary;
-        // TODO: Delete tag maps and such if an environment is deleted.
+    _setEnvSummaries = summaries => {
+        this.dispatch(ReduxActions.UpdateSummaries, summaries);
     };
 
     _setEnvSummary = summary => {
-        const index = _.findIndex(this.envSummaries, s => s.id === summary.id);
-        if (index === -1) this.envSummaries.push(summary);
-        else this.envSummaries[index] = summary;
+        this.dispatch(ReduxActions.UpdateSummary, summary.id, summary);
     };
 
-    getEnvSummaries() {
-        return this.envSummaries;
-    }
+    _removeFiles = data => {
+        this.dispatch(ReduxActions.TagTabRemoveFiles, data.id, data.hashes);
+    };
 
     _fetchAllTags() {
-        const envIds = _.map(this.envSummaries, s => s.id);
+        const envIds = this.store.getState().envIds;
         const promises = _.map(envIds, id => window.ipcModule.getAllTags({id}));
         return Promise.all(promises)
             .then(allAllTags => _.zipWith(envIds, allAllTags, (envId, allTags) => this._setAllTags(envId, allTags)));
@@ -92,45 +105,40 @@ class DataManager {
         }
         this.allTagMaps[envId] = tagMap;
         this.allTagArrays[envId] = allTags;
-    };
-
-    _addNewTags = data => {
-        const tagMap = this.allTagMaps[data.id];
-        const tagArray = this.allTagArrays[data.id];
-        for (const tag of data.tags) {
-            if (tagMap[tag.id]) tagArray.push(tag);
-            tagMap[tag.id] = tag;
-        }
-        this.emitter.emit(FrontendEvents.NewAllTags, {id: data.id, allTags: tagArray});
+        this.dispatch(ReduxActions.SetAllTags, envId, allTags);
     };
 
     /**
      * @param {object} data
-     * @param {string} data.id
-     */
-    getAllTags(data) {
-        return this.allTagArrays[data.id];
-    }
-
-    getTagDetails = (envId, tagId) => {
-        return this.allTagMaps[envId][tagId];
-    };
-
-    /**
-     * @param {object} data
-     * @param {string} data.id
-     * @param {string} data.path
+     * @param {string} data.id Environment ID
+     * @param {string} data.path Sub route (URL) of the environment
      */
     setEnvRoutePath(data) {
-        this.envRoutePathMap[data.id] = data.path;
+        this.dispatch(ReduxActions.UpdateEnvSubRoute, data.id, data.path);
     }
 
     /**
      * @param {object} data
-     * @param {string} data.id
+     * @param {string} data.id Environment ID
+     * @param {string} data.path Path relative to environment route
      */
-    getEnvRoutePath(data) {
-        return this.envRoutePathMap[data.id];
+    changeTagTabPath(data) {
+        return window.ipcModule.getDirectoryContents({id: data.id, path: data.path})
+            .then(files => {
+                const fileHashes = new Array(files.length);
+                const fileMap = {};
+                for (let i = 0; i < files.length; ++i) {
+                    const file = files[i];
+                    fileHashes[i] = file.hash;
+                    fileMap[file.hash] = file;
+                }
+                const tabData = {
+                    path: data.path,
+                    fileHashes,
+                    fileMap,
+                };
+                this.dispatch(ReduxActions.TagTabChangeData, data.id, tabData);
+            });
     }
 
     isLocalClient() {
@@ -142,14 +150,4 @@ class DataManager {
         return navigator.userAgent.includes('Electron/');
     }
 
-    subscribe(event, listener) {
-        this.emitter.addListener(event, listener);
-    }
-
-    unsubscribe(event, listener) {
-        this.emitter.removeListener(event, listener);
-    }
-
 }
-
-export default DataManager;

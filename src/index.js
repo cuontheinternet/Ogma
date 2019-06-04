@@ -8,7 +8,9 @@
 import React from 'react';
 import Promise from 'bluebird';
 import ReactDOM from 'react-dom';
+import {Provider} from 'react-redux';
 import {EventEmitter2} from 'eventemitter2';
+import {configureStore} from 'redux-starter-kit';
 import 'react-notifications/lib/notifications.css';
 import 'bulma-extensions/dist/css/bulma-extensions.min.css';
 import {NotificationContainer, NotificationManager} from 'react-notifications';
@@ -18,14 +20,16 @@ import App from './react/App';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';
+import ogmaAppReducer from './redux/OgmaAppReducer';
 import ErrorHandler, {UserFriendlyError} from './util/ErrorHandler';
 
-// Setup base URL
+// Init basic window params
+window.isDevelopment = process.env.NODE_ENV !== 'production';
 window.serverHost = 'http://localhost:10548';
-
-// Setup error handling functions
 window.handleError = ErrorHandler.handleMiscError;
 window.handleErrorQuiet = ErrorHandler.handleMiscErrorQuiet;
+
+if (window.isDevelopment) console.log('Ogma app running in development mode.');
 
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
@@ -75,12 +79,14 @@ socketInitPromise
     }))
     .then(result => {
         const {socket, connDetails} = result;
-        window.dataManager = new DataManager({socket, connDetails});
-        return window.dataManager.init();
+        const store = configureStore({reducer: ogmaAppReducer});
+        window.dataManager = new DataManager({socket, store, connDetails});
+        return window.dataManager.init()
+            .then(() => store);
     })
-    .then(() => {
+    .then(store => {
         appLoaderDiv.hide();
-        ReactDOM.render(<App/>, document.getElementById('root'));
+        ReactDOM.render(<Provider store={store}><App/></Provider>, document.getElementById('root'));
     })
     .catch(error => {
         console.error(error);

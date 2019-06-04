@@ -8,13 +8,14 @@ import _ from 'lodash';
 import path from 'path';
 import React from 'react';
 import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 
 import EnvTag from './EnvTag';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
-import {BackendEvents, IndexRoutePath, EnvRoutePaths, DefaultEnvRoutePath} from '../../typedef';
+import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../typedef';
 
 const TabOptions = [
     {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
@@ -27,82 +28,70 @@ for (const option of TabOptions) option.id = option.path;
 class Environment extends React.Component {
 
     static propTypes = {
-        envSummaries: PropTypes.array.isRequired,
+        summary: PropTypes.object.isRequired,
+        subRoute: PropTypes.string.isRequired,
     };
 
-    constructor(props) {
-        super(props);
-
-        const slug = this.props.match.params.slug;
-        const summaries = this.props.envSummaries;
-        const summary = _.find(summaries, s => s.slug === slug);
-
-        this.state = {summary};
-    }
-
     componentDidMount() {
-        window.dataManager.subscribe(BackendEvents.UpdateEnvSummary, this.updateEnvSummary);
-
         // Immediately redirect to correct subroute if one isn't specified
         const props = this.props;
+        const summary = props.summary;
         const pathName = props.location.pathname;
         const parentPath = props.match.url;
         if (pathName === parentPath) {
-            const summary = _.find(props.envSummaries, s => s.slug === props.match.params.slug);
-            const envRoutePath = window.dataManager.getEnvRoutePath({id: summary.id}) || DefaultEnvRoutePath;
-            props.history.push(`${parentPath}${envRoutePath}`);
+            props.history.push(`${parentPath}${props.subRoute}`);
         } else {
-            const routePath = `/${path.relative(parentPath, pathName)}`;
-            window.dataManager.setEnvRoutePath({id: this.state.summary.id, path: routePath});
+            const hash = props.location.hash;
+            const routePath = `/${path.relative(parentPath, pathName)}${hash}`;
+            window.dataManager.setEnvRoutePath({id: summary.id, path: routePath});
         }
     }
 
-    componentWillUnmount() {
-        window.dataManager.unsubscribe(BackendEvents.UpdateEnvSummary, this.updateEnvSummary);
-    }
-
-    updateEnvSummary = summary => {
-        this.setState(prevState => ({
-            ...prevState,
-            summary,
-        }));
-    };
-
     handleRouteChange = routePath => {
         // Remember the current subroute
-        window.dataManager.setEnvRoutePath({id: this.state.summary.id, path: routePath});
+        const summary = this.props.summary;
+        window.dataManager.setEnvRoutePath({id: summary.id, path: routePath});
     };
 
     renderRoutes() {
+        const props = this.props;
+        const summary = props.summary;
         const comps = [];
-        const parentPath = this.props.match.path;
         for (const tab of TabOptions) {
             if (!tab.comp) continue;
             const TabComp = tab.comp;
-            comps.push(<Route key={`env-router-${tab.path}`} path={`${parentPath}${tab.path}`} exact={tab.exact}
-                              render={props => <TabComp envSummary={this.state.summary} {...props}/>}/>);
+            const routePath = `${props.match.path}${tab.path}`;
+            comps.push(<Route key={`env-router-${tab.path}`} path={routePath} exact={tab.exact}
+                              render={props => <TabComp summary={summary} tabPath={tab.path} {...props}/>}/>);
         }
         return <Switch>{comps}</Switch>;
     }
 
     render() {
-        const summary = this.state.summary;
-
+        const summary = this.props.summary;
         if (!summary) return <Redirect to={IndexRoutePath}/>;
 
         return <div className="env">
-            <h1 className="title">
-                <EnvIcon color={summary.color} icon={summary.icon}/>
-                &nbsp;&nbsp;{summary.name}
-            </h1>
+            <EnvironmentContext.Provider value={summary}>
+                <h1 className="title">
+                    <EnvIcon color={summary.color} icon={summary.icon}/>
+                    &nbsp;&nbsp;{summary.name}
+                </h1>
 
-            <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
-                  location={this.props.location} onOptionChange={this.handleRouteChange} className="is-boxed"/>
+                <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
+                      location={this.props.location} onOptionChange={this.handleRouteChange} className="is-boxed"/>
 
-            {this.renderRoutes()}
+                {this.renderRoutes()}
+            </EnvironmentContext.Provider>
         </div>;
     };
 
 }
 
-export default withRouter(Environment);
+export default connect((state, ownProps) => {
+    const env = _.find(state.envMap, e => e.summary.slug === ownProps.slug);
+    return {
+        summary: env ? env.summary : null,
+        subRoute: env ? env.subRoute : null,
+    };
+})(withRouter(Environment));
