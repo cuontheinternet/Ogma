@@ -58,7 +58,8 @@ class FileEntry extends React.Component {
         };
 
         this.clickCount = 0;
-        this.thumbLoaded = false;
+        this.wasVisibleOnce = false;
+        this.imageLoadPromise = null;
         this.triggerSingleClick = (event, displayIndex) => {
             this.clickCount = 0;
             if (this.props.onSingleClick) this.props.onSingleClick(this.props.file, event, displayIndex);
@@ -69,35 +70,44 @@ class FileEntry extends React.Component {
         };
     }
 
+    componentDidMount() {
+        const file = this.props.file;
+        if (file.thumb === ThumbnailState.Ready) this.loadThumbnail();
+    }
+
+    componentWillUnmount() {
+        if (this.imageLoadPromise) this.imageLoadPromise.cancel();
+    }
+
+    componentDidUpdate(prevProps) {
+        const oldFile = prevProps.file;
+        const newFile = this.props.file;
+        if (oldFile.thumb !== newFile.thumb && newFile.thumb === ThumbnailState.Ready) this.loadThumbnail();
+    }
+
     loadThumbnail = () => {
         const file = this.props.file;
         const summary = this.summary;
         const url = `${window.serverHost}/static/env/${summary.slug}/thumbs/${file.hash}.jpg`;
-        return Util.loadImage(url)
-            .then(() => this.setState({thumbBgImage: `url('${url}')`}));
+
+        this.imageLoadPromise = Util.loadImage(url)
+            .then(() => {
+                this.imageLoadPromise = null;
+                this.setState({thumbBgImage: `url('${url}')`});
+            });
     };
 
     handleVisibilityChange = isVisible => {
         const file = this.props.file;
-        const summary = this.summary;
-
-        if (!isVisible) return;
-        else if (this.thumbLoaded) return;
-        this.thumbLoaded = true;
-
         if (file.thumb === ThumbnailState.Impossible) return;
 
-        let promise;
-        if (file.thumb === ThumbnailState.Ready) promise = this.loadThumbnail();
-        if (file.thumb === ThumbnailState.Possible) {
-            promise = Promise.resolve()
-                .then(() => window.ipcModule.getFileThumbnail({id: summary.id, path: file.nixPath}))
-                .then(thumbName => {
-                    if (!thumbName) return;
-                    return this.loadThumbnail();
-                });
-        }
-        promise.catch(window.handleErrorQuiet);
+        if (!isVisible || this.wasVisibleOnce) return;
+        this.wasVisibleOnce = true;
+
+        const summary = this.summary;
+        Promise.resolve()
+            .then(() => window.ipcModule.requestFileThumbnail({id: summary.id, path: file.nixPath}))
+            .catch(window.handleErrorQuiet);
     };
 
     handleClick = event => {
@@ -159,7 +169,7 @@ class FileEntry extends React.Component {
                               onChange={this.handleVisibilityChange}>
                 <div {...props.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
 
-                    {<div className={`file-entry-thumbnail ${thumbBgImage ? '' : 'hidden'}`} style={thumbStyle}/>}
+                    {<div className={`file-entry-thumbnail ${thumbBgImage ? 'loaded' : ''}`} style={thumbStyle}/>}
 
                     {props.selected && <div className={`file-entry-selected`}/>}
 

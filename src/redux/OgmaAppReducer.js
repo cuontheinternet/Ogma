@@ -88,6 +88,26 @@ const environmentReducer = createReducer({}, {
         for (const hash of deletedHashes) delete fileMap[hash];
         return {...state, tagTab: {...state.tagTab, fileHashes, fileMap}};
     },
+    [ReduxActions.TagTabThumbUpdate]: (state, action) => {
+        const {hash, thumb} = action.data;
+        const oldFileMap = state.tagTab.fileMap;
+
+        let newState = state;
+        const oldFile = oldFileMap[hash];
+        if (oldFile) {
+            newState = {
+                ...state,
+                tagTab: {
+                    ...state.tagTab,
+                    fileMap: {
+                        ...oldFileMap,
+                        [hash]: {...oldFile, thumb},
+                    },
+                },
+            };
+        }
+        return newState;
+    },
 });
 
 /**

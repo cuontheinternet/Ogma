@@ -30,6 +30,7 @@ export const ReduxActions = {
 
     TagTabChangeData: 'tagtab-change-data',
     TagTabRemoveFiles: 'tagtab-remove-files',
+    TagTabThumbUpdate: 'tagtag-thumb-update',
 };
 
 export const IndexRoutePath = '/';

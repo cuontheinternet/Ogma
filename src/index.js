@@ -23,6 +23,10 @@ import * as serviceWorker from './util/serviceWorker';
 import ogmaAppReducer from './redux/OgmaAppReducer';
 import ErrorHandler, {UserFriendlyError} from './util/ErrorHandler';
 
+Promise.config({
+    cancellation: true,
+});
+
 // Init basic window params
 window.isDevelopment = process.env.NODE_ENV !== 'production';
 window.serverHost = 'http://localhost:10548';
