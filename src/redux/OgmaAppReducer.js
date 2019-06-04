@@ -5,6 +5,7 @@
  */
 
 import _ from 'lodash';
+import ExactTrie from 'exact-trie';
 import {createReducer} from 'redux-starter-kit';
 
 import {DefaultEnvRoutePath, ReduxActions} from '../typedef';
@@ -51,6 +52,21 @@ const environmentReducer = createReducer({}, {
                 ...oldFile,
                 entityId: entityIds[i],
                 tagIds: _.union(oldFile.tagIds, tagIds),
+            };
+        }
+        return {...state, tagTab: {...state.tagTab, fileMap}};
+    },
+    [ReduxActions.UntagFiles]: (state, action) => {
+        const {entityIds, tagIds} = action.data;
+        const fileMap = {...state.tagTab.fileMap};
+        const entityTrie = new ExactTrie({ignoreCase: false}).putAll(entityIds, true);
+        const untaggedFiles = _.filter(fileMap, f => f.entityId && entityTrie.has(f.entityId));
+        for (let i = 0; i < untaggedFiles.length; ++i) {
+            const file = untaggedFiles[i];
+            const remainingTags = _.difference(file.tagIds, tagIds);
+            fileMap[file.hash] = {
+                ...file,
+                tagIds: remainingTags,
             };
         }
         return {...state, tagTab: {...state.tagTab, fileMap}};

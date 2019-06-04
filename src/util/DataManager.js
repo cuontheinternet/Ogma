@@ -43,6 +43,7 @@ export default class DataManager {
             [BackendEvents.EnvRemoveFiles]: this._removeFiles,
             [BackendEvents.EnvAddTags]: data => this.dispatch(ReduxActions.AddNewTags, data.id, data.tags),
             [BackendEvents.EnvTagFiles]: data => this.dispatch(ReduxActions.TagFiles, data.id, data),
+            [BackendEvents.EnvUntagFiles]: data => this.dispatch(ReduxActions.UntagFiles, data.id, data),
         };
         this.emitter.on('*', function (...args) {
             const eventName = this.event;

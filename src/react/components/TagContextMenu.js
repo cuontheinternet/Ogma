@@ -17,7 +17,7 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvironmentContext, EnvSummaryPropType, FilePropType} from '../../typedef';
+import {EnvironmentContext, FilePropType} from '../../typedef';
 
 const ContextTabs = {
     Tag: 0,
@@ -36,10 +36,9 @@ class TagContextMenu extends React.Component {
 
     static propTypes = {
         id: PropTypes.string.isRequired,
-        file: FilePropType,
+        fileHash: PropTypes.string,
         changePath: PropTypes.func.isRequired,
         selection: PropTypes.object.isRequired,
-        summary: EnvSummaryPropType.isRequired,
         confirmDeletions: PropTypes.bool.isRequired,
     };
 
@@ -58,22 +57,14 @@ class TagContextMenu extends React.Component {
 
         this.tagAddQueue = new Denque();
         this.tagDeleteQueue = new Denque();
-        this.debouncedCommitTagAddition = _.debounce(this.commitTagAddition, 1200);
-        this.debouncedCommitTagDeletion = _.debounce(this.commitTagDeletion, 1200);
+        this.debouncedCommitTagAddition = _.debounce(this.commitTagAddition, 50);
+        this.debouncedCommitTagDeletion = _.debounce(this.commitTagDeletion, 50);
     }
 
     static getDerivedStateFromProps(props, state) {
-        const file = props.file;
-
-        // const selectionSize = Util.objectLength(props.selection, null, val => !!val);
-        const selectionSize = _.size(props.selection);
-        const isMult = selectionSize > 1;
-
-        let files;
-        if (isMult) files = Object.values(props.selection);
-        else files = [file];
-
-        _.remove(files, f => !f);
+        const files = props.files;
+        const fileCount = files.length;
+        const isMult = files.length > 1;
         const firstFile = files[0];
 
         const tagTab = state.tabOptions[0];
@@ -81,7 +72,7 @@ class TagContextMenu extends React.Component {
 
         if (isMult) {
             fileTab.icon = 'copy';
-            fileTab.name = `Selection (${selectionSize})`;
+            fileTab.name = `Selection (${fileCount})`;
         } else if (firstFile) {
             if (firstFile.isDir) {
                 fileTab.icon = 'folder';
@@ -92,8 +83,12 @@ class TagContextMenu extends React.Component {
             }
         }
 
+        const tagIds = _.union(..._.map(files, f => f.tagIds));
+        const selectedTags = _.map(tagIds, tagId => props.tagMap[tagId]);
+
         return {
             files,
+            tags: selectedTags,
             selection: props.selection,
             tabOptions: [tagTab, fileTab],
         };
@@ -104,22 +99,29 @@ class TagContextMenu extends React.Component {
     };
 
     commitTagAddition = () => {
+        const id = this.summary.id;
         const queue = this.tagAddQueue;
         this.tagAddQueue = new Denque();
-
-        const id = this.summary.id;
-
         const tagNames = new Array(queue.length);
         for (let i = 0; i < queue.length; ++i) {
             tagNames[i] = queue.pop().name;
         }
-
         const paths = _.map(this.state.files, f => f.nixPath);
         window.ipcModule.addTagsToFiles({id, tagNames, paths})
             .catch(window.handleError);
     };
 
     commitTagDeletion = () => {
+        const id = this.summary.id;
+        const queue = this.tagDeleteQueue;
+        this.tagDeleteQueue = new Denque();
+        const tagIds = new Array(queue.length);
+        for (let i = 0; i < queue.length; ++i) {
+            tagIds[i] = queue.pop().id;
+        }
+        const entityIds = _.map(this.state.files, f => f.entityId);
+        window.ipcModule.removeTagsFromFiles({id, tagIds, entityIds})
+            .catch(window.handleError);
     };
 
     handleTagAddition = tag => {
@@ -271,7 +273,6 @@ class TagContextMenu extends React.Component {
                 <Tabs options={state.tabOptions} size="small" activeOption={state.activeTab}
                       fullwidth={true} onOptionChange={this.handleTabChange}/>
 
-
                 <div className="dropdown-menu" id="dropdown-menu" role="menu">
                     <div className="dropdown-content">
                         {tabContent}
@@ -290,6 +291,14 @@ class TagContextMenu extends React.Component {
 
 }
 
-export default connect((state, ownProps) => ({
-    tags: Object.values(state.envMap[ownProps.summary.id].tagMap),
-}))(TagContextMenu);
+export default connect((state, ownProps) => {
+    const fileMap = state.envMap[ownProps.summary.id].tagTab.fileMap;
+    const selectedHashes = Object.keys(ownProps.selection);
+    let files = [];
+    if (selectedHashes.length === 1) files = [fileMap[ownProps.fileHash]];
+    else files = _.map(selectedHashes, h => fileMap[h]);
+
+    const tagMap = state.envMap[ownProps.summary.id].tagMap;
+    const tags = Object.values(tagMap);
+    return {tags, tagMap, files};
+})(TagContextMenu);

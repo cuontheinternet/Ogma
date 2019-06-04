@@ -28,6 +28,7 @@ export const ReduxActions = {
     SetAllTags: 'set-all-tags',
     AddNewTags: 'add-new-tags',
     TagFiles: 'tag-files',
+    UntagFiles: 'untag-files',
 
     UpdateEnvSubRoute: 'update-sub-route',
 

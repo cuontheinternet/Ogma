@@ -51,7 +51,7 @@ class EnvTag extends React.Component {
 
         this.state = {
             selection: {},
-            contextFile: null,
+            contextFileHash: null,
             breadcrumbs: this.pathToBreadcrumbs(props.path),
 
             optionState: {
@@ -162,7 +162,6 @@ class EnvTag extends React.Component {
             const oldSelSize = _.size(oldSel);
             const selection = mod ? oldSel : {};
             if (oldSel[hash] && oldSelSize <= 1) {
-                console.log(oldSelSize);
                 delete selection[hash];
             } else {
                 selection[hash] = file;
@@ -185,7 +184,7 @@ class EnvTag extends React.Component {
 
     handleContextMenuShow = data => {
         this.setState(prevState => {
-            const newState = {contextFile: data};
+            const newState = {contextFileHash: data};
 
             const oldSel = prevState.selection;
             const oldSelSize = _.size(oldSel);
@@ -256,7 +255,7 @@ class EnvTag extends React.Component {
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
-            const handlers = prepareContextMenuHandlers({id: TagContextMenuId, data: file});
+            const handlers = prepareContextMenuHandlers({id: TagContextMenuId, data: file.hash});
             comps[i] = <FileEntry key={file.hash} fileHash={file.hash} basePath={props.path} summary={this.summary}
                                   showExtension={state.optionState[Options.ShowExtensions]}
                                   collapseLongNames={state.optionState[Options.CollapseLong]}
@@ -310,7 +309,7 @@ class EnvTag extends React.Component {
             </div>
 
             <ContextMenuWrapper id={TagContextMenuId} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={TagContextMenuId} file={state.contextFile} changePath={this.changePath}
+                <TagContextMenu id={TagContextMenuId} fileHash={state.contextFileHash} changePath={this.changePath}
                                 summary={this.summary} selection={state.selection}
                                 confirmDeletions={state.optionState[Options.ConfirmDeletions]}/>
             </ContextMenuWrapper>
