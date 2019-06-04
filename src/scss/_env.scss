@@ -7,6 +7,7 @@
         font-size: 0.9em;
         color: #fff;
     }
+
     &-tag {
         &-top-bar {
             margin: -1.5rem 0 0 0 !important;
@@ -34,6 +35,24 @@
                         pointer-events: none;
                         cursor: default;
                         color: #363636;
+                    }
+                }
+            }
+        }
+    }
+
+    &-browse {
+        &-card {
+            border-radius: 3px;
+            .card-content {
+                padding: 1rem;
+                .title {
+                    margin-bottom: 1rem;
+                }
+                .tag-group {
+                    font-size: 0.9rem;
+                    &-tag {
+                        margin: 2px;
                     }
                 }
             }

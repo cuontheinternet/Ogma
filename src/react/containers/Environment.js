@@ -12,13 +12,14 @@ import {connect} from 'react-redux';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 
 import EnvTag from './EnvTag';
+import EnvBrowse from './EnvBrowse';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
 import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../typedef';
 
 const TabOptions = [
-    {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse'},
+    {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse', comp: EnvBrowse},
     {path: EnvRoutePaths.search, icon: 'search', name: 'Search'},
     {path: EnvRoutePaths.tag, icon: 'tag', name: 'Tag', comp: EnvTag},
     {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},

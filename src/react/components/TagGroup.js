@@ -9,7 +9,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
-import {EnvironmentContext} from '../../typedef';
+import {EnvironmentContext, EnvSummaryPropType} from '../../typedef';
 
 class TagGroup extends React.Component {
 
@@ -18,6 +18,8 @@ class TagGroup extends React.Component {
 
     static propTypes = {
         tags: PropTypes.arrayOf(PropTypes.object).isRequired,
+        tagIds: PropTypes.arrayOf(PropTypes.object).isRequired,
+        summary: EnvSummaryPropType.isRequired,
     };
 
     constructor(props) {
