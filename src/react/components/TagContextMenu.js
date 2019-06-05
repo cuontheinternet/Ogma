@@ -35,10 +35,20 @@ class TagContextMenu extends React.Component {
     static contextType = EnvironmentContext;
 
     static propTypes = {
-        id: PropTypes.string.isRequired,
+        // Props used in redux.connect
         fileHash: PropTypes.string,
-        changePath: PropTypes.func.isRequired,
+        summary: PropTypes.object.isRequired,
         selection: PropTypes.object.isRequired,
+
+        // Props provided by redux.connect
+        tags: PropTypes.arrayOf(PropTypes.object).isRequired,
+        files: PropTypes.arrayOf(PropTypes.object).isRequired,
+        entityIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+        selectedTags: PropTypes.arrayOf(PropTypes.object).isRequired,
+
+        // Props passed by parent
+        id: PropTypes.string.isRequired,
+        changePath: PropTypes.func.isRequired,
         confirmDeletions: PropTypes.bool.isRequired,
     };
 
@@ -49,10 +59,9 @@ class TagContextMenu extends React.Component {
         this.tabOptionsTemplate = Util.deepClone(BaseTabOptions);
 
         this.state = {
+            selectedTags: [],
             activeTab: ContextTabs.Tag,
             tabOptions: this.tabOptionsTemplate,
-
-            tags: [],
         };
 
         this.tagAddQueue = new Denque();
@@ -62,7 +71,7 @@ class TagContextMenu extends React.Component {
     }
 
     static getDerivedStateFromProps(props, state) {
-        const files = props.files;
+        const {files, selectedTags} = props;
         const fileCount = files.length;
         const isMult = files.length > 1;
         const firstFile = files[0];
@@ -83,13 +92,8 @@ class TagContextMenu extends React.Component {
             }
         }
 
-        const tagIds = _.union(..._.map(files, f => f.tagIds));
-        const selectedTags = _.map(tagIds, tagId => props.tagMap[tagId]);
-
         return {
-            files,
-            tags: selectedTags,
-            selection: props.selection,
+            selectedTags,
             tabOptions: [tagTab, fileTab],
         };
     }
@@ -99,6 +103,7 @@ class TagContextMenu extends React.Component {
     };
 
     commitTagAddition = () => {
+        const {files} = this.props;
         const id = this.summary.id;
         const queue = this.tagAddQueue;
         this.tagAddQueue = new Denque();
@@ -106,12 +111,13 @@ class TagContextMenu extends React.Component {
         for (let i = 0; i < queue.length; ++i) {
             tagNames[i] = queue.pop().name;
         }
-        const paths = _.map(this.state.files, f => f.nixPath);
+        const paths = files.map(f => f.nixPath);
         window.ipcModule.addTagsToFiles({id, tagNames, paths})
             .catch(window.handleError);
     };
 
     commitTagDeletion = () => {
+        const {entityIds} = this.props;
         const id = this.summary.id;
         const queue = this.tagDeleteQueue;
         this.tagDeleteQueue = new Denque();
@@ -119,23 +125,22 @@ class TagContextMenu extends React.Component {
         for (let i = 0; i < queue.length; ++i) {
             tagIds[i] = queue.pop().id;
         }
-        const entityIds = _.map(this.state.files, f => f.entityId);
         window.ipcModule.removeTagsFromFiles({id, tagIds, entityIds})
             .catch(window.handleError);
     };
 
     handleTagAddition = tag => {
-        const tags = [].concat(this.state.tags, tag);
-        this.setState({tags});
+        const selectedTags = [].concat(this.state.selectedTags, tag);
+        this.setState({selectedTags});
 
         this.tagAddQueue.push(tag);
         this.debouncedCommitTagAddition();
     };
 
     handleTagDeletion = tagIndex => {
-        const tags = this.state.tags.slice(0);
-        const tag = tags.splice(tagIndex, 1)[0];
-        this.setState({tags});
+        const selectedTags = this.state.selectedTags.slice(0);
+        const tag = selectedTags.splice(tagIndex, 1)[0];
+        this.setState({selectedTags});
 
         this.tagDeleteQueue.push(tag);
         this.debouncedCommitTagDeletion();
@@ -166,7 +171,7 @@ class TagContextMenu extends React.Component {
     }
 
     renderTagOptions() {
-        const files = this.state.files;
+        const files = this.props.files;
         const fileCount = files.length;
         if (fileCount === 0) return null;
 
@@ -180,14 +185,14 @@ class TagContextMenu extends React.Component {
         }
 
         return <React.Fragment>
-            <ReactTags tags={this.state.tags} suggestions={this.props.tags}
+            <ReactTags tags={this.state.selectedTags} suggestions={this.props.tags}
                        handleDelete={this.handleTagDeletion} handleAddition={this.handleTagAddition} minQueryLength={1}
                        allowNew={true} allowBackspace={false} placeholder="Add tag"/>
         </React.Fragment>;
     }
 
     renderFileOptions() {
-        const files = this.state.files;
+        const files = this.props.files;
         const fileCount = files.length;
         if (fileCount === 0) return null;
 
@@ -291,15 +296,22 @@ class TagContextMenu extends React.Component {
 
 }
 
-export default connect((state, ownProps) => {
-    const fileMap = state.envMap[ownProps.summary.id].fileMap;
-    const selectedHashes = Object.keys(ownProps.selection);
-    let files = [];
-    if (selectedHashes.length === 1) files = [fileMap[ownProps.fileHash]];
-    else files = _.map(selectedHashes, h => fileMap[h]);
-    files = _.filter(files, f => !!f);
 
-    const tagMap = state.envMap[ownProps.summary.id].tagMap;
-    const tags = Object.values(tagMap);
-    return {tags, tagMap, files};
+export default connect((state, ownProps) => {
+    const {summary, selection, fileHash} = ownProps;
+    const {tagIds, tagMap, entityMap, fileMap} = state.envMap[summary.id];
+
+    const selectedHashes = Object.keys(selection);
+    let files = [];
+    if (selectedHashes.length === 1) files = [fileMap[fileHash]];
+    else files = selectedHashes.map(h => fileMap[h]);
+    files = files.filter(f => !!f);
+
+    const entityIds = files.map(f => f.entityId).filter(e => !!e);
+    const entities = entityIds.map(id => entityMap[id]);
+    const selectedTagIds = _.union(...entities.map(e => e.tagIds));
+    const selectedTags = _.map(selectedTagIds, tagId => tagMap[tagId]);
+
+    const tags = tagIds.map(tagId => tagMap[tagId]);
+    return {tags, entityIds, selectedTags, files};
 })(TagContextMenu);

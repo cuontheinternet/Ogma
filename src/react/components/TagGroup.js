@@ -17,9 +17,12 @@ class TagGroup extends React.Component {
     static contextType = EnvironmentContext;
 
     static propTypes = {
-        tags: PropTypes.arrayOf(PropTypes.object).isRequired,
-        tagIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+        // Props used in redux.connect
         summary: EnvSummaryPropType.isRequired,
+        entityId: PropTypes.string.isRequired,
+
+        // Props provided by redux.connect
+        tags: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
 
     constructor(props) {
@@ -29,7 +32,7 @@ class TagGroup extends React.Component {
 
     renderTags() {
         const tags = this.props.tags;
-        if (tags.length === 0) return;
+        if (!tags || tags.length === 0) return;
 
         const comps = new Array(tags.length);
         for (let i = 0; i < tags.length; ++i) {
@@ -46,6 +49,11 @@ class TagGroup extends React.Component {
 
 }
 
-export default connect((state, ownProps) => ({
-    tags: _.map(ownProps.tagIds, tagId => state.envMap[ownProps.summary.id].tagMap[tagId]),
-}))(TagGroup);
+export default connect((state, ownProps) => {
+    const {summary, entityId} = ownProps;
+    const {tagMap, entityMap} = state.envMap[summary.id];
+    const entity = entityMap[entityId];
+    let tags = null;
+    if (entity) tags = entity.tagIds ? _.map(entity.tagIds, tagId => tagMap[tagId]) : null;
+    return {tags};
+})(TagGroup);

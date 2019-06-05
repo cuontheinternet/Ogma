@@ -5,7 +5,6 @@
  */
 
 import _ from 'lodash';
-import ExactTrie from 'exact-trie';
 import {createReducer} from 'redux-starter-kit';
 
 import {ReduxActions} from '../util/typedef';
@@ -40,33 +39,40 @@ export const environmentReducer = createReducer({}, {
     },
     [ReduxActions.TagFiles]: (state, action) => {
         const {hashes, entityIds, tagIds} = action.data;
-        const fileMap = {...state.fileMap};
+        let {fileMap, entityMap} = state;
+        fileMap = {...fileMap};
+        entityMap = {...entityMap};
         for (let i = 0; i < hashes.length; ++i) {
             const hash = hashes[i];
+            const entityId = entityIds[i];
+            const oldEntity = entityMap[entityId];
+            const oldTagIds = oldEntity ? oldEntity.tagIds : null;
+            entityMap[entityId] = {
+                ...oldEntity,
+                tagIds: _.union(oldTagIds, tagIds),
+            };
             const oldFile = fileMap[hash];
             if (!oldFile) continue;
             fileMap[hash] = {
                 ...oldFile,
-                entityId: entityIds[i],
-                tagIds: _.union(oldFile.tagIds, tagIds),
+                entityId,
             };
         }
-        return {...state, fileMap};
+        return {...state, fileMap, entityMap};
     },
     [ReduxActions.UntagFiles]: (state, action) => {
         const {entityIds, tagIds} = action.data;
-        const fileMap = {...state.fileMap};
-        const entityTrie = new ExactTrie({ignoreCase: false}).putAll(entityIds, true);
-        const untaggedFiles = _.filter(fileMap, f => f.entityId && entityTrie.has(f.entityId));
-        for (let i = 0; i < untaggedFiles.length; ++i) {
-            const file = untaggedFiles[i];
-            const remainingTags = _.difference(file.tagIds, tagIds);
-            fileMap[file.hash] = {
-                ...file,
-                tagIds: remainingTags,
+        const entityMap = {...state.entityMap};
+        for (let i = 0; i < entityIds.length; ++i) {
+            const entityId = entityIds[i];
+            const entity = entityMap[entityId];
+            if (!entity) return;
+            entityMap[entityId] = {
+                ...entity,
+                tagIds: _.difference(entity.tagIds, tagIds),
             };
         }
-        return {...state, fileMap};
+        return {...state, entityMap};
     },
 
     [ReduxActions.SetDirectoryContent]: (state, action) => {
@@ -81,20 +87,36 @@ export const environmentReducer = createReducer({}, {
     },
     [ReduxActions.SetMultipleFileDetails]: (state, action) => {
         const files = action.data;
-        const fileMap = {...state.fileMap};
-        for (const file of files) {
-            fileMap[file.hash] = {
-                ...fileMap[file.hash],
-                ...file,
+        let {fileMap, entityMap} = state;
+        fileMap = {...fileMap};
+        entityMap = {...entityMap};
+        for (const newFile of files) {
+            const oldFile = fileMap[newFile.hash];
+            fileMap[newFile.hash] = {
+                ...oldFile,
+                ...newFile,
             };
+            delete fileMap[newFile.hash]['tagIds'];
+            if (!oldFile || newFile.entityId !== oldFile.entityId) {
+                if (oldFile) delete entityMap[oldFile.entityId];
+                if (newFile.entityId) {
+                    entityMap[newFile.entityId] = {
+                        ...entityMap[newFile.entityId],
+                        fileHash: newFile.hash,
+                        tagIds: newFile.tagIds,
+                    };
+                }
+            }
         }
-        return {...state, fileMap};
+        return {...state, fileMap, entityMap};
     },
     [ReduxActions.RemoveMultipleFiles]: (state, action) => {
         const deletedHashes = action.data;
+        let {fileMap, entityMap} = state;
+        fileMap = {...fileMap};
+        entityMap = {...entityMap};
 
         const dirHashMap = {};
-        const fileMap = {...state.fileMap};
         for (const fileHash of deletedHashes) {
             const file = fileMap[fileHash];
             if (file) {
@@ -104,6 +126,10 @@ export const environmentReducer = createReducer({}, {
 
                 if (dirHashMap[dirHash]) dirHashMap[dirHash].push(fileHash);
                 else dirHashMap[dirHash] = [fileHash];
+
+                if (file.entityId) {
+                    delete entityMap[file.entityId];
+                }
             }
             delete fileMap[fileHash];
         }

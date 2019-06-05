@@ -34,6 +34,7 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
                 subRoute: DefaultEnvRoutePath,
                 tagIds: [],
                 tagMap: {},
+                entityMap: {},
                 fileMap: {},
                 tagTab: {path: '/'},
             };

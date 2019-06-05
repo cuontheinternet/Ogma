@@ -57,7 +57,11 @@ class FileEntry extends React.PureComponent {
             icon: file.isDir ? FolderIconData : getIconData(file),
         };
 
-        this.handlers = prepareContextMenuHandlers({id: props.contextMenuId, data: props.hash});
+        if (props.contextMenuId) {
+            this.handlers = prepareContextMenuHandlers({id: props.contextMenuId, data: props.hash});
+        } else {
+            this.handlers = {};
+        }
 
         this.clickCount = 0;
         this.wasVisibleOnce = false;
@@ -101,7 +105,7 @@ class FileEntry extends React.PureComponent {
 
     handleVisibilityChange = isVisible => {
         const file = this.props.file;
-        if (file.thumb === ThumbnailState.Impossible) return;
+        if (file.thumb === ThumbnailState.Impossible || file.thumb === ThumbnailState.Ready) return;
 
         if (!isVisible || this.wasVisibleOnce) return;
         this.wasVisibleOnce = true;
@@ -175,9 +179,9 @@ class FileEntry extends React.PureComponent {
 
                     {props.selected && <div className={`file-entry-selected`}/>}
 
-                    <div className="file-entry-tags">
-                        <TagGroup summary={this.summary} tagIds={file.tagIds}/>
-                    </div>
+                    {file.entityId && <div className="file-entry-tags">
+                        <TagGroup summary={this.summary} entityId={file.entityId}/>
+                    </div>}
 
                     <div className="file-entry-icon">
                         <div className="file-entry-icon-content">{this.renderIcon(true)}</div>
