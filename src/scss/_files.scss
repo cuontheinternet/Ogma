@@ -28,8 +28,20 @@
         font-size: 0.8rem;
         overflow: hidden;
 
+        &.medium-thumb {
+            display: inline-block;
+            border-radius: 3px;
+            height: 150px;
+            width: 250px;
+            margin: 3px;
+        }
+
         &-thumbnail, &-selected, &-tags, &-icon {
             position: absolute;
+        }
+
+        &.medium-thumb:hover &-tags {
+           opacity: 0.6;
         }
 
         &-thumbnail, &-selected, &-icon {
@@ -64,9 +76,15 @@
         }
 
         &-tags {
+            -webkit-transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease;
+            max-width: 100%;
             z-index: 3;
             bottom: 0;
             left: 0;
+            .tag-group-tag {
+                max-width: calc(100% - 2px);
+            }
         }
 
         &-icon {
@@ -127,12 +145,5 @@
             }
         }
 
-        &.medium-thumb {
-            display: inline-block;
-            border-radius: 3px;
-            height: 150px;
-            width: 250px;
-            margin: 3px;
-        }
     }
 }

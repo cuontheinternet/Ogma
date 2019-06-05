@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import c from 'classnames';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
@@ -23,6 +24,16 @@ class TagGroup extends React.Component {
 
         // Props provided by redux.connect
         tags: PropTypes.arrayOf(PropTypes.object).isRequired,
+
+        // Props passed by parent
+        onClick: PropTypes.func,
+        showEllipsis: PropTypes.bool,
+        showPlaceHolderOnEmpty: PropTypes.bool,
+    };
+
+    static defaultProps = {
+        showEllipsis: false,
+        showPlaceHolderOnEmpty: false,
     };
 
     constructor(props) {
@@ -31,14 +42,27 @@ class TagGroup extends React.Component {
     }
 
     renderTags() {
-        const tags = this.props.tags;
-        if (!tags || tags.length === 0) return;
+        const {tags, onClick, showEllipsis, showPlaceHolderOnEmpty} = this.props;
+        if (!tags || tags.length === 0) {
+            if (!showPlaceHolderOnEmpty) return;
+            return <div className="tag-group-tag tag-group-tag-empty">Nothing to show</div>;
+        }
+
+        const className = c({
+            'tag-group-tag': true,
+            'text-ellipsis': showEllipsis,
+            'clickable': !!onClick,
+        });
 
         const comps = new Array(tags.length);
         for (let i = 0; i < tags.length; ++i) {
             const tag = tags[i];
             const style = {background: tag.color};
-            comps[i] = <div key={tag.id} className="tag-group-tag" style={style}>{tag.name}</div>;
+            const title = showEllipsis ? tag.name : null;
+            comps[i] = <div key={tag.id} className={className} style={style}
+                            title={title} onClick={() => onClick(tag.id)}>
+                {tag.name}
+            </div>;
         }
         return comps;
     }

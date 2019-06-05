@@ -36,7 +36,8 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
                 tagMap: {},
                 entityMap: {},
                 fileMap: {},
-                tagTab: {path: '/'},
+                tabBrowse: {path: '/'},
+                tabSearch: {selectedTagsMap: {}},
             };
             env.summary = summary;
             newEnvMap[summary.id] = env;

@@ -47,7 +47,8 @@ class TabBrowse extends React.Component {
             optionState: ExplorerOptionsDefaults,
         };
         this.optionCheckboxes = [
-            {id: Options.CollapseLong, name: 'Collapse long names'},
+            {id: Options.CollapseLongNames, name: 'Collapse long names'},
+            {id: Options.CollapseLongTags, name: 'Collapse long tags'},
             {id: Options.FoldersFirst, name: 'Show folders first'},
             {id: Options.ShowExtensions, name: 'Show extensions'},
             {id: Options.ShowHidden, name: 'Show hidden files'},
@@ -88,7 +89,7 @@ class TabBrowse extends React.Component {
             if (uriHash) newPath = uriHash;
         }
         const normPath = path.normalize(newPath);
-        window.dataManager.dispatch(ReduxActions.TagTabChangePath, this.summary.id, normPath);
+        window.dataManager.dispatch(ReduxActions.TabBrowseChangePath, this.summary.id, normPath);
         const hash = `#${normPath}`;
         history.push(hash);
         window.dataManager.setEnvRoutePath({id: this.summary.id, path: `${tabPath}${hash}`});
@@ -242,9 +243,9 @@ class TabBrowse extends React.Component {
 
 export default connect((state, ownProps) => {
     const {summary} = ownProps;
-    const tagTab = state.envMap[summary.id].tagTab;
+    const {tabBrowse} = state.envMap[summary.id];
     return {
-        ...tagTab,
+        ...tabBrowse,
         rootDirName: upath.basename(summary.path),
     };
 })(TabBrowse);

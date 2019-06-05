@@ -26,7 +26,8 @@ class FileExplorer extends React.Component {
 
     static propTypes = {
         // Props used in redux.connect
-        path: PropTypes.string.isRequired,
+        path: PropTypes.string,
+        entityIds: PropTypes.arrayOf(PropTypes.string),
         summary: EnvSummaryPropType.isRequired,
 
         // Props provided by redux.connect
@@ -179,9 +180,10 @@ class FileExplorer extends React.Component {
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
-            comps[i] = <FileEntry key={file.hash} hash={file.hash} summary={this.summary}
+            comps[i] = <FileEntry key={file.hash} hash={file.hash} summary={this.summary} options={options}
                                   showExtension={options[Options.ShowExtensions]} displayIndex={i}
-                                  collapseLongNames={options[Options.CollapseLong]} selected={!!selection[file.hash]}
+                                  collapseLongNames={options[Options.CollapseLongNames]}
+                                  selected={!!selection[file.hash]}
                                   onSingleClick={this.handleSingleClick} onDoubleClick={this.handleDoubleClick}
                                   contextMenuId={contextMenuId}/>;
         }
@@ -215,14 +217,24 @@ class FileExplorer extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const {summary, path} = ownProps;
+    const {summary, path, entityIds} = ownProps;
+    const {fileMap, entityMap} = state.envMap[summary.id];
     if (!summary) throw new Error('FileExplorer needs "summary" in props!');
-    if (!path) throw new Error('FileExplorer needs "path" or "hash" in props!');
+    if (!path && !entityIds) throw new Error('FileExplorer needs "path" or "entityIds" in props!');
 
-    const hash = Util.getFileHash(path);
-    const fileMap = state.envMap[summary.id].fileMap;
-    const directory = fileMap[hash];
-    const fileHashes = directory ? directory.fileHashes : null;
+    let fileHashes = null;
+    if (path) {
+        const hash = Util.getFileHash(path);
+        const directory = fileMap[hash];
+        fileHashes = directory ? directory.fileHashes : null;
+    } else if (entityIds) {
+        const entities = entityIds.map(id => entityMap[id]);
+        fileHashes = entities.map(e => e.fileHash).filter(h => !!h);
+        if (fileHashes.length !== entities.length) {
+            console.warn('Some entities in FileExplorer are missing relevant file hashes!');
+        }
+    }
+
     let files = null;
     if (fileHashes) {
         files = _.map(fileHashes, h => fileMap[h]);

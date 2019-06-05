@@ -42,19 +42,28 @@
     }
 
     &-browse {
-        &-card {
+        &-available {
             border-radius: 3px;
             .card-content {
-                padding: 1rem;
+                padding: 0.6rem;
                 .title {
-                    margin-bottom: 1rem;
+                    margin: 0 0 0.6rem 0.3rem;
                 }
                 .tag-group {
                     font-size: 0.9rem;
                     &-tag {
+                        padding: 2px 5px;
                         margin: 2px;
                     }
                 }
+            }
+        }
+
+        &-selected {
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+            p {
+                margin: 3px 0.5rem 0 0;
             }
         }
     }

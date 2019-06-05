@@ -49,6 +49,7 @@ export const environmentReducer = createReducer({}, {
             const oldTagIds = oldEntity ? oldEntity.tagIds : null;
             entityMap[entityId] = {
                 ...oldEntity,
+                id: entityId,
                 tagIds: _.union(oldTagIds, tagIds),
             };
             const oldFile = fileMap[hash];
@@ -71,6 +72,19 @@ export const environmentReducer = createReducer({}, {
                 ...entity,
                 tagIds: _.difference(entity.tagIds, tagIds),
             };
+        }
+        return {...state, entityMap};
+    },
+
+    [ReduxActions.SetAllEntities]: (state, action) => {
+        const entities = action.data;
+        // Uncomment if we'll need entityIDs in the future
+        // const entityIds = new Array(tags.length);
+        const entityMap = {};
+        for (let i = 0; i < entities.length; ++i) {
+            const entity = entities[i];
+            // entityIds[i] = entity.id;
+            entityMap[entity.id] = entity;
         }
         return {...state, entityMap};
     },
@@ -102,6 +116,7 @@ export const environmentReducer = createReducer({}, {
                 if (newFile.entityId) {
                     entityMap[newFile.entityId] = {
                         ...entityMap[newFile.entityId],
+                        id: newFile.entityId,
                         fileHash: newFile.hash,
                         tagIds: newFile.tagIds,
                     };
@@ -170,9 +185,17 @@ export const environmentReducer = createReducer({}, {
     [ReduxActions.UpdateEnvSubRoute]: (state, action) => {
         return {...state, subRoute: action.data};
     },
-    [ReduxActions.TagTabChangePath]: (state, action) => {
+    [ReduxActions.TabBrowseChangePath]: (state, action) => {
         const newPath = action.data;
-        return {...state, tagTab: {...state.tagTab, path: newPath}};
+        return {...state, tabBrowse: {...state.tabBrowse, path: newPath}};
+    },
+    [ReduxActions.TabSearchChangeTagSelection]: (state, action) => {
+        const {tagId, selected} = action.data;
+        const {tabSearch} = state;
+        const selectedTagsMap = {...tabSearch.selectedTagsMap};
+        if (selected) selectedTagsMap[tagId] = true;
+        else delete selectedTagsMap[tagId];
+        return {...state, tabSearch: {...tabSearch, selectedTagsMap}};
     },
 });
 

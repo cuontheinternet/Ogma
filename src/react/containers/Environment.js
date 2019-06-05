@@ -14,15 +14,15 @@ import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 import TabBrowse from './TabBrowse';
 import TabSearch from './TabSearch';
 import Tabs from '../components/Tabs';
+import TabConfigure from './TabConfigure';
 import EnvIcon from '../components/EnvIcon';
-import EnvConfigure from '../containers/EnvConfigure';
 import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const TabOptions = [
     {path: EnvRoutePaths.browse, icon: 'eye', name: 'Browse', comp: TabBrowse},
     {path: EnvRoutePaths.search, icon: 'search', name: 'Search', comp: TabSearch},
     {path: EnvRoutePaths.tag, icon: 'tags', name: 'Manage tags'},
-    {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},
+    {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: TabConfigure},
 ];
 for (const option of TabOptions) option.id = option.path;
 

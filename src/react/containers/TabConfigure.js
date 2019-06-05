@@ -17,7 +17,7 @@ import ErrorHandler from '../../util/ErrorHandler';
 import ExternalLink from '../components/ExternalLink';
 import {EnvProperty, IndexRoutePath, Colors, KeyCode} from '../../util/typedef';
 
-class EnvConfigure extends React.Component {
+class TabConfigure extends React.Component {
 
     static propTypes = {
         summary: PropTypes.object.isRequired,
@@ -208,4 +208,4 @@ class EnvConfigure extends React.Component {
 
 }
 
-export default withRouter(EnvConfigure);
+export default withRouter(TabConfigure);

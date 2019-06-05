@@ -4,13 +4,16 @@
  * @license LGPL-3.0
  */
 
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
 import TagGroup from '../components/TagGroup';
 
-import {EnvSummaryPropType} from '../../util/typedef';
+import {EnvSummaryPropType, ReduxActions} from '../../util/typedef';
+import Icon from '../components/Icon';
+import FileExplorer from '../components/FileExplorer';
 
 class TabSearch extends React.Component {
 
@@ -19,8 +22,9 @@ class TabSearch extends React.Component {
         summary: EnvSummaryPropType.isRequired,
 
         // Props provided by redux.connect
-        tagMap: PropTypes.object.isRequired,
         tagIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+        entityMap: PropTypes.object.isRequired,
+        selectedTagsMap: PropTypes.object.isRequired,
     };
 
     constructor(props) {
@@ -29,24 +33,58 @@ class TabSearch extends React.Component {
         this.summary = props.summary;
     }
 
-    renderTags() {
-        const props = this.props;
-        const tagIds = props.tagIds;
-        return <div className="card env-browse-card">
+    selectTag = tagId => {
+        const actionData = {tagId, selected: true};
+        window.dataManager.dispatch(ReduxActions.TabSearchChangeTagSelection, this.summary.id, actionData);
+    };
+
+    deselectTag = tagId => {
+        const actionData = {tagId, selected: false};
+        window.dataManager.dispatch(ReduxActions.TabSearchChangeTagSelection, this.summary.id, actionData);
+    };
+
+    renderAvailableTags(availableTags) {
+        return <div className="card env-browse-available">
             <div className="card-content">
-                <p className="title is-size-5">Existing tags:</p>
-                <TagGroup tagIds={tagIds} summary={this.summary}/>
+                <p className="title is-size-5">Available tags:</p>
+                <div className="field has-addons">
+                    <p className="control ">
+                        <button className="button is-static"><Icon name="filter"/></button>
+                    </p>
+                    <p className="control is-expanded">
+                        <input className="input" type="text" placeholder="Tag name"/>
+                    </p>
+                    <p className="control">
+                        <button className="button">Filter</button>
+                    </p>
+                </div>
+                <TagGroup tagIds={availableTags} summary={this.summary} onClick={this.selectTag}
+                          showPlaceHolderOnEmpty={true}/>
             </div>
         </div>;
     }
 
+    renderSelectedTags(selectedTags) {
+        return <div className="env-browse-selected">
+            <p className="is-pulled-left">Showing tags:</p>
+            <TagGroup tagIds={selectedTags} summary={this.summary} onClick={this.deselectTag}
+                      showPlaceHolderOnEmpty={true}/>
+        </div>;
+    }
+
     render() {
+        const {tagIds, entityMap, selectedTagsMap} = this.props;
+        const [selectedTags, availableTags] = _.partition(tagIds, id => !!selectedTagsMap[id]);
+
+        const entityIds = Object.keys(entityMap);
+
         return <div className="columns">
-            <div className="column is-narrow" style={{width: 260}}>
-                {this.renderTags()}
+            <div className="column is-narrow" style={{width: 360}}>
+                {this.renderAvailableTags(availableTags)}
             </div>
             <div className="column">
-                Files will be here.
+                {this.renderSelectedTags(selectedTags)}
+                <FileExplorer summary={this.summary} entityIds={entityIds}/>
             </div>
         </div>;
     };
@@ -54,9 +92,10 @@ class TabSearch extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const env = state.envMap[ownProps.summary.id];
+    const {tagIds, entityMap, tabSearch} = state.envMap[ownProps.summary.id];
     return {
-        tagIds: env.tagIds,
-        tagMap: env.tagMap,
+        tagIds,
+        entityMap,
+        ...tabSearch,
     };
 })(TabSearch);

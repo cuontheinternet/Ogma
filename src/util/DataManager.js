@@ -75,7 +75,7 @@ export default class DataManager {
     _syncBaseState() {
         return Promise.resolve()
             .then(() => this._fetchEnvSummaries())
-            .then(() => this._fetchAllTags());
+            .then(() => Promise.all([this._fetchAllTags(), this._fetchAllEntities()]));
     }
 
     _fetchEnvSummaries() {
@@ -103,11 +103,18 @@ export default class DataManager {
     }
 
     _setAllTags = (envId, allTags) => {
-        const tagMap = {};
-        for (const tag of allTags) {
-            tagMap[tag.id] = tag;
-        }
         this.dispatch(ReduxActions.SetAllTags, envId, allTags);
+    };
+
+    _fetchAllEntities() {
+        const envIds = this.store.getState().envIds;
+        const promises = _.map(envIds, id => window.ipcModule.getAllEntities({id}));
+        return Promise.all(promises)
+            .then(allAllEntities => _.zipWith(envIds, allAllEntities, (envId, allEntities) => this._setAllEntities(envId, allEntities)));
+    }
+
+    _setAllEntities = (envId, allEntities) => {
+        this.dispatch(ReduxActions.SetAllEntities, envId, allEntities);
     };
 
     /**

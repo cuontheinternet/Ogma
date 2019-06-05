@@ -28,6 +28,8 @@ export const ReduxActions = {
     TagFiles: 'tag-files',
     UntagFiles: 'untag-files',
 
+    SetAllEntities: 'set-all-entities',
+
     SetDirectoryContent: 'set-dir-contents',
     SetMultipleFileDetails: 'set-multi-file-details',
     RemoveMultipleFiles: 'remove-files',
@@ -35,7 +37,8 @@ export const ReduxActions = {
 
     UpdateEnvSubRoute: 'update-sub-route',
 
-    TagTabChangePath: 'tagtab-change-path',
+    TabBrowseChangePath: 'browse-change-path',
+    TabSearchChangeTagSelection: 'search-change-selection',
 };
 
 export const IndexRoutePath = '/';
@@ -67,14 +70,15 @@ export const MenuIds = {
 
 export const FileView = {
     List: 'list',
-    SmallThumb: 'small-thumb',
     MediumThumb: 'medium-thumb',
     LargeThumb: 'large-thumb',
 };
 
 export const ExplorerOptions = {
     SortOrder: 'sort-order',
-    CollapseLong: 'collapse-long',
+    FileView: 'file-view',
+    CollapseLongNames: 'collapse-names',
+    CollapseLongTags: 'collapse-tags',
     FoldersFirst: 'folders-first',
     ShowExtensions: 'show-exts',
     ShowHidden: 'show-hidden',
@@ -89,7 +93,9 @@ export const ExplorerOptionsThatAffectSort = [
 
 export const ExplorerOptionsDefaults = {
     [ExplorerOptions.SortOrder]: 'name-asc',
-    [ExplorerOptions.CollapseLong]: false,
+    [ExplorerOptions.FileView]: FileView.MediumThumb,
+    [ExplorerOptions.CollapseLongNames]: false,
+    [ExplorerOptions.CollapseLongTags]: true,
     [ExplorerOptions.FoldersFirst]: true,
     [ExplorerOptions.ShowExtensions]: true,
     [ExplorerOptions.ShowHidden]: true,

@@ -14,7 +14,17 @@ import Icon from './Icon';
 import TagGroup from './TagGroup';
 import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
-import {FileView, ColorsLight, ColorsDark, ThumbnailState, EnvironmentContext, FilePropType} from '../../util/typedef';
+import {
+    FileView,
+    ColorsLight,
+    ColorsDark,
+    ThumbnailState,
+    ExplorerOptions as Options,
+    ExplorerOptionsDefaults,
+    EnvironmentContext,
+    EnvSummaryPropType,
+    FilePropType,
+} from '../../util/typedef';
 
 class FileEntry extends React.PureComponent {
 
@@ -22,14 +32,20 @@ class FileEntry extends React.PureComponent {
     static contextType = EnvironmentContext;
 
     static propTypes = {
-        file: FilePropType.isRequired,
+        // Props used in redux.connect
         hash: PropTypes.string.isRequired,
+        summary: EnvSummaryPropType.isRequired,
+
+
+        // Props provided by redux.connect
+        file: FilePropType.isRequired,
+
+        // Props passed by parent
+        options: PropTypes.object,
         view: PropTypes.oneOf(Object.values(FileView)),
-        selection: PropTypes.object,
         showExtension: PropTypes.bool,
         collapseLongNames: PropTypes.bool,
         singleAndDoubleClickExclusive: PropTypes.bool,
-
         selected: PropTypes.bool,
         onSingleClick: PropTypes.func,
         onDoubleClick: PropTypes.func,
@@ -38,13 +54,12 @@ class FileEntry extends React.PureComponent {
     };
 
     static defaultProps = {
+        options: ExplorerOptionsDefaults,
+        selected: false,
         view: FileView.MediumThumb,
-        selection: {},
         showExtension: true,
         collapseLongNames: false,
         singleAndDoubleClickExclusive: false,
-
-        selected: false,
     };
 
     constructor(props, context) {
@@ -68,11 +83,11 @@ class FileEntry extends React.PureComponent {
         this.imageLoadPromise = null;
         this.triggerSingleClick = (event, displayIndex) => {
             this.clickCount = 0;
-            if (this.props.onSingleClick) this.props.onSingleClick(this.props.file, event, displayIndex);
+            if (props.onSingleClick) props.onSingleClick(props.file, event, displayIndex);
         };
         this.triggerDoubleClick = event => {
             this.clickCount = 0;
-            if (this.props.onDoubleClick) this.props.onDoubleClick(this.props.file, event);
+            if (props.onDoubleClick) this.props.onDoubleClick(props.file, event);
         };
     }
 
@@ -144,14 +159,14 @@ class FileEntry extends React.PureComponent {
     }
 
     render() {
-        const props = this.props;
+        const {options, selected} = this.props;
         const file = this.props.file;
 
         // Prepare file name
         let name = file.name;
-        if (props.collapseLongNames) {
+        if (options[Options.CollapseLongNames]) {
             const length = name.length;
-            const extLength = props.showExtension ? file.ext.length : 0;
+            const extLength = options[Options.ShowExtensions] ? file.ext.length : 0;
             if (length + extLength > 65) {
                 // TODO: Improve this code.
                 const collapse = <span className="file-entry-name-collapse">&lt;...&gt;</span>;
@@ -168,7 +183,7 @@ class FileEntry extends React.PureComponent {
         const thumbBgImage = this.state.thumbBgImage;
         const thumbStyle = {backgroundImage: thumbBgImage};
 
-        const className = `file-entry ${props.view} ${props.selected ? 'selected' : ''}`;
+        const className = `file-entry ${options[Options.FileView]} ${selected ? 'selected' : ''}`;
         return (
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
@@ -177,10 +192,11 @@ class FileEntry extends React.PureComponent {
 
                     {<div className={`file-entry-thumbnail ${thumbBgImage ? 'loaded' : ''}`} style={thumbStyle}/>}
 
-                    {props.selected && <div className={`file-entry-selected`}/>}
+                    {selected && <div className={`file-entry-selected`}/>}
 
                     {file.entityId && <div className="file-entry-tags">
-                        <TagGroup summary={this.summary} entityId={file.entityId}/>
+                        <TagGroup summary={this.summary} entityId={file.entityId}
+                                  showEllipsis={options[Options.CollapseLongTags]}/>
                     </div>}
 
                     <div className="file-entry-icon">
@@ -190,7 +206,7 @@ class FileEntry extends React.PureComponent {
                     <div className="file-entry-name">
                         <span className="file-entry-name-icon">{this.renderIcon(false)}</span>
                         {name}
-                        {props.showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
+                        {options[Options.ShowExtensions] && <span className="file-entry-name-ext">{file.ext}</span>}
                     </div>
 
                 </div>
