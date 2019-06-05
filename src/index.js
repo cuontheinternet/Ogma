@@ -17,6 +17,7 @@ import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 import './scss/index.scss';
 import App from './react/App';
+import baseConfig from '../../base-config';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
 import * as serviceWorker from './util/serviceWorker';
@@ -29,7 +30,7 @@ Promise.config({
 
 // Init basic window params
 window.isDevelopment = process.env.NODE_ENV !== 'production';
-window.serverHost = 'http://192.168.1.230:10548';
+window.serverHost = `http://${baseConfig.ogmaHost}:${baseConfig.ogmaPort}`;
 window.handleError = ErrorHandler.handleMiscError;
 window.handleErrorQuiet = ErrorHandler.handleMiscErrorQuiet;
 
@@ -38,8 +39,16 @@ if (window.isDevelopment) console.log('Ogma app running in development mode.');
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
 
+const socketIoLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Could not download the Socket.io script from the server.'));
+    script.src = `${window.serverHost}/socket.io/socket.io.js`;
+    document.head.appendChild(script);
+});
+
 // Socket.IO connection logic
-const socketInitPromise = new Promise(resolve => {
+const socketInitPromise = socketIoLoadPromise.then(() => new Promise(resolve => {
     const socket = io.connect(window.serverHost);
 
     let firstConnection = true;
@@ -58,7 +67,7 @@ const socketInitPromise = new Promise(resolve => {
         NotificationManager.error('Error occurred when connecting to server.');
         console.error(error);
     });
-});
+}));
 
 // Prepare loader reference
 const appLoaderDiv = $('#app-loader');
