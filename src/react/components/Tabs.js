@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
 import Icon from './Icon';
-import {BulmaSizes} from '../../typedef';
+import {BulmaSizes} from '../../util/typedef';
 
 export default class Tabs extends React.Component {
 

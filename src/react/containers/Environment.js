@@ -16,7 +16,7 @@ import EnvBrowse from './EnvBrowse';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
-import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../typedef';
+import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const TabOptions = [
     {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse', comp: EnvBrowse},
@@ -40,7 +40,6 @@ class Environment extends React.Component {
         const pathName = props.location.pathname;
         const parentPath = props.match.url;
         if (pathName === parentPath) {
-            console.log(props.subRoute);
             props.history.push(`${parentPath}${props.subRoute}`);
         } else {
             const hash = props.location.hash;

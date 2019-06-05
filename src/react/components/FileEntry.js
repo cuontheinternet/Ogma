@@ -13,7 +13,7 @@ import Icon from './Icon';
 import TagGroup from './TagGroup';
 import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
-import {FileView, ColorsLight, ColorsDark, ThumbnailState, EnvironmentContext, FilePropType} from '../../typedef';
+import {FileView, ColorsLight, ColorsDark, ThumbnailState, EnvironmentContext, FilePropType} from '../../util/typedef';
 
 class FileEntry extends React.Component {
 
@@ -194,6 +194,9 @@ class FileEntry extends React.Component {
 
 }
 
-export default connect((state, ownProps) => ({
-    file: state.envMap[ownProps.summary.id].tagTab.fileMap[ownProps.fileHash],
-}))(FileEntry);
+export default connect((state, ownProps) => {
+    const {summary, fileHash: hash} = ownProps;
+    const fileMap = state.envMap[summary.id].fileMap;
+    const file = fileMap[hash];
+    return {file};
+})(FileEntry);

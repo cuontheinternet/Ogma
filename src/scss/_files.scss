@@ -3,9 +3,16 @@
     &-explorer {
         border: solid 1px #dbdbdb;
         -webkit-user-select: none;
+        background-color: #fafafa;
         -moz-user-select: none;
         user-select: none;
         padding: 3px;
+
+        &-empty, &-loading {
+            text-align: center;
+            padding: 50px 0;
+            color: #999;
+        }
     }
     &-nothing {
         text-align: center;

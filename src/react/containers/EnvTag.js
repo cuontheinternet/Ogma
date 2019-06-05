@@ -10,25 +10,17 @@ import upath from 'upath';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
-import {ContextMenuWrapper, hideAllContextMenus, prepareContextMenuHandlers} from 'react-context-menu-wrapper';
+import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
 import ModalUtil from '../../util/ModalUtil';
 import Checkbox from '../components/Checkbox';
-import FileEntry from '../components/FileEntry';
 import Breadcrumbs from '../components/Breadcrumbs';
+import FileExplorer from '../components/FileExplorer';
 import TagContextMenu from '../components/TagContextMenu';
-import {EnvironmentContext, KeyCode} from '../../typedef';
+import {EnvironmentContext, MenuIds, ExplorerOptions, ExplorerOptionsDefaults, ReduxActions} from '../../util/typedef';
 
-const Options = {
-    CollapseLong: 'collapse-long',
-    FoldersFirst: 'folders-first',
-    ShowExtensions: 'show-exts',
-    ShowHidden: 'show-hidden',
-    ConfirmDeletions: 'confirm-deletions',
-};
-
-const TagContextMenuId = 'tag-context-menu';
+const Options = ExplorerOptions;
 
 class EnvTag extends React.Component {
 
@@ -41,8 +33,6 @@ class EnvTag extends React.Component {
 
         path: PropTypes.string.isRequired,
         rootDirName: PropTypes.string.isRequired,
-        fileHashes: PropTypes.array.isRequired,
-        fileMap: PropTypes.object.isRequired,
     };
 
     constructor(props, context) {
@@ -50,18 +40,11 @@ class EnvTag extends React.Component {
         this.summary = context;
 
         this.state = {
-            files: [],
             selection: {},
             contextFileHash: null,
             breadcrumbs: this.pathToBreadcrumbs(props.path),
 
-            optionState: {
-                [Options.CollapseLong]: false,
-                [Options.FoldersFirst]: true,
-                [Options.ShowExtensions]: true,
-                [Options.ShowHidden]: true,
-                [Options.ConfirmDeletions]: true,
-            },
+            optionState: ExplorerOptionsDefaults,
         };
         this.optionCheckboxes = [
             {id: Options.CollapseLong, name: 'Collapse long names'},
@@ -77,47 +60,13 @@ class EnvTag extends React.Component {
     }
 
     static getDerivedStateFromProps(props, state) {
-        let stateUpdate;
-        let updateFiles = false;
         if (props.path !== state.path) {
-            stateUpdate = {
+            return {
                 path: props.path,
-                fileMap: props.fileMap,
-                fileHashes: props.fileHashes,
-                selection: {},
-                lastSelectionIndex: -1,
                 levelUpDisabled: props.path === '/',
             };
-            updateFiles = true;
-        } else {
-            stateUpdate = {};
-            if (props.fileHashes !== state.fileHashes) {
-                stateUpdate.fileHashes = props.fileHashes;
-                stateUpdate.lastSelectionIndex = _.clamp(state.lastSelectionIndex, -1, props.fileHashes.length - 1);
-                updateFiles = true;
-            }
-            if (props.fileMap !== state.fileMap) {
-                stateUpdate.fileMap = props.fileMap;
-                updateFiles = true;
-            }
         }
-        if (updateFiles) {
-            let files = Object.values(props.fileMap);
-            if (!state.optionState[Options.ShowHidden]) {
-                files = _.filter(files, f => !f.name.startsWith('.'));
-            }
-            const compare = (fileA, fileB) => {
-                if (state.optionState[Options.FoldersFirst]) {
-                    if (fileA.isDir && !fileB.isDir) return -1;
-                    if (!fileA.isDir && fileB.isDir) return 1;
-                }
-
-                return fileA.name.localeCompare(fileB.name);
-            };
-            files.sort(compare);
-            stateUpdate.files = files;
-        }
-        return stateUpdate;
+        return null;
     }
 
     componentDidUpdate(prevProps) {
@@ -129,26 +78,20 @@ class EnvTag extends React.Component {
 
     componentDidMount() {
         this.changePath(this.props.path, true);
-        document.addEventListener('keydown', this.handleKeyPress, false);
-    }
-
-    componentWillUnmount() {
-        document.removeEventListener('keydown', this.handleKeyPress, false);
     }
 
     changePath = (newPath, tryUrlHash = false) => {
+        const {location, history, tabPath} = this.props;
+
         if (tryUrlHash) {
-            const uriHash = decodeURI(this.props.location.hash.slice(1));
+            const uriHash = decodeURI(location.hash.slice(1));
             if (uriHash) newPath = uriHash;
         }
         const normPath = path.normalize(newPath);
-        window.dataManager.changeTagTabPath({id: this.summary.id, path: normPath})
-            .then(() => {
-                const hash = `#${normPath}`;
-                this.props.history.push(hash);
-                window.dataManager.setEnvRoutePath({id: this.summary.id, path: `${this.props.tabPath}${hash}`});
-            })
-            .catch(window.handleError);
+        window.dataManager.dispatch(ReduxActions.TagTabChangePath, this.summary.id, normPath);
+        const hash = `#${normPath}`;
+        history.push(hash);
+        window.dataManager.setEnvRoutePath({id: this.summary.id, path: `${tabPath}${hash}`});
     };
 
     pathToBreadcrumbs(normPath) {
@@ -166,25 +109,6 @@ class EnvTag extends React.Component {
         return breadcrumbs;
     }
 
-    handleKeyPress = event => {
-        const files = this.state.files;
-        switch (event.keyCode) {
-            case KeyCode.Esc:
-                hideAllContextMenus();
-                break;
-            case KeyCode.A:
-                if (event.ctrlKey) {
-                    event.preventDefault();
-                    const selection = {};
-                    for (const file of files) selection[file.hash] = true;
-                    this.setState({selection});
-                }
-                break;
-            default:
-            // Do nothing
-        }
-    };
-
     handleCheckboxChange = (id, value) => {
         this.setState({
             optionState: {
@@ -194,42 +118,13 @@ class EnvTag extends React.Component {
         });
     };
 
+    handleSelectionChange = selection => {
+        this.setState({selection});
+    };
+
+    // noinspection JSUnusedLocalSymbols
     handleFileClick = (file, event, displayIndex) => {
-        const hash = file.hash;
-        const files = this.state.files;
-
-        const ctrlKey = event.ctrlKey;
-        const shiftKey = event.shiftKey;
-        this.setState(prevState => {
-            const oldSel = prevState.selection;
-            const oldSelSize = _.size(oldSel);
-
-            let selection = {};
-            let newSelectionIndex = displayIndex;
-            const rangeSelection = prevState.lastSelectionIndex !== -1 ? shiftKey : false;
-            if (rangeSelection) {
-                newSelectionIndex = prevState.lastSelectionIndex;
-                let a = prevState.lastSelectionIndex;
-                let b = displayIndex;
-                if (a > b) {
-                    const temp = b;
-                    b = a;
-                    a = temp;
-                }
-                for (let i = a; i < b + 1; ++i) {
-                    selection[files[i].hash] = true;
-                }
-            } else {
-                if (ctrlKey) selection = oldSel;
-                if (oldSel[hash] && oldSelSize <= 1) {
-                    delete selection[hash];
-                } else {
-                    selection[hash] = true;
-                }
-            }
-
-            return {selection, lastSelectionIndex: newSelectionIndex};
-        });
+        // Nothing to do here... YET.
     };
 
     handleFileDoubleClick = file => {
@@ -288,34 +183,9 @@ class EnvTag extends React.Component {
         return comps;
     }
 
-    renderFiles() {
-        const props = this.props;
-        const state = this.state;
-        const files = state.files;
-
-        if (files.length === 0) {
-            return <div className="file-nothing">
-                No files to show.
-            </div>;
-        }
-
-        const comps = new Array(files.length);
-        for (let i = 0; i < files.length; ++i) {
-            const file = files[i];
-            const handlers = prepareContextMenuHandlers({id: TagContextMenuId, data: file.hash});
-            comps[i] = <FileEntry key={file.hash} fileHash={file.hash} basePath={props.path} summary={this.summary}
-                                  showExtension={state.optionState[Options.ShowExtensions]} displayIndex={i}
-                                  collapseLongNames={state.optionState[Options.CollapseLong]}
-                                  onSingleClick={this.handleFileClick} selected={!!state.selection[file.hash]}
-                                  onDoubleClick={this.handleFileDoubleClick}
-                                  handlers={handlers}/>;
-        }
-
-        return comps;
-    }
-
     render() {
         const state = this.state;
+        const options = state.optionState;
 
         return <div>
 
@@ -351,14 +221,14 @@ class EnvTag extends React.Component {
                 </div>
             </div>
 
-            <div className="file-explorer">
-                {this.renderFiles()}
-            </div>
+            <FileExplorer summary={this.summary} options={options} path={state.path}
+                          selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}
+                          onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}/>
 
-            <ContextMenuWrapper id={TagContextMenuId} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={TagContextMenuId} fileHash={state.contextFileHash} changePath={this.changePath}
+            <ContextMenuWrapper id={MenuIds.TagTab} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
+                <TagContextMenu id={MenuIds.TagTab} fileHash={state.contextFileHash} changePath={this.changePath}
                                 summary={this.summary} selection={state.selection}
-                                confirmDeletions={state.optionState[Options.ConfirmDeletions]}/>
+                                confirmDeletions={options[Options.ConfirmDeletions]}/>
             </ContextMenuWrapper>
 
             {/*<br/>*/}
@@ -371,9 +241,10 @@ class EnvTag extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const props = {
-        ...state.envMap[ownProps.summary.id].tagTab,
+    const {summary} = ownProps;
+    const tagTab = state.envMap[summary.id].tagTab;
+    return {
+        ...tagTab,
+        rootDirName: upath.basename(summary.path),
     };
-    props.rootDirName = upath.basename(ownProps.summary.path);
-    return props;
 })(EnvTag);

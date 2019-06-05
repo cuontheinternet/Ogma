@@ -7,7 +7,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 
-import {BackendEvents, ReduxActions} from '../typedef';
+import {BackendEvents, ReduxActions} from './typedef';
 import ErrorHandler from './ErrorHandler';
 
 export default class DataManager {
@@ -44,7 +44,7 @@ export default class DataManager {
             [BackendEvents.EnvAddTags]: data => this.dispatch(ReduxActions.AddNewTags, data.id, data.tags),
             [BackendEvents.EnvTagFiles]: data => this.dispatch(ReduxActions.TagFiles, data.id, data),
             [BackendEvents.EnvUntagFiles]: data => this.dispatch(ReduxActions.UntagFiles, data.id, data),
-            [BackendEvents.EnvThumbUpdate]: data => this.dispatch(ReduxActions.TagTabThumbUpdate, data.id, data),
+            [BackendEvents.EnvThumbUpdate]: data => this.dispatch(ReduxActions.UpdateThumbState, data.id, data),
         };
         this.emitter.on('*', function (...args) {
             const eventName = this.event;
@@ -90,7 +90,7 @@ export default class DataManager {
     };
 
     _removeFiles = data => {
-        this.dispatch(ReduxActions.TagTabRemoveFiles, data.id, data.hashes);
+        this.dispatch(ReduxActions.RemoveMultipleFiles, data.id, data.hashes);
     };
 
     _fetchAllTags() {
@@ -123,23 +123,21 @@ export default class DataManager {
      * @param {object} data
      * @param {string} data.id Environment ID
      * @param {string} data.path Path relative to environment route
+     * @param {boolean} data.wasCached Available
      */
-    changeTagTabPath(data) {
+    requestDirectoryContent(data) {
+        if (data.wasCached) {
+            // TODO: Do some re-fetching or updates on the directory in the future.
+            return Promise.resolve();
+        }
+
         return window.ipcModule.getDirectoryContents({id: data.id, path: data.path})
-            .then(files => {
-                const fileHashes = new Array(files.length);
-                const fileMap = {};
-                for (let i = 0; i < files.length; ++i) {
-                    const file = files[i];
-                    fileHashes[i] = file.hash;
-                    fileMap[file.hash] = file;
-                }
-                const tabData = {
-                    path: data.path,
-                    fileHashes,
-                    fileMap,
-                };
-                this.dispatch(ReduxActions.TagTabChangeData, data.id, tabData);
+            .then(result => {
+                const {directory, files} = result;
+                this.dispatch(ReduxActions.SetMultipleFileDetails, data.id, files);
+
+                const actionData = {directory, files: _.map(files, f => f.hash)};
+                this.dispatch(ReduxActions.SetDirectoryContent, data.id, actionData);
             });
     }
 

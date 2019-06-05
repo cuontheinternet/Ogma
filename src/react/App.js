@@ -56,10 +56,8 @@ class App extends React.Component {
                                         <Route path="/settings" component={GlobalSettings}/>
                                         <Route path="/env/:slug"
                                                render={props =>
-                                                   <Environment {...props}
-                                                                key={props.match.params.slug}
-                                                                slug={props.match.params.slug}
-                                                                envSummaries={summaries}/>
+                                                   <Environment {...props} key={props.match.params.slug}
+                                                                slug={props.match.params.slug}/>
                                                }/>
                                     </Switch>
                                 </div>

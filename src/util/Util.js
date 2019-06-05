@@ -4,7 +4,11 @@
  * @license LGPL-3.0
  */
 
-const Promise = require('bluebird');
+import md5 from 'md5';
+import _ from 'lodash';
+import Promise from 'bluebird';
+
+import {ExplorerOptions} from './typedef';
 
 export default class Util {
 
@@ -35,6 +39,22 @@ export default class Util {
     }
 
     /**
+     * @param {string} string
+     * @returns {string}
+     */
+    static getMd5(string) {
+        return md5(string);
+    }
+
+    /**
+     * @param {string} nixPath
+     * @returns {string}
+     */
+    static getFileHash(nixPath) {
+        return Util.getMd5(nixPath).substring(0, 12);
+    }
+
+    /**
      * @param {any[]} array
      * @param {function(any): string} keyFunc
      */
@@ -56,5 +76,22 @@ export default class Util {
         }
         return length;
     }
+
+    static sortFiles(unsortedFiles, options) {
+        let files = unsortedFiles;
+        if (!options[ExplorerOptions.ShowHidden]) {
+            files = _.filter(files, f => !f.name.startsWith('.'));
+        }
+        const compare = (fileA, fileB) => {
+            if (options[ExplorerOptions.FoldersFirst]) {
+                if (fileA.isDir && !fileB.isDir) return -1;
+                if (!fileA.isDir && fileB.isDir) return 1;
+            }
+
+            return fileA.name.localeCompare(fileB.name);
+        };
+        files.sort(compare);
+        return files;
+    };
 
 }

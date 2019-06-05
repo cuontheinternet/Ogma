@@ -17,7 +17,7 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvironmentContext} from '../../typedef';
+import {EnvironmentContext} from '../../util/typedef';
 
 const ContextTabs = {
     Tag: 0,
@@ -292,7 +292,7 @@ class TagContextMenu extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const fileMap = state.envMap[ownProps.summary.id].tagTab.fileMap;
+    const fileMap = state.envMap[ownProps.summary.id].fileMap;
     const selectedHashes = Object.keys(ownProps.selection);
     let files = [];
     if (selectedHashes.length === 1) files = [fileMap[ownProps.fileHash]];

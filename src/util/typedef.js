@@ -21,16 +21,21 @@ import PropTypes from 'prop-types';
 export const ReduxActions = {
     UpdateSummaries: 'update-summaries',
     UpdateSummary: 'update-summary',
+
+
     SetAllTags: 'set-all-tags',
     AddNewTags: 'add-new-tags',
     TagFiles: 'tag-files',
     UntagFiles: 'untag-files',
 
+    SetDirectoryContent: 'set-dir-contents',
+    SetMultipleFileDetails: 'set-multi-file-details',
+    RemoveMultipleFiles: 'remove-files',
+    UpdateThumbState: 'update-thumb-state',
+
     UpdateEnvSubRoute: 'update-sub-route',
 
-    TagTabChangeData: 'tagtab-change-data',
-    TagTabRemoveFiles: 'tagtab-remove-files',
-    TagTabThumbUpdate: 'tagtag-thumb-update',
+    TagTabChangePath: 'tagtab-change-path',
 };
 
 export const IndexRoutePath = '/';
@@ -56,11 +61,39 @@ export const EnvSummaryPropType = PropTypes.shape({
     color: PropTypes.string,
 });
 
+export const MenuIds = {
+    TagTab: 'menu-tag-tab',
+};
+
 export const FileView = {
     List: 'list',
     SmallThumb: 'small-thumb',
     MediumThumb: 'medium-thumb',
     LargeThumb: 'large-thumb',
+};
+
+export const ExplorerOptions = {
+    SortOrder: 'sort-order',
+    CollapseLong: 'collapse-long',
+    FoldersFirst: 'folders-first',
+    ShowExtensions: 'show-exts',
+    ShowHidden: 'show-hidden',
+    ConfirmDeletions: 'confirm-deletions',
+};
+
+export const ExplorerOptionsThatAffectSort = [
+    ExplorerOptions.SortOrder,
+    ExplorerOptions.FoldersFirst,
+    ExplorerOptions.ShowHidden,
+];
+
+export const ExplorerOptionsDefaults = {
+    [ExplorerOptions.SortOrder]: 'name-asc',
+    [ExplorerOptions.CollapseLong]: false,
+    [ExplorerOptions.FoldersFirst]: true,
+    [ExplorerOptions.ShowExtensions]: true,
+    [ExplorerOptions.ShowHidden]: true,
+    [ExplorerOptions.ConfirmDeletions]: true,
 };
 
 export const FilePropType = PropTypes.shape({
@@ -81,5 +114,5 @@ export const KeyCode = {
     Esc: 27,
 };
 
-export * from '../../shared/typedef';
+export * from '../../../shared/typedef';
 

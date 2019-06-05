@@ -15,7 +15,7 @@ import EnvIcon from '../components/EnvIcon';
 import ModalUtil from '../../util/ModalUtil';
 import ErrorHandler from '../../util/ErrorHandler';
 import ExternalLink from '../components/ExternalLink';
-import {EnvProperty, IndexRoutePath, Colors, KeyCode} from '../../typedef';
+import {EnvProperty, IndexRoutePath, Colors, KeyCode} from '../../util/typedef';
 
 class EnvConfigure extends React.Component {
 

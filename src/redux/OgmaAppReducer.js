@@ -5,110 +5,14 @@
  */
 
 import _ from 'lodash';
-import ExactTrie from 'exact-trie';
-import {createReducer} from 'redux-starter-kit';
 
-import {DefaultEnvRoutePath, ReduxActions} from '../typedef';
+import {environmentReducer} from './EnvironmentReducer';
+import {DefaultEnvRoutePath, ReduxActions} from '../util/typedef';
 
 const initialGlobalState = {
     envIds: [],
     envMap: {},
 };
-
-const environmentReducer = createReducer({}, {
-    [ReduxActions.UpdateSummary]: (state, action) => {
-        return {...state, summary: action.data};
-    },
-    [ReduxActions.SetAllTags]: (state, action) => {
-        const tags = action.data;
-        const tagIds = new Array(tags.length);
-        const tagMap = {};
-        for (let i = 0; i < tags.length; ++i) {
-            const tag = tags[i];
-            tagIds[i] = tag.id;
-            tagMap[tag.id] = tag;
-        }
-        return {...state, tagIds, tagMap};
-    },
-    [ReduxActions.AddNewTags]: (state, action) => {
-        const tags = action.data;
-        const newTagIds = new Array(tags.length);
-        const tagMap = {...state.tagMap};
-        for (let i = 0; i < tags.length; ++i) {
-            const tag = tags[i];
-            newTagIds[i] = tag.id;
-            tagMap[tag.id] = tag;
-        }
-        return {...state, tagIds: _.union(state.tagIds, newTagIds), tagMap};
-    },
-    [ReduxActions.TagFiles]: (state, action) => {
-        const {hashes, entityIds, tagIds} = action.data;
-        const fileMap = {...state.tagTab.fileMap};
-        for (let i = 0; i < hashes.length; ++i) {
-            const hash = hashes[i];
-            const oldFile = fileMap[hash];
-            if (!oldFile) continue;
-            fileMap[hash] = {
-                ...oldFile,
-                entityId: entityIds[i],
-                tagIds: _.union(oldFile.tagIds, tagIds),
-            };
-        }
-        return {...state, tagTab: {...state.tagTab, fileMap}};
-    },
-    [ReduxActions.UntagFiles]: (state, action) => {
-        const {entityIds, tagIds} = action.data;
-        const fileMap = {...state.tagTab.fileMap};
-        const entityTrie = new ExactTrie({ignoreCase: false}).putAll(entityIds, true);
-        const untaggedFiles = _.filter(fileMap, f => f.entityId && entityTrie.has(f.entityId));
-        for (let i = 0; i < untaggedFiles.length; ++i) {
-            const file = untaggedFiles[i];
-            const remainingTags = _.difference(file.tagIds, tagIds);
-            fileMap[file.hash] = {
-                ...file,
-                tagIds: remainingTags,
-            };
-        }
-        return {...state, tagTab: {...state.tagTab, fileMap}};
-    },
-    [ReduxActions.UpdateEnvSubRoute]: (state, action) => {
-        return {...state, subRoute: action.data};
-    },
-    [ReduxActions.TagTabChangeData]: (state, action) => {
-        return {...state, tagTab: {...state.tagTab, ...action.data}};
-    },
-    [ReduxActions.TagTabRemoveFiles]: (state, action) => {
-        const tagTab = state.tagTab;
-        const deletedHashes = action.data;
-
-        const fileHashes = _.difference(tagTab.fileHashes, deletedHashes);
-        if (fileHashes.length === tagTab.fileHashes.length) return state;
-
-        const fileMap = {...tagTab.fileMap};
-        for (const hash of deletedHashes) delete fileMap[hash];
-        return {...state, tagTab: {...state.tagTab, fileHashes, fileMap}};
-    },
-    [ReduxActions.TagTabThumbUpdate]: (state, action) => {
-        const {hash, thumb} = action.data;
-        const oldFileMap = state.tagTab.fileMap;
-
-        let newState = state;
-        const oldFile = oldFileMap[hash];
-        if (oldFile) {
-            newState = {
-                ...state,
-                tagTab: {
-                    ...state.tagTab,
-                    fileMap: {
-                        ...oldFileMap,
-                        [hash]: {...oldFile, thumb},
-                    },
-                },
-            };
-        }
-        return newState;
-    },
-});
 
 /**
  * @param {object} state
@@ -130,7 +34,8 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
                 subRoute: DefaultEnvRoutePath,
                 tagIds: [],
                 tagMap: {},
-                tagTab: {path: '/', fileHashes: [], fileMap: {}},
+                fileMap: {},
+                tagTab: {path: '/'},
             };
             env.summary = summary;
             newEnvMap[summary.id] = env;
@@ -140,7 +45,10 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
             envIds: newEnvIds,
             envMap: newEnvMap,
         };
-    } else if (action.envId) {
+    }
+
+    if (!action.envId && data && data.id) action.envId = data.id;
+    if (action.envId) {
         const envId = action.envId;
         const newEnvMap = {
             ...state.envMap,

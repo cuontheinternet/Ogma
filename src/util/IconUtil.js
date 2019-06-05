@@ -6,7 +6,7 @@
 
 import ExactTrie from 'exact-trie';
 
-import {ColorsLight, VideoExtensions, ImageExtensions, AudioExtensions} from '../typedef';
+import {ColorsLight, VideoExtensions, ImageExtensions, AudioExtensions} from './typedef';
 
 export const FolderIconData = {name: 'folder', colorCode: 0};
 const FileIconData = {name: 'file', colorCode: 32};

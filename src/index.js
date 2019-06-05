@@ -29,7 +29,7 @@ Promise.config({
 
 // Init basic window params
 window.isDevelopment = process.env.NODE_ENV !== 'production';
-window.serverHost = 'http://localhost:10548';
+window.serverHost = 'http://192.168.1.230:10548';
 window.handleError = ErrorHandler.handleMiscError;
 window.handleErrorQuiet = ErrorHandler.handleMiscErrorQuiet;
 
