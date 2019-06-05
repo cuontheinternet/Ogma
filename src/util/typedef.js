@@ -39,6 +39,8 @@ export const ReduxActions = {
 
     TabBrowseChangePath: 'browse-change-path',
     TabSearchChangeTagSelection: 'search-change-selection',
+    TabSearchChangeTagSearchCondition: 'search-change-tag-cond',
+    TabSearchChangeTagFilter: 'search-change-tag-filter',
 };
 
 export const IndexRoutePath = '/';
@@ -101,6 +103,12 @@ export const ExplorerOptionsDefaults = {
     [ExplorerOptions.ShowHidden]: true,
     [ExplorerOptions.ConfirmDeletions]: true,
 };
+
+export const TagSearchCondition = {
+    All: 1,
+    Any: 2,
+};
+export const DefaultTagSearchCondition = TagSearchCondition.All;
 
 export const FilePropType = PropTypes.shape({
     hash: PropTypes.string,

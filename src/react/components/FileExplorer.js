@@ -7,8 +7,10 @@
 import _ from 'lodash';
 import React from 'react';
 import c from 'classnames';
+import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
+import {NotificationManager} from 'react-notifications';
 
 import Icon from './Icon';
 import Util from '../../util/Util';
@@ -41,7 +43,7 @@ class FileExplorer extends React.Component {
         // Props provided by redux.connect
         files: PropTypes.arrayOf(PropTypes.object),
         fileDataSource: PropTypes.number.isRequired,
-        handlerObjects: PropTypes.arrayOf(PropTypes.object),
+        badHashes: PropTypes.arrayOf(PropTypes.string).isRequired,
 
         // Props passed by parent
         page: PropTypes.number,
@@ -78,12 +80,22 @@ class FileExplorer extends React.Component {
 
     componentDidMount() {
         const props = this.props;
-        const {path, files, options} = props;
-        const wasCached = !!files;
+        const {path, fileDataSource, files, options, badHashes} = props;
 
-        if (wasCached) this.setState({files: Util.sortFiles(files, options)});
-        window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached})
-            .catch(window.handleError);
+        if (fileDataSource === FileDataSource.DirPath) {
+            const wasCached = !!files;
+            if (wasCached) this.setState({files: Util.sortFiles(files, options)});
+            Promise.resolve()
+                .then(() => window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached}))
+                .catch(window.handleError);
+        } else {
+            this.setState({files: files});
+            if (badHashes.length !== 0) {
+                Promise.resolve()
+                    .then(() => window.dataManager.getEntityFiles({id: this.summary.id, hashes: badHashes}))
+                    .catch(window.handleError);
+            }
+        }
 
         document.addEventListener('keydown', this.handleKeydown);
     }
@@ -94,12 +106,12 @@ class FileExplorer extends React.Component {
 
     // noinspection JSCheckFunctionSignatures
     componentDidUpdate(prevProps) {
-        const {path, files: propFiles, options, selectedFileHash, onSelectionChange, onPageChange} = this.props;
+        const {path, files: propFiles, options, selectedFileHash, badHashes, fileDataSource, onSelectionChange, onPageChange} = this.props;
         const {files: stateFiles, selection} = this.state;
-        if (path !== prevProps.path) {
+        if (fileDataSource === FileDataSource.DirPath && path !== prevProps.path) {
             const page = 1;
             const selection = {};
-            this.setState({selection,page});
+            this.setState({selection, page});
             if (onPageChange) onPageChange(page);
             if (onSelectionChange) onSelectionChange(selection);
             window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached: !!propFiles})
@@ -126,11 +138,16 @@ class FileExplorer extends React.Component {
         } else if (propFiles !== stateFiles) {
             this.setState({files: propFiles});
         }
+
+        if (!equal(prevProps.badHashes, badHashes) && badHashes.length !== 0) {
+            window.dataManager.getEntityFiles({id: this.summary.id, hashes: badHashes})
+                .catch(window.handleError);
+        }
     }
 
     handleKeydown = event => {
         const {onSelectionChange} = this.props;
-        const {files} = this.state;
+        const {files, selection: oldSelection} = this.state;
 
         const tagName = event.target.tagName.toUpperCase();
         const isInInput = tagName === 'INPUT' || tagName === 'TEXTAREA';
@@ -141,7 +158,9 @@ class FileExplorer extends React.Component {
                     if (!isInInput) {
                         event.preventDefault();
                         const selection = {};
-                        for (const file of files) selection[file.hash] = true;
+                        if (_.size(oldSelection) !== files.length) {
+                            for (const file of files) selection[file.hash] = true;
+                        }
                         this.setState({selection});
                         if (onSelectionChange) onSelectionChange(selection);
                     }
@@ -199,6 +218,14 @@ class FileExplorer extends React.Component {
     handleDoubleClick = file => {
         const {onFileDoubleClick} = this.props;
 
+        if (!file.isDir) {
+            if (window.dataManager.isLocalClient()) {
+                return window.ipcModule.openFile({id: this.summary.id, path: file.nixPath})
+                    .catch(window.handleError);
+            } else {
+                NotificationManager.warning('Opening files in the browser is not supported yet.');
+            }
+        }
         if (onFileDoubleClick) onFileDoubleClick(file);
     };
 
@@ -258,12 +285,18 @@ class FileExplorer extends React.Component {
     }
 
     renderStatusBar() {
-        const {fileDataSource} = this.props;
+        const {fileDataSource, badHashes} = this.props;
         const {files, selection, filter} = this.state;
         const fileCount = !files ? null : files.length;
         const selectionCount = _.size(selection);
 
         const targetWord = fileDataSource === FileDataSource.DirPath ? 'directory' : 'file list';
+
+        let fileCountString = null;
+        if (!_.isNil(fileCount)) {
+            fileCountString = `${fileCount} file${fileCount !== 1 ? 's' : ''}`;
+            if (badHashes.length > 0) fileCountString += ` (loading ${badHashes.length} more)`;
+        }
 
         return <div className="file-explorer-bar">
             <nav className="level">
@@ -278,7 +311,7 @@ class FileExplorer extends React.Component {
                             </div>
                         </div>
                     </div>
-                    {fileCount && <div className="level-item">{fileCount} file{fileCount !== 1 ? 's' : ''}</div>}
+                    {!!fileCountString && <div className="level-item file-count">{fileCountString}</div>}
                     {selectionCount > 0 &&
                     <div className="level-item selection-count">{selectionCount} selected</div>}
                 </div>
@@ -291,11 +324,11 @@ class FileExplorer extends React.Component {
     }
 
     renderFiles() {
-        const {options, contextMenuId} = this.props;
+        const {options, badHashes, contextMenuId} = this.props;
         const {files, selection} = this.state;
         let {page} = this.state;
-        const loading = !files;
         const empty = files && files.length === 0;
+        const loading = !files || (empty && badHashes.length > 0);
 
         if (loading) return <div className="file-explorer-text"><Icon name="cog" animation={true}/> Loading...</div>;
         else if (empty) return <div className="file-explorer-text">No files to show.</div>;
@@ -362,15 +395,19 @@ export default connect((state, ownProps) => {
     } else if (entityIds) {
         fileDataSource = FileDataSource.EntityIDs;
         const entities = entityIds.map(id => entityMap[id]);
-        fileHashes = entities.map(e => e.hash).filter(h => !!h);
+        fileHashes = entities.filter(e => !!e).map(e => e.hash).filter(h => !!h);
         if (fileHashes.length !== entities.length) {
             console.warn('Some entities in FileExplorer are missing relevant file hashes!');
         }
     }
 
     let files = null;
+    let badHashes = [];
     if (fileHashes) {
-        files = _.map(fileHashes, h => fileMap[h]);
+        files = fileHashes.map(h => fileMap[h]);
+        const badIndices = _.keys(_.pickBy(files, f => !f));
+        _.pullAt(files, badIndices);
+        badHashes = _.at(fileHashes, badIndices);
     }
-    return {files, fileDataSource};
+    return {files, fileDataSource, badHashes};
 })(FileExplorer);

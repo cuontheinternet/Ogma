@@ -7,7 +7,7 @@
 import _ from 'lodash';
 
 import {environmentReducer} from './EnvironmentReducer';
-import {DefaultEnvRoutePath, ReduxActions} from '../util/typedef';
+import {DefaultEnvRoutePath, DefaultTagSearchCondition, ReduxActions} from '../util/typedef';
 
 const initialGlobalState = {
     envIds: [],
@@ -37,7 +37,7 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
                 entityMap: {},
                 fileMap: {},
                 tabBrowse: {path: '/'},
-                tabSearch: {selectedTagsMap: {}},
+                tabSearch: {selectedTagsMap: {}, tagFilter: '', tagSearchCondition: DefaultTagSearchCondition},
             };
             env.summary = summary;
             newEnvMap[summary.id] = env;

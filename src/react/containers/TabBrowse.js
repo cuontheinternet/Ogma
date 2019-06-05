@@ -13,7 +13,6 @@ import {connect} from 'react-redux';
 import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
-import ModalUtil from '../../util/ModalUtil';
 import Checkbox from '../components/Checkbox';
 import Breadcrumbs from '../components/Breadcrumbs';
 import FileExplorer from '../components/FileExplorer';
@@ -129,14 +128,8 @@ class TabBrowse extends React.Component {
     };
 
     handleFileDoubleClick = file => {
-        const relPath = path.join(this.state.path, file.base);
         if (file.isDir) {
-            this.changePath(relPath);
-        } else if (window.dataManager.isLocalClient()) {
-            return window.ipcModule.openFile({id: this.summary.id, path: relPath})
-                .catch(window.handleError);
-        } else {
-            ModalUtil.showError({message: 'Opening files in the browser is not supported yet.'});
+            this.changePath(file.nixPath);
         }
     };
 

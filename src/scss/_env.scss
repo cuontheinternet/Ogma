@@ -67,8 +67,18 @@
         &-selected {
             margin-bottom: 0.6rem;
             font-size: 0.9rem;
-            p {
-                margin: 3px 0.5rem 0 0;
+            &-text {
+                margin: 0 8px 0 0;
+                font-size: 1rem;
+                float: left;
+                .tabs {
+                    margin: 0 6px;
+                    button {
+                        padding: 0.2em 0.5em;
+                        margin-top: -6px;
+                        font-size: 0.9em;
+                    }
+                }
             }
         }
     }

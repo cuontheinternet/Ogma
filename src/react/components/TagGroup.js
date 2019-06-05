@@ -21,9 +21,11 @@ class TagGroup extends React.Component {
         entityId: PropTypes.string,
         summary: EnvSummaryPropType.isRequired,
         tagIds: PropTypes.arrayOf(PropTypes.string),
+        nameFilter: PropTypes.string,
 
         // Props provided by redux.connect
         tags: PropTypes.arrayOf(PropTypes.object).isRequired,
+        hiddenTagCount: PropTypes.number,
 
         // Props passed by parent
         onClick: PropTypes.func,
@@ -42,8 +44,8 @@ class TagGroup extends React.Component {
     }
 
     renderTags() {
-        const {tags, onClick, showEllipsis, showPlaceHolderOnEmpty} = this.props;
-        if (!tags || tags.length === 0) {
+        const {tags, onClick, showEllipsis, showPlaceHolderOnEmpty, hiddenTagCount} = this.props;
+        if (hiddenTagCount === 0 && (!tags || tags.length === 0)) {
             if (!showPlaceHolderOnEmpty) return;
             return <div className="tag-group-tag tag-group-tag-empty">Nothing to show</div>;
         }
@@ -51,6 +53,11 @@ class TagGroup extends React.Component {
         const badClassName = c({
             'tag-group-tag': true,
             'tag-group-tag-bad': true,
+        });
+
+        const hiddenClassName = c({
+            'tag-group-tag': true,
+            'tag-group-tag-hidden': true,
         });
 
         const className = c({
@@ -72,6 +79,13 @@ class TagGroup extends React.Component {
                 {tag.name}
             </div>;
         }
+
+        if (hiddenTagCount > 0) {
+            comps.push(<div key={`hidden-tag-count`} className={hiddenClassName}>
+                ({hiddenTagCount} tag{hiddenTagCount !== 1 ? 's' : ''} hidden)
+            </div>);
+        }
+
         return comps;
     }
 
@@ -82,7 +96,7 @@ class TagGroup extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const {summary, tagIds, entityId} = ownProps;
+    const {summary, tagIds, entityId, nameFilter} = ownProps;
     const {tagMap, entityMap} = state.envMap[summary.id];
     let finalTagIds;
     if (tagIds) {
@@ -91,6 +105,13 @@ export default connect((state, ownProps) => {
         const entity = entityMap[entityId];
         if (entity) finalTagIds = entity.tagIds;
     }
-    const tags = finalTagIds ? finalTagIds.map(tagId => tagMap[tagId]) : null;
-    return {tags};
+    let tags = finalTagIds ? finalTagIds.map(tagId => tagMap[tagId]) : null;
+    let hiddenTagCount = 0;
+    if (tags && nameFilter) {
+        const fixedFilter = nameFilter.trim().toLowerCase();
+        const oldLength = tags.length;
+        tags = tags.filter(t => t.name.toLowerCase().indexOf(fixedFilter) !== -1);
+        hiddenTagCount = oldLength - tags.length;
+    }
+    return {tags, hiddenTagCount};
 })(TagGroup);

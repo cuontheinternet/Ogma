@@ -197,5 +197,15 @@ export const environmentReducer = createReducer({}, {
         else delete selectedTagsMap[tagId];
         return {...state, tabSearch: {...tabSearch, selectedTagsMap}};
     },
+    [ReduxActions.TabSearchChangeTagSearchCondition]: (state, action) => {
+        const tagSearchCondition = action.data;
+        const {tabSearch} = state;
+        return {...state, tabSearch: {...tabSearch, tagSearchCondition}};
+    },
+    [ReduxActions.TabSearchChangeTagFilter]: (state, action) => {
+        const tagFilter = action.data;
+        const {tabSearch} = state;
+        return {...state, tabSearch: {...tabSearch, tagFilter}};
+    },
 });
 

@@ -145,6 +145,7 @@ export default class DataManager {
 
                 const actionData = {directory, files: _.map(files, f => f.hash)};
                 this.dispatch(ReduxActions.SetDirectoryContent, data.id, actionData);
+                return null;
             });
     }
 
@@ -167,6 +168,22 @@ export default class DataManager {
         this.lastThumbRequestEnvId = data.id;
         this.thumbRequestQueue.push(data.path);
         this._debounceRequestBatchThumbnails();
+    }
+
+    /**
+     * @param {object} data
+     * @param {string} data.id Environment ID
+     * @param {string} data.hashes File hashes that came from entities
+     */
+    getEntityFiles(data) {
+        const chunks = _.chunk(data.hashes, 75);
+        const promises = chunks.map(ch => window.ipcModule.getEntityFiles({id: data.id, hashes: ch}));
+        return Promise.all(promises)
+            .then(chunks => {
+                const entityFiles = _.flattenDeep(chunks);
+                this.dispatch(ReduxActions.SetMultipleFileDetails, data.id, entityFiles);
+                return null;
+            });
     }
 
     isLocalClient() {
