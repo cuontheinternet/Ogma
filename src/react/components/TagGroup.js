@@ -48,6 +48,11 @@ class TagGroup extends React.Component {
             return <div className="tag-group-tag tag-group-tag-empty">Nothing to show</div>;
         }
 
+        const badClassName = c({
+            'tag-group-tag': true,
+            'tag-group-tag-bad': true,
+        });
+
         const className = c({
             'tag-group-tag': true,
             'text-ellipsis': showEllipsis,
@@ -57,6 +62,9 @@ class TagGroup extends React.Component {
         const comps = new Array(tags.length);
         for (let i = 0; i < tags.length; ++i) {
             const tag = tags[i];
+            if (!tag) {
+                comps[i] = <div key={`bad-tag-${i}`} className={badClassName}>Bad tag!</div>;
+            }
             const style = {background: tag.color};
             const title = showEllipsis ? tag.name : null;
             comps[i] = <div key={tag.id} className={className} style={style}

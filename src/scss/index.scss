@@ -1,3 +1,10 @@
+@charset "utf-8";
+
+$radius: 3px;
+$radius-small: 3px;
+$radius-large: 3px;
+
+@import 'bulma-custom';
 @import 'bulma-fixes';
 @import 'env';
 @import 'files';

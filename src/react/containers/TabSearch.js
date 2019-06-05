@@ -48,14 +48,11 @@ class TabSearch extends React.Component {
             <div className="card-content">
                 <p className="title is-size-5">Available tags:</p>
                 <div className="field has-addons">
-                    <p className="control ">
-                        <button className="button is-static"><Icon name="filter"/></button>
+                    <p className="control">
+                        <button className="button is-static"><Icon name="search"/></button>
                     </p>
                     <p className="control is-expanded">
-                        <input className="input" type="text" placeholder="Tag name"/>
-                    </p>
-                    <p className="control">
-                        <button className="button">Filter</button>
+                        <input className="input" type="text" placeholder="Search tags"/>
                     </p>
                 </div>
                 <TagGroup tagIds={availableTags} summary={this.summary} onClick={this.selectTag}
@@ -77,7 +74,6 @@ class TabSearch extends React.Component {
         const [selectedTags, availableTags] = _.partition(tagIds, id => !!selectedTagsMap[id]);
 
         const entityIds = Object.keys(entityMap);
-
         return <div className="columns">
             <div className="column is-narrow" style={{width: 360}}>
                 {this.renderAvailableTags(availableTags)}

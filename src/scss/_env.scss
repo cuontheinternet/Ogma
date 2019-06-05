@@ -44,6 +44,11 @@
     &-browse {
         &-available {
             border-radius: 3px;
+            .field {
+                &, .input, .button {
+                    font-size: 0.9rem;
+                }
+            }
             .card-content {
                 padding: 0.6rem;
                 .title {
@@ -52,8 +57,8 @@
                 .tag-group {
                     font-size: 0.9rem;
                     &-tag {
+                        margin: 2px 4px 2px 0;
                         padding: 2px 5px;
-                        margin: 2px;
                     }
                 }
             }

@@ -6,8 +6,9 @@
 
 import _ from 'lodash';
 import React from 'react';
-import PropTypes from 'prop-types';
+import c from 'classnames';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 
 import Icon from './Icon';
 import Util from '../../util/Util';
@@ -22,6 +23,13 @@ import {
 
 const Options = ExplorerOptions;
 
+const FileDataSource = {
+    DirPath: 0,
+    EntityIDs: 1,
+};
+
+const ExplorerPageSize = 200;
+
 class FileExplorer extends React.Component {
 
     static propTypes = {
@@ -32,10 +40,16 @@ class FileExplorer extends React.Component {
 
         // Props provided by redux.connect
         files: PropTypes.arrayOf(PropTypes.object),
+        fileDataSource: PropTypes.number.isRequired,
         handlerObjects: PropTypes.arrayOf(PropTypes.object),
 
         // Props passed by parent
+        page: PropTypes.number,
+        onPageChange: PropTypes.func,
+        filter: PropTypes.string,
+        onFilterChange: PropTypes.func,
         options: PropTypes.object,
+        showStatusBar: PropTypes.bool,
         contextMenuId: PropTypes.string,
         onSelectionChange: PropTypes.func,
         onFileSingleClick: PropTypes.func,
@@ -44,7 +58,10 @@ class FileExplorer extends React.Component {
     };
 
     static defaultProps = {
+        page: 1,
+        filter: '',
         options: ExplorerOptionsDefaults,
+        showStatusBar: true,
     };
 
     constructor(props) {
@@ -52,7 +69,8 @@ class FileExplorer extends React.Component {
         this.summary = props.summary;
 
         this.state = {
-            files: null,
+            page: 1,
+            filter: props.filter,
             selection: {},
             lastSelectionIndex: -1,
         };
@@ -67,17 +85,23 @@ class FileExplorer extends React.Component {
         window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached})
             .catch(window.handleError);
 
-        document.addEventListener('keydown', this.handleKeydown, false);
+        document.addEventListener('keydown', this.handleKeydown);
     }
 
     componentWillUnmount() {
-        document.removeEventListener('keydown', this.handleKeydown, false);
+        document.removeEventListener('keydown', this.handleKeydown);
     }
 
+    // noinspection JSCheckFunctionSignatures
     componentDidUpdate(prevProps) {
-        const {path, files: propFiles, options, selectedFileHash} = this.props;
+        const {path, files: propFiles, options, selectedFileHash, onSelectionChange, onPageChange} = this.props;
         const {files: stateFiles, selection} = this.state;
         if (path !== prevProps.path) {
+            const page = 1;
+            const selection = {};
+            this.setState({selection,page});
+            if (onPageChange) onPageChange(page);
+            if (onSelectionChange) onSelectionChange(selection);
             window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached: !!propFiles})
                 .catch(window.handleError);
         }
@@ -108,14 +132,19 @@ class FileExplorer extends React.Component {
         const {onSelectionChange} = this.props;
         const {files} = this.state;
 
+        const tagName = event.target.tagName.toUpperCase();
+        const isInInput = tagName === 'INPUT' || tagName === 'TEXTAREA';
+
         switch (event.keyCode) {
             case KeyCode.A:
                 if (event.ctrlKey) {
-                    event.preventDefault();
-                    const selection = {};
-                    for (const file of files) selection[file.hash] = true;
-                    this.setState({selection});
-                    if (onSelectionChange) onSelectionChange(selection);
+                    if (!isInInput) {
+                        event.preventDefault();
+                        const selection = {};
+                        for (const file of files) selection[file.hash] = true;
+                        this.setState({selection});
+                        if (onSelectionChange) onSelectionChange(selection);
+                    }
                 }
                 break;
             default:
@@ -173,44 +202,145 @@ class FileExplorer extends React.Component {
         if (onFileDoubleClick) onFileDoubleClick(file);
     };
 
+    handleFilterChange = filter => {
+        const {onFilterChange} = this.props;
+        this.setState({filter});
+        if (onFilterChange) onFilterChange(filter);
+    };
+
+    handlePageChange = page => {
+        const {files} = this.state;
+        const {onPageChange} = this.props;
+
+        const pageCount = Math.ceil(files.length / ExplorerPageSize);
+        page = _.clamp(page, 1, pageCount);
+        this.setState({page});
+        if (onPageChange) onPageChange(page);
+    };
+
+    renderPagination() {
+        const {files, page} = this.state;
+        if (!files) return;
+        if (files.length < ExplorerPageSize) return;
+
+        const pageCount = Math.ceil(files.length / ExplorerPageSize);
+        const buttons = new Array(pageCount);
+        for (let i = 0; i < pageCount; i++) {
+            const pageNo = i + 1;
+            const active = page === pageNo;
+            buttons[i] = <li key={`pagination-button-${i}`}>
+                <button className={`pagination-link ${active ? 'is-current' : ''}`}
+                        onClick={() => active ? null : this.handlePageChange(pageNo)}>{pageNo}</button>
+            </li>;
+        }
+
+        const prevPageDisabled = page <= 1;
+        const nextPageDisabled = page >= pageCount;
+
+        return <React.Fragment>
+            <div className="level-item pagination-file-count">
+                Showing files {(page - 1) * ExplorerPageSize + 1} - {Math.min(page * ExplorerPageSize, files.length)}
+            </div>
+            <div className="level-item">
+                <nav className="pagination" role="navigation" aria-label="pagination">
+                    <button className="pagination-previous" disabled={prevPageDisabled}
+                            onClick={() => this.handlePageChange(page - 1)}>
+                        <Icon name="arrow-left" wrapper={false}/>
+                    </button>
+                    <button className="pagination-next" disabled={nextPageDisabled}
+                            onClick={() => this.handlePageChange(page + 1)}>
+                        <Icon name="arrow-right" wrapper={false}/>
+                    </button>
+                    <ul className="pagination-list">{buttons}</ul>
+                </nav>
+            </div>
+        </React.Fragment>;
+    }
+
+    renderStatusBar() {
+        const {fileDataSource} = this.props;
+        const {files, selection, filter} = this.state;
+        const fileCount = !files ? null : files.length;
+        const selectionCount = _.size(selection);
+
+        const targetWord = fileDataSource === FileDataSource.DirPath ? 'directory' : 'file list';
+
+        return <div className="file-explorer-bar">
+            <nav className="level">
+                <div className="level-left">
+                    <div className="level-item">
+                        <div className="field has-addons">
+                            <div className="control has-icons-left has-icons-right">
+                                <input className="input" type="text" placeholder={`Search in ${targetWord}`}
+                                       disabled={true}
+                                       value={filter} onChange={event => this.handleFilterChange(event.target.value)}/>
+                                <span className="icon is-left"><Icon name="search" wrapper={false}/></span>
+                            </div>
+                        </div>
+                    </div>
+                    {fileCount && <div className="level-item">{fileCount} file{fileCount !== 1 ? 's' : ''}</div>}
+                    {selectionCount > 0 &&
+                    <div className="level-item selection-count">{selectionCount} selected</div>}
+                </div>
+
+                <div className="level-right">
+                    {this.renderPagination()}
+                </div>
+            </nav>
+        </div>;
+    }
+
     renderFiles() {
         const {options, contextMenuId} = this.props;
         const {files, selection} = this.state;
+        let {page} = this.state;
+        const loading = !files;
+        const empty = files && files.length === 0;
+
+        if (loading) return <div className="file-explorer-text"><Icon name="cog" animation={true}/> Loading...</div>;
+        else if (empty) return <div className="file-explorer-text">No files to show.</div>;
+
+        let startIndex = 0;
+        let endIndex = ExplorerPageSize;
+        if (files.length > ExplorerPageSize) {
+            const pageCount = Math.ceil(files.length / ExplorerPageSize);
+            page = _.clamp(page, 1, pageCount);
+            startIndex = (page - 1) * ExplorerPageSize;
+            endIndex = page * ExplorerPageSize;
+        }
 
         const comps = new Array(files.length);
-        for (let i = 0; i < files.length; ++i) {
+        for (let i = startIndex; i < Math.min(endIndex, files.length); ++i) {
             const file = files[i];
-            comps[i] = <FileEntry key={file.hash} hash={file.hash} summary={this.summary} options={options}
-                                  showExtension={options[Options.ShowExtensions]} displayIndex={i}
-                                  collapseLongNames={options[Options.CollapseLongNames]}
-                                  selected={!!selection[file.hash]}
-                                  onSingleClick={this.handleSingleClick} onDoubleClick={this.handleDoubleClick}
-                                  contextMenuId={contextMenuId}/>;
+            if (!file) {
+                comps[i] =
+                    <div key={`bad-${i}`} className="file-entry-bad"><Icon name="radiation"/> Bad file entry</div>;
+            } else comps[i] = <FileEntry key={file.hash} hash={file.hash} summary={this.summary} options={options}
+                                         showExtension={options[Options.ShowExtensions]} displayIndex={i}
+                                         collapseLongNames={options[Options.CollapseLongNames]}
+                                         selected={!!selection[file.hash]} contextMenuId={contextMenuId}
+                                         onSingleClick={this.handleSingleClick}
+                                         onDoubleClick={this.handleDoubleClick}/>;
         }
         return comps;
     }
 
     render() {
+        const {showStatusBar} = this.props;
         const {files} = this.state;
-        const directoryLoaded = !!files;
+        const loading = !files;
+        const empty = files && files.length === 0;
 
-        let content;
-        let classModifier = '';
-        if (directoryLoaded) {
-            if (files.length > 0) {
-                content = this.renderFiles();
-            } else {
-                content = <div className="file-explorer-text">No files to show.</div>;
-                classModifier = 'file-explorer-empty';
-            }
-        } else {
-            content = <div className="file-explorer-text"><Icon name="cog" animation={true}/> Loading...</div>;
-            classModifier = 'file-explorer-loading';
-        }
-
-        const className = `file-explorer ${classModifier}`;
-        return <div className={className}>
-            {content}
+        const listClassName = c({
+            'file-explorer-list': true,
+            'file-explorer-list-loading': loading,
+            'file-explorer-list-empty': empty,
+        });
+        return <div className="file-explorer">
+            {showStatusBar && this.renderStatusBar()}
+            <div className={listClassName}>
+                {this.renderFiles()}
+            </div>
         </div>;
     };
 
@@ -222,14 +352,17 @@ export default connect((state, ownProps) => {
     if (!summary) throw new Error('FileExplorer needs "summary" in props!');
     if (!path && !entityIds) throw new Error('FileExplorer needs "path" or "entityIds" in props!');
 
+    let fileDataSource;
     let fileHashes = null;
     if (path) {
+        fileDataSource = FileDataSource.DirPath;
         const hash = Util.getFileHash(path);
         const directory = fileMap[hash];
         fileHashes = directory ? directory.fileHashes : null;
     } else if (entityIds) {
+        fileDataSource = FileDataSource.EntityIDs;
         const entities = entityIds.map(id => entityMap[id]);
-        fileHashes = entities.map(e => e.fileHash).filter(h => !!h);
+        fileHashes = entities.map(e => e.hash).filter(h => !!h);
         if (fileHashes.length !== entities.length) {
             console.warn('Some entities in FileExplorer are missing relevant file hashes!');
         }
@@ -239,5 +372,5 @@ export default connect((state, ownProps) => {
     if (fileHashes) {
         files = _.map(fileHashes, h => fileMap[h]);
     }
-    return {files};
+    return {files, fileDataSource};
 })(FileExplorer);

@@ -5,17 +5,23 @@
  */
 
 import React from 'react';
+import {NotificationManager} from 'react-notifications';
+
 import ErrorHandler from '../../util/ErrorHandler';
 
 class Dashboard extends React.Component {
 
     handleCreateEnvClick = () => {
-        window.showGlobalLoader('Creating collection...');
+        if (!window.dataManager.isLocalClient()) {
+            NotificationManager.warning('Only local clients can create new collections.');
+            return;
+        }
+        NotificationManager.info('Check other windows on your computer.',
+            'The "create new collection" dialog is now open.');
         window.ipcModule.createEnvironment()
             .then(summary => {
-                window.hideGlobalLoader();
                 if (!summary) return null;
-                
+
                 const url = `/env/${summary.slug}`;
                 this.props.history.push(url);
             })

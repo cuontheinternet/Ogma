@@ -117,7 +117,7 @@ export const environmentReducer = createReducer({}, {
                     entityMap[newFile.entityId] = {
                         ...entityMap[newFile.entityId],
                         id: newFile.entityId,
-                        fileHash: newFile.hash,
+                        hash: newFile.hash,
                         tagIds: newFile.tagIds,
                     };
                 }
