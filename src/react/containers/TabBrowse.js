@@ -215,12 +215,12 @@ class TabBrowse extends React.Component {
                 </div>
             </div>
 
-            <FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TagTab} path={state.path}
+            <FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TabBrowse} path={state.path}
                           selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}
                           onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}/>
 
-            <ContextMenuWrapper id={MenuIds.TagTab} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={MenuIds.TagTab} fileHash={state.contextFileHash} changePath={this.changePath}
+            <ContextMenuWrapper id={MenuIds.TabBrowse} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
+                <TagContextMenu id={MenuIds.TabBrowse} fileHash={state.contextFileHash} changePath={this.changePath}
                                 summary={this.summary} selection={state.selection}
                                 confirmDeletions={options[Options.ConfirmDeletions]}/>
             </ContextMenuWrapper>

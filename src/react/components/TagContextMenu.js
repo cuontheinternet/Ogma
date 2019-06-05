@@ -5,11 +5,13 @@
  */
 
 import _ from 'lodash';
+import path from 'path';
 import React from 'react';
 import Denque from 'denque';
 import Promise from 'bluebird';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
+import {withRouter} from 'react-router-dom';
 import ReactTags from 'react-tag-autocomplete';
 import {hideAllContextMenus} from 'react-context-menu-wrapper';
 
@@ -17,7 +19,7 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvironmentContext} from '../../util/typedef';
+import {EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const ContextTabs = {
     Tag: 0,
@@ -48,8 +50,13 @@ class TagContextMenu extends React.Component {
 
         // Props passed by parent
         id: PropTypes.string.isRequired,
-        changePath: PropTypes.func.isRequired,
+        changePath: PropTypes.func,
+        allowShowInBrowseTab: PropTypes.bool,
         confirmDeletions: PropTypes.bool.isRequired,
+    };
+
+    static defaultProps = {
+        allowShowInBrowseTab: false,
     };
 
     constructor(props, context) {
@@ -192,7 +199,7 @@ class TagContextMenu extends React.Component {
     }
 
     renderFileOptions() {
-        const files = this.props.files;
+        const {files, changePath, allowShowInBrowseTab, history} = this.props;
         const fileCount = files.length;
         if (fileCount === 0) return null;
 
@@ -204,24 +211,38 @@ class TagContextMenu extends React.Component {
         const firstFile = files[0];
         const firstFileReqData = {id: s.id, path: firstFile.nixPath};
 
-        const buttons = new Array(4);
+        const buttons = new Array(5);
 
         if (!isMult) {
             const file = firstFile;
             const isDir = file.isDir;
-            const openContent = <React.Fragment>Open <strong>{file.base}</strong></React.Fragment>;
-            const openFunc = isDir ? () => this.props.changePath(file.nixPath) : () => ipc.openFile(firstFileReqData);
-            buttons[0] = {
-                icon: 'envelope-open-text', name: openContent,
-                onClick: this.getHandler(openFunc, true),
-            };
-            buttons[2] = {icon: 'i-cursor', name: 'Rename', onClick: null};
+            if (!isDir || changePath) {
+                const openContent = <React.Fragment>Open <strong>{file.base}</strong></React.Fragment>;
+                const openFunc = isDir ? () => this.props.changePath(file.nixPath) : () => ipc.openFile(firstFileReqData);
+                buttons[0] = {
+                    icon: 'envelope-open-text', name: openContent,
+                    onClick: this.getHandler(openFunc, true),
+                };
+            }
+
+            if (allowShowInBrowseTab) {
+                const urlPart = path.join(`/env/${s.slug}`, EnvRoutePaths.browse);
+                const hashPart = path.dirname(file.nixPath);
+                buttons[1] = {
+                    icon: 'eye', name: 'Show in browse tab',
+                    onClick: () => history.push(`${urlPart}#${hashPart}`),
+                };
+            }
+
+            buttons[3] = {icon: 'i-cursor', name: 'Rename', onClick: null};
         }
 
-        buttons[1] = {
-            icon: 'external-link-alt', name: 'Show in files',
-            onClick: this.getHandler(() => ipc.openInExplorer(firstFileReqData), true),
-        };
+        if (window.dataManager.isLocalClient()) {
+            buttons[2] = {
+                icon: 'external-link-alt', name: 'Show in files',
+                onClick: this.getHandler(() => ipc.openInExplorer(firstFileReqData), true),
+            };
+        }
 
         const removeFunc = () => {
             let removeTitle;
@@ -257,7 +278,7 @@ class TagContextMenu extends React.Component {
                     return ipc.removeFiles({id: s.id, paths: _.map(files, f => f.nixPath)});
                 });
         };
-        buttons[3] = {
+        buttons[4] = {
             icon: 'trash', name: 'Move to trash',
             onClick: this.getHandler(removeFunc, true),
         };
@@ -314,4 +335,4 @@ export default connect((state, ownProps) => {
 
     const tags = tagIds.map(tagId => tagMap[tagId]);
     return {tags, entityIds, selectedTags, files};
-})(TagContextMenu);
+})(withRouter(TagContextMenu));

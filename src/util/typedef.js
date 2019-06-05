@@ -67,7 +67,8 @@ export const EnvSummaryPropType = PropTypes.shape({
 });
 
 export const MenuIds = {
-    TagTab: 'menu-tag-tab',
+    TabBrowse: 'browse-menu',
+    TabSearch: 'search',
 };
 
 export const FileView = {
