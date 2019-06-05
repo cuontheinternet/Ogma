@@ -8,13 +8,11 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
-import {prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
 import Icon from './Icon';
 import Util from '../../util/Util';
 import FileEntry from './FileEntry';
 import {
-    MenuIds,
     EnvSummaryPropType,
     ExplorerOptions,
     ExplorerOptionsDefaults,
@@ -33,9 +31,11 @@ class FileExplorer extends React.Component {
 
         // Props provided by redux.connect
         files: PropTypes.arrayOf(PropTypes.object),
+        handlerObjects: PropTypes.arrayOf(PropTypes.object),
 
         // Props passed by parent
         options: PropTypes.object,
+        contextMenuId: PropTypes.string,
         onSelectionChange: PropTypes.func,
         onFileSingleClick: PropTypes.func,
         onFileDoubleClick: PropTypes.func,
@@ -172,19 +172,18 @@ class FileExplorer extends React.Component {
         if (onFileDoubleClick) onFileDoubleClick(file);
     };
 
-    renderFiles(files) {
-        const {path: dirPath, options} = this.props;
-        const {selection} = this.state;
+    renderFiles() {
+        const {options, contextMenuId} = this.props;
+        const {files, selection} = this.state;
 
         const comps = new Array(files.length);
         for (let i = 0; i < files.length; ++i) {
             const file = files[i];
-            const handlers = prepareContextMenuHandlers({id: MenuIds.TagTab, data: file.hash});
-            comps[i] = <FileEntry key={file.hash} fileHash={file.hash} basePath={dirPath} summary={this.summary}
+            comps[i] = <FileEntry key={file.hash} hash={file.hash} summary={this.summary}
                                   showExtension={options[Options.ShowExtensions]} displayIndex={i}
                                   collapseLongNames={options[Options.CollapseLong]} selected={!!selection[file.hash]}
                                   onSingleClick={this.handleSingleClick} onDoubleClick={this.handleDoubleClick}
-                                  handlers={handlers}/>;
+                                  contextMenuId={contextMenuId}/>;
         }
         return comps;
     }
@@ -197,7 +196,7 @@ class FileExplorer extends React.Component {
         let classModifier = '';
         if (directoryLoaded) {
             if (files.length > 0) {
-                content = this.renderFiles(files);
+                content = this.renderFiles();
             } else {
                 content = <div className="file-explorer-text">No files to show.</div>;
                 classModifier = 'file-explorer-empty';
@@ -224,6 +223,9 @@ export default connect((state, ownProps) => {
     const fileMap = state.envMap[summary.id].fileMap;
     const directory = fileMap[hash];
     const fileHashes = directory ? directory.fileHashes : null;
-    const files = fileHashes ? _.map(fileHashes, h => fileMap[h]) : null;
+    let files = null;
+    if (fileHashes) {
+        files = _.map(fileHashes, h => fileMap[h]);
+    }
     return {files};
 })(FileExplorer);

@@ -8,6 +8,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import VisibilitySensor from 'react-visibility-sensor';
+import {prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
 import Icon from './Icon';
 import TagGroup from './TagGroup';
@@ -15,26 +16,25 @@ import Util from '../../util/Util';
 import {FolderIconData, getIconData} from '../../util/IconUtil';
 import {FileView, ColorsLight, ColorsDark, ThumbnailState, EnvironmentContext, FilePropType} from '../../util/typedef';
 
-class FileEntry extends React.Component {
+class FileEntry extends React.PureComponent {
 
     // noinspection JSUnusedGlobalSymbols
     static contextType = EnvironmentContext;
 
     static propTypes = {
         file: FilePropType.isRequired,
-        basePath: PropTypes.string.isRequired,
+        hash: PropTypes.string.isRequired,
         view: PropTypes.oneOf(Object.values(FileView)),
         selection: PropTypes.object,
         showExtension: PropTypes.bool,
         collapseLongNames: PropTypes.bool,
         singleAndDoubleClickExclusive: PropTypes.bool,
 
-        handlers: PropTypes.object,
-
         selected: PropTypes.bool,
         onSingleClick: PropTypes.func,
         onDoubleClick: PropTypes.func,
         displayIndex: PropTypes.number,
+        contextMenuId: PropTypes.string,
     };
 
     static defaultProps = {
@@ -56,6 +56,8 @@ class FileEntry extends React.Component {
             thumbBgImage: null,
             icon: file.isDir ? FolderIconData : getIconData(file),
         };
+
+        this.handlers = prepareContextMenuHandlers({id: props.contextMenuId, data: props.hash});
 
         this.clickCount = 0;
         this.wasVisibleOnce = false;
@@ -106,7 +108,7 @@ class FileEntry extends React.Component {
 
         const summary = this.summary;
         Promise.resolve()
-            .then(() => window.ipcModule.requestFileThumbnail({id: summary.id, path: file.nixPath}))
+            .then(() => window.dataManager.requestFileThumbnail({id: summary.id, path: file.nixPath}))
             .catch(window.handleErrorQuiet);
     };
 
@@ -167,7 +169,7 @@ class FileEntry extends React.Component {
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
                               onChange={this.handleVisibilityChange}>
-                <div {...props.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
+                <div {...this.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
 
                     {<div className={`file-entry-thumbnail ${thumbBgImage ? 'loaded' : ''}`} style={thumbStyle}/>}
 
@@ -195,7 +197,7 @@ class FileEntry extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const {summary, fileHash: hash} = ownProps;
+    const {summary, hash} = ownProps;
     const fileMap = state.envMap[summary.id].fileMap;
     const file = fileMap[hash];
     return {file};

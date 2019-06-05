@@ -5,6 +5,7 @@
  */
 
 import _ from 'lodash';
+import Denque from 'denque';
 import Promise from 'bluebird';
 
 import {BackendEvents, ReduxActions} from './typedef';
@@ -25,8 +26,9 @@ export default class DataManager {
 
         this.emitter = window.proxyEmitter;
 
-        this.allTagMaps = {};
-        this.allTagArrays = {};
+        this.lastThumbRequestEnvId = '';
+        this.thumbRequestQueue = new Denque();
+        this._debounceRequestBatchThumbnails = _.debounce(this._requestBatchThumbnails, 100);
     }
 
     init() {
@@ -105,8 +107,6 @@ export default class DataManager {
         for (const tag of allTags) {
             tagMap[tag.id] = tag;
         }
-        this.allTagMaps[envId] = tagMap;
-        this.allTagArrays[envId] = allTags;
         this.dispatch(ReduxActions.SetAllTags, envId, allTags);
     };
 
@@ -139,6 +139,27 @@ export default class DataManager {
                 const actionData = {directory, files: _.map(files, f => f.hash)};
                 this.dispatch(ReduxActions.SetDirectoryContent, data.id, actionData);
             });
+    }
+
+    _requestBatchThumbnails() {
+        const newDenque = new Denque();
+        const envId = this.lastThumbRequestEnvId;
+        const requestQueue = this.thumbRequestQueue;
+        this.thumbRequestQueue = newDenque;
+
+        window.ipcModule.requestFileThumbnails({id: envId, paths: requestQueue.toArray()});
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * @param {object} data
+     * @param {string} data.id Environment ID
+     * @param {string} data.path Relative path of the file (from environment root)
+     */
+    requestFileThumbnail(data) {
+        this.lastThumbRequestEnvId = data.id;
+        this.thumbRequestQueue.push(data.path);
+        this._debounceRequestBatchThumbnails();
     }
 
     isLocalClient() {

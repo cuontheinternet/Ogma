@@ -221,7 +221,7 @@ class EnvTag extends React.Component {
                 </div>
             </div>
 
-            <FileExplorer summary={this.summary} options={options} path={state.path}
+            <FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TagTab} path={state.path}
                           selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}
                           onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}/>
 
