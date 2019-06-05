@@ -4,7 +4,6 @@
  * @license LGPL-3.0
  */
 
-import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
@@ -18,8 +17,9 @@ class TagGroup extends React.Component {
 
     static propTypes = {
         // Props used in redux.connect
+        entityId: PropTypes.string,
         summary: EnvSummaryPropType.isRequired,
-        entityId: PropTypes.string.isRequired,
+        tagIds: PropTypes.arrayOf(PropTypes.string),
 
         // Props provided by redux.connect
         tags: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -50,10 +50,15 @@ class TagGroup extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const {summary, entityId} = ownProps;
+    const {summary, tagIds, entityId} = ownProps;
     const {tagMap, entityMap} = state.envMap[summary.id];
-    const entity = entityMap[entityId];
-    let tags = null;
-    if (entity) tags = entity.tagIds ? _.map(entity.tagIds, tagId => tagMap[tagId]) : null;
+    let finalTagIds;
+    if (tagIds) {
+        finalTagIds = tagIds;
+    } else {
+        const entity = entityMap[entityId];
+        if (entity) finalTagIds = entity.tagIds;
+    }
+    const tags = finalTagIds ? finalTagIds.map(tagId => tagMap[tagId]) : null;
     return {tags};
 })(TagGroup);

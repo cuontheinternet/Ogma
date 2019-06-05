@@ -10,10 +10,17 @@ import {connect} from 'react-redux';
 
 import TagGroup from '../components/TagGroup';
 
-class EnvBrowse extends React.Component {
+import {EnvSummaryPropType} from '../../util/typedef';
+
+class TabSearch extends React.Component {
 
     static propTypes = {
-        tags: PropTypes.string.isRequired,
+        // Props used in redux.connect
+        summary: EnvSummaryPropType.isRequired,
+
+        // Props provided by redux.connect
+        tagMap: PropTypes.object.isRequired,
+        tagIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
 
     constructor(props) {
@@ -52,4 +59,4 @@ export default connect((state, ownProps) => {
         tagIds: env.tagIds,
         tagMap: env.tagMap,
     };
-})(EnvBrowse);
+})(TabSearch);

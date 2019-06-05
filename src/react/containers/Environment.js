@@ -11,17 +11,17 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 
-import EnvTag from './EnvTag';
-import EnvBrowse from './EnvBrowse';
+import TabBrowse from './TabBrowse';
+import TabSearch from './TabSearch';
 import Tabs from '../components/Tabs';
 import EnvIcon from '../components/EnvIcon';
 import EnvConfigure from '../containers/EnvConfigure';
 import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const TabOptions = [
-    {path: EnvRoutePaths.browse, exact: true, icon: 'eye', name: 'Browse', comp: EnvBrowse},
-    {path: EnvRoutePaths.search, icon: 'search', name: 'Search'},
-    {path: EnvRoutePaths.tag, icon: 'tag', name: 'Tag', comp: EnvTag},
+    {path: EnvRoutePaths.browse, icon: 'eye', name: 'Browse', comp: TabBrowse},
+    {path: EnvRoutePaths.search, icon: 'search', name: 'Search', comp: TabSearch},
+    {path: EnvRoutePaths.tag, icon: 'tags', name: 'Manage tags'},
     {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: EnvConfigure},
 ];
 for (const option of TabOptions) option.id = option.path;

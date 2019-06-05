@@ -22,7 +22,7 @@ import {EnvironmentContext, MenuIds, ExplorerOptions, ExplorerOptionsDefaults, R
 
 const Options = ExplorerOptions;
 
-class EnvTag extends React.Component {
+class TabBrowse extends React.Component {
 
     // noinspection JSUnusedGlobalSymbols
     static contextType = EnvironmentContext;
@@ -247,4 +247,4 @@ export default connect((state, ownProps) => {
         ...tagTab,
         rootDirName: upath.basename(summary.path),
     };
-})(EnvTag);
+})(TabBrowse);
