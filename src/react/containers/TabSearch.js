@@ -54,7 +54,7 @@ class TabSearch extends React.Component {
             options: ExplorerOptionsDefaults,
         };
         this.debouncedTagFilterDispatch = _.debounce(tagFilter =>
-            window.dataManager.dispatch(ReduxActions.TabSearchChangeTagFilter, this.summary.id, tagFilter), 60);
+            window.dataManager.dispatch(ReduxActions.TabSearchChangeTagFilter, this.summary.id, tagFilter), 100);
     }
 
     selectTag = tagId => {

@@ -50,6 +50,7 @@ export const environmentReducer = createReducer({}, {
             entityMap[entityId] = {
                 ...oldEntity,
                 id: entityId,
+                hash,
                 tagIds: _.union(oldTagIds, tagIds),
             };
             const oldFile = fileMap[hash];
