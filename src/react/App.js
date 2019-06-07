@@ -39,7 +39,7 @@ class App extends React.Component {
                 <Helmet titleTemplate="%s | Ogma" defaultTite="Ogma"/>
                 <div className="app-wrapper">
                     <div className="columns">
-                        <div className="column is-narrow"><Sidebar envSummaries={summaries}/></div>
+                        <div className="column is-narrow"><Sidebar summaries={summaries}/></div>
                         <div className="column">
                             <div className="box">
                                 <Switch>

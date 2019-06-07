@@ -88,7 +88,7 @@ export default class Util {
                 if (!fileA.isDir && fileB.isDir) return 1;
             }
 
-            return fileA.name.localeCompare(fileB.name);
+            return fileA.base.localeCompare(fileB.base);
         };
         files.sort(compare);
         return files;

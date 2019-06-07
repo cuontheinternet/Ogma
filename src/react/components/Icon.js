@@ -7,6 +7,7 @@
 const React = require('react');
 const ExactTrie = require('exact-trie');
 const PropTypes = require('prop-types');
+const equal = require('fast-deep-equal');
 
 const {BulmaSizes} = require('../../util/typedef');
 
@@ -15,7 +16,7 @@ const IconSizeTrie = new ExactTrie({ignoreCase: false});
 IconSizeTrie.put('music', 1);
 IconSizeTrie.put('terminal', 0);
 
-export default class Icon extends React.Component {
+class Icon extends React.Component {
 
     static propTypes = {
         name: PropTypes.string.isRequired,
@@ -29,6 +30,10 @@ export default class Icon extends React.Component {
         wrapper: true, // Enables Bulma wrapper for the icon
         animation: false, // Enables animations, use `true` for standard `spin` animation or custom string
     };
+
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return !equal(this.props, nextProps);
+    }
 
     render() {
         let {name} = this.props;
@@ -66,3 +71,5 @@ export default class Icon extends React.Component {
     }
 
 }
+
+export default Icon;

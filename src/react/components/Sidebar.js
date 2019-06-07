@@ -5,18 +5,23 @@
  */
 
 import React from 'react';
+import equal from 'fast-deep-equal';
 import * as PropTypes from 'prop-types';
 import {NavLink} from 'react-router-dom';
 
 import Icon from './Icon';
-import OgmaIcon from '../../ogma-icon-128.png';
 import {KeyCode} from '../../util/typedef';
+import OgmaIcon from '../../ogma-icon-128.png';
 
 class Sidebar extends React.Component {
 
     static propTypes = {
-        envSummaries: PropTypes.array.isRequired,
+        summaries: PropTypes.array.isRequired,
     };
+
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return !equal(this.props.summaries, nextProps.summaries);
+    }
 
     componentDidMount() {
         document.addEventListener('keydown', this.handleKeydown);
@@ -48,7 +53,7 @@ class Sidebar extends React.Component {
     };
 
     renderCollections() {
-        const summaries = this.props.envSummaries;
+        const {summaries} = this.props;
 
         const collections = new Array(summaries.length);
         for (let i = 0; i < summaries.length; ++i) {
@@ -70,7 +75,7 @@ class Sidebar extends React.Component {
     }
 
     render() {
-        const summaries = this.props.envSummaries;
+        const {summaries} = this.props;
 
         let ogmaType = 'Web';
         if (window.dataManager.isElectron()) ogmaType = 'Electron';

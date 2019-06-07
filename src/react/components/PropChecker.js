@@ -20,7 +20,12 @@ export default function withPropChecker(WrappedComponent, getId = null) {
             Object.keys(prevProps).filter(key => prevProps[key] !== this.props[key])
                 .map(key => {
                     const diff = detailedDiff(prevProps[key], this.props[key]);
-                    console.log(id, 'Changed property:', key, 'updated:', diff.updated, 'added:', diff.added);
+                    console.log(
+                        id, 'Changed property:', key,
+                        'updated:', diff.updated,
+                        'added:', diff.added,
+                        'deleted:', diff.deleted,
+                    );
                 });
         }
 

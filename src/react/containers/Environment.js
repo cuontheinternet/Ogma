@@ -19,10 +19,10 @@ import EnvIcon from '../components/EnvIcon';
 import {IndexRoutePath, EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const TabOptions = [
-    {path: EnvRoutePaths.browse, icon: 'eye', name: 'Browse', comp: TabBrowse},
-    {path: EnvRoutePaths.search, icon: 'search', name: 'Search', comp: TabSearch},
-    {path: EnvRoutePaths.tag, icon: 'tags', name: 'Manage tags'},
-    {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', comp: TabConfigure},
+    {path: EnvRoutePaths.browse, icon: 'eye', name: 'Browse', passRouterProps: true, comp: TabBrowse},
+    {path: EnvRoutePaths.search, icon: 'search', name: 'Search', passRouterProps: false, comp: TabSearch},
+    {path: EnvRoutePaths.tags, icon: 'tags', name: 'Manage tags', passRouterProps: false},
+    {path: EnvRoutePaths.configure, icon: 'cog', name: 'Configure', passRouterProps: false, comp: TabConfigure},
 ];
 for (const option of TabOptions) option.id = option.path;
 
@@ -62,8 +62,13 @@ class Environment extends React.Component {
             if (!tab.comp) continue;
             const TabComp = tab.comp;
             const routePath = `${props.match.path}${tab.path}`;
+
+            let renderFunc;
+            if (tab.passRouterProps) renderFunc = props => <TabComp summary={summary} tabPath={tab.path} {...props}/>;
+            else renderFunc = () => <TabComp summary={summary} tabPath={tab.path}/>;
+
             comps.push(<Route key={`env-router-${tab.path}`} path={routePath} exact={tab.exact}
-                              render={props => <TabComp summary={summary} tabPath={tab.path} {...props}/>}/>);
+                              render={renderFunc}/>);
         }
         return <Switch>{comps}</Switch>;
     }

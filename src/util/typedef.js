@@ -53,7 +53,7 @@ export const EnvironmentContext = React.createContext(null);
 export const EnvRoutePaths = {
     browse: '/browse',
     search: '/search',
-    tag: '/tag',
+    tags: '/tags',
     configure: '/configure',
 };
 export const DefaultEnvRoutePath = EnvRoutePaths.browse;

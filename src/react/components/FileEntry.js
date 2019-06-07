@@ -232,4 +232,3 @@ export default connect((state, ownProps) => {
     const file = fileMap[hash];
     return {file};
 })(FileEntry);
-// })(withPropChecker(FileEntry, props => props.file.name));

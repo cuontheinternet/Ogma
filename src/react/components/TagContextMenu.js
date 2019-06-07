@@ -86,7 +86,7 @@ class TagContextMenu extends React.Component {
         const isMult = files.length > 1;
         const firstFile = files[0];
 
-        const fileTab = state.tabOptions[1];
+        const fileTab = {...state.tabOptions[1]};
 
         if (isMult) {
             fileTab.icon = 'copy';
