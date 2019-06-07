@@ -124,9 +124,11 @@ export const FilePropType = PropTypes.shape({
 });
 
 export const KeyCode = {
-    A: 65,
     Enter: 13,
     Esc: 27,
+    ArrowUp: 38,
+    ArrowDown: 40,
+    A: 65,
 };
 
 export * from '../../../shared/typedef';

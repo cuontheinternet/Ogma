@@ -6,10 +6,10 @@
 
 import _ from 'lodash';
 import React from 'react';
-import PropTypes from 'prop-types';
+import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 import {ContextMenuWrapper} from 'react-context-menu-wrapper';
-
 
 import {
     EnvSummaryPropType, ExplorerOptions as Options,
@@ -154,10 +154,10 @@ class TabSearch extends React.Component {
             } else {
                 console.warn('Unknown "tagSearchCondition" specified in TabSearch!');
             }
-            console.log('Recalculated!');
             relevantEntityIds = relevantEntities.map(e => e.id);
         }
         return <div className="columns">
+            <Helmet><title>Search</title></Helmet>
             <div className="column is-narrow" style={{width: 360}}>
                 {this.renderAvailableTags(availableTags)}
             </div>

@@ -8,8 +8,9 @@ import _ from 'lodash';
 import path from 'path';
 import upath from 'upath';
 import React from 'react';
-import PropTypes from 'prop-types';
+import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
@@ -182,6 +183,7 @@ class TabBrowse extends React.Component {
         const options = state.optionState;
 
         return <div>
+            <Helmet><title>Browse</title></Helmet>
 
             <div className="level env-tag-top-bar">
                 <div className="level-left">

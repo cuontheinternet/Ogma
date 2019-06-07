@@ -4,11 +4,11 @@
  * @license GPL-3.0
  */
 
-import _ from 'lodash';
 import path from 'path';
 import React from 'react';
-import PropTypes from 'prop-types';
+import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 
 import TabBrowse from './TabBrowse';
@@ -72,7 +72,9 @@ class Environment extends React.Component {
         const summary = this.props.summary;
         if (!summary) return <Redirect to={IndexRoutePath}/>;
 
+        const pageTitle = `${summary.name} collection`;
         return <div className="env">
+            <Helmet titleTemplate={`%s | ${pageTitle} | Ogma`}><title>{pageTitle}</title></Helmet>
             <EnvironmentContext.Provider value={summary}>
                 <h1 className="title">
                     <EnvIcon color={summary.color} icon={summary.icon}/>
@@ -90,9 +92,9 @@ class Environment extends React.Component {
 }
 
 export default connect((state, ownProps) => {
-    const env = _.find(state.envMap, e => e.summary.slug === ownProps.slug);
+    const {summary} = ownProps;
+    const env = state.envMap[summary.id];
     return {
-        summary: env ? env.summary : null,
         subRoute: env ? env.subRoute : null,
     };
 })(withRouter(Environment));

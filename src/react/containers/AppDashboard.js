@@ -5,11 +5,12 @@
  */
 
 import React from 'react';
+import {Helmet} from 'react-helmet';
 import {NotificationManager} from 'react-notifications';
 
 import ErrorHandler from '../../util/ErrorHandler';
 
-class Dashboard extends React.Component {
+class AppDashboard extends React.Component {
 
     handleCreateEnvClick = () => {
         if (!window.dataManager.isLocalClient()) {
@@ -33,6 +34,7 @@ class Dashboard extends React.Component {
 
     render() {
         return <div>
+            <Helmet><title>Dashboard</title></Helmet>
             <h1 className="title">Dashboard</h1>
 
             <button className="button" onClick={this.handleCreateEnvClick}>Create collection</button>
@@ -41,4 +43,4 @@ class Dashboard extends React.Component {
 
 }
 
-export default Dashboard;
+export default AppDashboard;

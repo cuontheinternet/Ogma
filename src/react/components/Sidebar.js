@@ -5,16 +5,46 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import {NavLink} from 'react-router-dom';
 
 import Icon from './Icon';
 import OgmaIcon from '../../ogma-icon-128.png';
+import {KeyCode} from '../../util/typedef';
 
 class Sidebar extends React.Component {
 
     static propTypes = {
         envSummaries: PropTypes.array.isRequired,
+    };
+
+    componentDidMount() {
+        document.addEventListener('keydown', this.handleKeydown);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('keydown', this.handleKeydown);
+    }
+
+    handleKeydown = event => {
+        // Switch pages on Alt+Up or Alt+Down
+        if (!event.altKey) return;
+        switch (event.keyCode) {
+            case KeyCode.ArrowUp:
+                this.showNextPageFromMenu();
+                break;
+            case KeyCode.ArrowDown:
+                this.showPrevPageFromMenu();
+                break;
+            default:
+            // Do nothing
+        }
+    };
+
+    showNextPageFromMenu = () => {
+    };
+
+    showPrevPageFromMenu = () => {
     };
 
     renderCollections() {

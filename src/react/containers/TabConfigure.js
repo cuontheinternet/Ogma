@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import equal from 'fast-deep-equal';
+import {Helmet} from 'react-helmet';
+import * as PropTypes from 'prop-types';
 import {GithubPicker} from 'react-color';
 import {withRouter} from 'react-router-dom';
 
@@ -124,6 +125,7 @@ class TabConfigure extends React.Component {
         </span>;
 
         return <div>
+            <Helmet><title>Configure</title></Helmet>
 
             <p className="title is-5">Collection icon</p>
 
