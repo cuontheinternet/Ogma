@@ -165,22 +165,15 @@ export const environmentReducer = createReducer({}, {
 
         return {...state, fileMap};
     },
-    [ReduxActions.UpdateThumbState]: (state, action) => {
-        const {hash, thumb} = action.data;
-        const oldFileMap = state.fileMap;
+    [ReduxActions.UpdateThumbStates]: (state, action) => {
+        const {hashes, thumb} = action.data;
+        const fileMap = {...state.fileMap};
 
-        let newState = state;
-        const oldFile = oldFileMap[hash];
-        if (oldFile) {
-            newState = {
-                ...state,
-                fileMap: {
-                    ...oldFileMap,
-                    [hash]: {...oldFile, thumb},
-                },
-            };
+        for (const hash of hashes) {
+            const file = fileMap[hash];
+            if (file) fileMap[hash] = {...file, thumb};
         }
-        return newState;
+        return {...state, fileMap};
     },
     [ReduxActions.SetThumbLoaded]: (state, action) => {
         const hash = action.data;

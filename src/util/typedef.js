@@ -33,7 +33,7 @@ export const ReduxActions = {
     SetDirectoryContent: 'set-dir-contents',
     SetMultipleFileDetails: 'set-multi-file-details',
     RemoveMultipleFiles: 'remove-files',
-    UpdateThumbState: 'update-thumb-state',
+    UpdateThumbStates: 'update-thumb-state',
     SetThumbLoaded: 'set-thumb-loaded',
 
     UpdateEnvSubRoute: 'update-sub-route',
@@ -72,6 +72,9 @@ export const MenuIds = {
     TabSearch: 'search',
 };
 
+/**
+ * @enum {string} FileView
+ */
 export const FileView = {
     List: 'list',
     MediumThumb: 'medium-thumb',

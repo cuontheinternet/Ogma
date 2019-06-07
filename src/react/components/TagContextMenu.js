@@ -9,11 +9,10 @@ import path from 'path';
 import React from 'react';
 import Denque from 'denque';
 import Promise from 'bluebird';
-import PropTypes from 'prop-types';
 import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 import {createSelector} from 'reselect';
-import {withRouter} from 'react-router-dom';
 import ReactTags from 'react-tag-autocomplete';
 import {hideAllContextMenus} from 'react-context-menu-wrapper';
 
@@ -164,6 +163,7 @@ class TagContextMenu extends React.Component {
         };
     };
 
+    // noinspection JSMethodCanBeStatic
     renderDropdownButtons(buttons) {
         const comps = new Array(buttons.length);
 

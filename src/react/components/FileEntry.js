@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
+import * as PropTypes from 'prop-types';
 import VisibilitySensor from 'react-visibility-sensor';
 import {prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
@@ -100,10 +100,11 @@ class FileEntry extends React.PureComponent {
         if (this.imageLoadPromise) this.imageLoadPromise.cancel();
     }
 
+    // noinspection JSCheckFunctionSignatures
     componentDidUpdate(prevProps) {
         const oldFile = prevProps.file;
         const newFile = this.props.file;
-        if (oldFile.thumb !== newFile.thumb 
+        if (oldFile.thumb !== newFile.thumb
             && newFile.thumb === ThumbnailState.Ready) {
             this.loadThumbnail();
         }
@@ -169,6 +170,7 @@ class FileEntry extends React.PureComponent {
     render() {
         const {options, selected} = this.props;
         const file = this.props.file;
+        // console.log(`Re-rendered ${file.name}`);
 
         // Prepare file name
         let name = file.name;
@@ -230,3 +232,4 @@ export default connect((state, ownProps) => {
     const file = fileMap[hash];
     return {file};
 })(FileEntry);
+// })(withPropChecker(FileEntry, props => props.file.name));
