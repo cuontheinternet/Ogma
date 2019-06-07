@@ -135,7 +135,7 @@ class TabSearch extends React.Component {
     }
 
     render() {
-        const {tagIds, entityMap, selectedTagsMap, tagSearchCondition} = this.props;
+        const {tagIds, entityMap, selectedTagsMap, tagSearchCondition, history} = this.props;
         const {options, contextFileHash, selection} = this.state;
         const [selectedTags, availableTags] = _.partition(tagIds, id => !!selectedTagsMap[id]);
         const selectedTagCount = _.size(selectedTagsMap);
@@ -170,7 +170,7 @@ class TabSearch extends React.Component {
             <ContextMenuWrapper id={MenuIds.TabSearch} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
                 <TagContextMenu id={MenuIds.TabSearch} fileHash={contextFileHash}
                                 summary={this.summary} selection={selection} allowShowInBrowseTab={true}
-                                confirmDeletions={options[Options.ConfirmDeletions]}/>
+                                confirmDeletions={options[Options.ConfirmDeletions]} history={history}/>
             </ContextMenuWrapper>
         </div>;
     };

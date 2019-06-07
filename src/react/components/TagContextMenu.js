@@ -10,7 +10,9 @@ import React from 'react';
 import Denque from 'denque';
 import Promise from 'bluebird';
 import PropTypes from 'prop-types';
+import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
+import {createSelector} from 'reselect';
 import {withRouter} from 'react-router-dom';
 import ReactTags from 'react-tag-autocomplete';
 import {hideAllContextMenus} from 'react-context-menu-wrapper';
@@ -20,6 +22,7 @@ import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
 import {EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
+import {createDeepEqualSelector} from '../../redux/Selector';
 
 const ContextTabs = {
     Tag: 0,
@@ -50,6 +53,7 @@ class TagContextMenu extends React.Component {
 
         // Props passed by parent
         id: PropTypes.string.isRequired,
+        history: PropTypes.object,
         changePath: PropTypes.func,
         allowShowInBrowseTab: PropTypes.bool,
         confirmDeletions: PropTypes.bool.isRequired,
@@ -83,7 +87,6 @@ class TagContextMenu extends React.Component {
         const isMult = files.length > 1;
         const firstFile = files[0];
 
-        const tagTab = state.tabOptions[0];
         const fileTab = state.tabOptions[1];
 
         if (isMult) {
@@ -98,11 +101,10 @@ class TagContextMenu extends React.Component {
                 fileTab.name = 'File';
             }
         }
-
-        return {
-            selectedTags,
-            tabOptions: [tagTab, fileTab],
-        };
+        let newState = null;
+        if (selectedTags !== state.selectedTags) newState = {selectedTags};
+        if (!equal(fileTab, state.tabOptions[1])) newState = {...newState, tabOptions: [state.tabOptions[0], fileTab]};
+        return newState;
     }
 
     handleTabChange = contextTab => {
@@ -317,22 +319,43 @@ class TagContextMenu extends React.Component {
 
 }
 
-
-export default connect((state, ownProps) => {
-    const {summary, selection, fileHash} = ownProps;
-    const {tagIds, tagMap, entityMap, fileMap} = state.envMap[summary.id];
-
+const getSelection = (_, props) => props.selection;
+const getFileHash = (_, props) => props.fileHash;
+const getFileHashes = createSelector([getSelection, getFileHash], (selection, fileHash) => {
     const selectedHashes = Object.keys(selection);
-    let files = [];
-    if (selectedHashes.length === 1) files = [fileMap[fileHash]];
-    else files = selectedHashes.map(h => fileMap[h]);
-    files = files.filter(f => !!f);
+    let fileHashes = [];
+    if (selectedHashes.length === 1) fileHashes = [fileHash];
+    else fileHashes = selectedHashes;
+    fileHashes = fileHashes.filter(h => !!h);
+    return fileHashes;
+});
 
+const getFileMap = (state, props) => state.envMap[props.summary.id].fileMap;
+const getFiles = createSelector([getFileMap, getFileHashes], (fileMap, hashes) => {
+    let files = hashes.map(h => fileMap[h]);
+    files = files.filter(f => !!f);
+    return files;
+});
+const getFilesDeep = createDeepEqualSelector([getFiles], files => files);
+
+const getEntityMap = (state, props) => state.envMap[props.summary.id].entityMap;
+const getTagMap = (state, props) => state.envMap[props.summary.id].tagMap;
+const getFilesEntityIdsSelectedTags = createSelector([getEntityMap, getTagMap, getFilesDeep], (entityMap, tagMap, files) => {
     const entityIds = files.map(f => f.entityId).filter(e => !!e);
     const entities = entityIds.map(id => entityMap[id]);
     const selectedTagIds = _.union(...entities.map(e => e.tagIds));
     const selectedTags = _.map(selectedTagIds, tagId => tagMap[tagId]);
+    return {files, entityIds, selectedTags};
+});
 
-    const tags = tagIds.map(tagId => tagMap[tagId]);
-    return {tags, entityIds, selectedTags, files};
-})(withRouter(TagContextMenu));
+const getTagIds = (state, props) => state.envMap[props.summary.id].tagIds;
+const getTags = createSelector([getTagIds, getTagMap], (tagIds, tagMap) => {
+    return tagIds.map(tagId => tagMap[tagId]);
+});
+
+export default connect((state, ownProps) => {
+    return {
+        tags: getTags(state, ownProps),
+        ...getFilesEntityIdsSelectedTags(state, ownProps),
+    };
+})(TagContextMenu);

@@ -23,7 +23,7 @@ import {
     ExplorerOptionsDefaults,
     EnvironmentContext,
     EnvSummaryPropType,
-    FilePropType,
+    FilePropType, ReduxActions,
 } from '../../util/typedef';
 
 class FileEntry extends React.PureComponent {
@@ -103,19 +103,27 @@ class FileEntry extends React.PureComponent {
     componentDidUpdate(prevProps) {
         const oldFile = prevProps.file;
         const newFile = this.props.file;
-        if (oldFile.thumb !== newFile.thumb && newFile.thumb === ThumbnailState.Ready) this.loadThumbnail();
+        if (oldFile.thumb !== newFile.thumb 
+            && newFile.thumb === ThumbnailState.Ready) {
+            this.loadThumbnail();
+        }
     }
 
     loadThumbnail = () => {
-        const file = this.props.file;
-        const summary = this.summary;
-        const url = `${window.serverHost}/static/env/${summary.slug}/thumbs/${file.hash}.jpg`;
+        const {file} = this.props;
+        const url = `${window.serverHost}/static/env/${this.summary.slug}/thumbs/${file.hash}.jpg`;
 
-        this.imageLoadPromise = Util.loadImage(url)
-            .then(() => {
-                this.imageLoadPromise = null;
-                this.setState({thumbBgImage: `url('${url}')`});
-            });
+        if (file.thumbLoaded) {
+            this.setState({thumbBgImage: `url('${url}')`});
+        } else {
+            this.imageLoadPromise = Util.loadImage(url)
+                .then(() => {
+                    this.imageLoadPromise = null;
+                    this.setState({thumbBgImage: `url('${url}')`});
+                    window.dataManager.dispatch(ReduxActions.SetThumbLoaded, this.summary.id, file.hash);
+                })
+                .catch(window.handleError);
+        }
     };
 
     handleVisibilityChange = isVisible => {

@@ -10,6 +10,7 @@ import c from 'classnames';
 import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
+import {createSelector} from 'reselect';
 import {NotificationManager} from 'react-notifications';
 
 import Icon from './Icon';
@@ -287,13 +288,13 @@ class FileExplorer extends React.Component {
     renderStatusBar() {
         const {fileDataSource, badHashes} = this.props;
         const {files, selection, filter} = this.state;
-        const fileCount = !files ? null : files.length;
+        const fileCount = !files ? -1 : files.length;
         const selectionCount = _.size(selection);
 
         const targetWord = fileDataSource === FileDataSource.DirPath ? 'directory' : 'file list';
 
         let fileCountString = null;
-        if (!_.isNil(fileCount)) {
+        if (fileCount > -1) {
             fileCountString = `${fileCount} file${fileCount !== 1 ? 's' : ''}`;
             if (badHashes.length > 0) fileCountString += ` (loading ${badHashes.length} more)`;
         }
@@ -379,12 +380,11 @@ class FileExplorer extends React.Component {
 
 }
 
-export default connect((state, ownProps) => {
-    const {summary, path, entityIds} = ownProps;
-    const {fileMap, entityMap} = state.envMap[summary.id];
-    if (!summary) throw new Error('FileExplorer needs "summary" in props!');
-    if (!path && !entityIds) throw new Error('FileExplorer needs "path" or "entityIds" in props!');
-
+const getEntityMap = (state, props) => state.envMap[props.summary.id].entityMap;
+const getFileMap = (state, props) => state.envMap[props.summary.id].fileMap;
+const getPathAndEntityIds = (_, props) => ({path: props.path, entityIds: props.entityIds});
+const getFileHashesByEntityIds = createSelector([getFileMap, getEntityMap, getPathAndEntityIds], (fileMap, entityMap, data) => {
+    const {path, entityIds} = data;
     let fileDataSource;
     let fileHashes = null;
     if (path) {
@@ -400,7 +400,10 @@ export default connect((state, ownProps) => {
             console.warn('Some entities in FileExplorer are missing relevant file hashes!');
         }
     }
-
+    return {fileHashes, fileDataSource};
+});
+const getFilesByFileHashes = createSelector([getFileMap, getFileHashesByEntityIds], (fileMap, data) => {
+    const {fileHashes, fileDataSource} = data;
     let files = null;
     let badHashes = [];
     if (fileHashes) {
@@ -410,4 +413,11 @@ export default connect((state, ownProps) => {
         badHashes = _.at(fileHashes, badIndices);
     }
     return {files, fileDataSource, badHashes};
+});
+
+export default connect((state, ownProps) => {
+    const {summary, path, entityIds} = ownProps;
+    if (!summary) throw new Error('FileExplorer needs "summary" in props!');
+    if (!path && !entityIds) throw new Error('FileExplorer needs "path" or "entityIds" in props!');
+    return getFilesByFileHashes(state, ownProps);
 })(FileExplorer);

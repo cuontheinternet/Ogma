@@ -12,7 +12,7 @@ import {Link} from 'react-router-dom';
 import Icon from './Icon';
 import {BulmaSizes} from '../../util/typedef';
 
-export default class Tabs extends React.Component {
+export default class Tabs extends React.PureComponent {
 
     static propTypes = {
         size: PropTypes.oneOf(BulmaSizes),

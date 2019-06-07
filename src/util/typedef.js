@@ -34,6 +34,7 @@ export const ReduxActions = {
     SetMultipleFileDetails: 'set-multi-file-details',
     RemoveMultipleFiles: 'remove-files',
     UpdateThumbState: 'update-thumb-state',
+    SetThumbLoaded: 'set-thumb-loaded',
 
     UpdateEnvSubRoute: 'update-sub-route',
 
