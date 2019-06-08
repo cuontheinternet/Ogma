@@ -9,7 +9,7 @@ import * as PropTypes from 'prop-types';
 
 import Icon from '../Icon';
 import FileEntry from './FileEntry';
-import {EnvSummaryPropType, FileView} from '../../../util/typedef';
+import {EnvSummaryPropType} from '../../../util/typedef';
 
 // const FileViewConfigs = {
 //     [FileView.MediumThumb]: {columnWidth: 256, rowHeight: 156},

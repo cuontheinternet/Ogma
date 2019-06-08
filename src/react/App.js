@@ -6,6 +6,7 @@
 
 import _ from 'lodash';
 import React from 'react';
+import equal from 'fast-deep-equal';
 import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
@@ -23,6 +24,10 @@ class App extends React.Component {
         // Props provided by redux.connect
         summaries: PropTypes.array.isRequired,
     };
+
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return !equal(this.props, nextProps);
+    }
 
     render() {
         const {summaries} = this.props;

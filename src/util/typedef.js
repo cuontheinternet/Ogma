@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 
 /**
  * @typedef {object} HelloResponse
@@ -38,7 +38,6 @@ export const ReduxActions = {
     SetMultipleFileDetails: 'set-multi-file-details',
     RemoveMultipleFiles: 'remove-files',
     UpdateThumbStates: 'update-thumb-state',
-    SetThumbLoaded: 'set-thumb-loaded',
 
     UpdateEnvSubRoute: 'update-sub-route',
 

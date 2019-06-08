@@ -109,19 +109,7 @@ class FileEntry extends React.PureComponent {
     loadThumbnail = () => {
         const {file} = this.props;
         const url = `${window.serverHost}/static/env/${this.summary.slug}/thumbs/${file.hash}.jpg`;
-        if (this.imageLoadPromise) return;
-
-        if (file.thumbLoaded) {
-            this.setState({thumbBgImage: `url('${url}')`});
-        } else {
-            this.imageLoadPromise = Util.loadImage(url)
-                .then(() => {
-                    this.imageLoadPromise = null;
-                    this.setState({thumbBgImage: `url('${url}')`});
-                    window.dataManager.dispatch(ReduxActions.SetThumbLoaded, this.summary.id, file.hash);
-                })
-                .catch(window.handleError);
-        }
+        this.setState({thumbBgImage: `url('${url}')`});
     };
 
     handleVisibilityChange = isVisible => {

@@ -175,23 +175,6 @@ export const environmentReducer = createReducer({}, {
         }
         return {...state, fileMap};
     },
-    [ReduxActions.SetThumbLoaded]: (state, action) => {
-        const hash = action.data;
-        const oldFileMap = state.fileMap;
-
-        let newState = state;
-        const oldFile = oldFileMap[hash];
-        if (oldFile) {
-            newState = {
-                ...state,
-                fileMap: {
-                    ...oldFileMap,
-                    [hash]: {...oldFile, thumbLoaded: true},
-                },
-            };
-        }
-        return newState;
-    },
 
     [ReduxActions.UpdateEnvSubRoute]: (state, action) => {
         return {...state, subRoute: action.data};

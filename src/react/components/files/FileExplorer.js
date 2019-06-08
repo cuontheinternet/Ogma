@@ -13,6 +13,7 @@ import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
 import {createSelector} from 'reselect';
+import shallowEqual from 'is-equal-shallow';
 import {NotificationManager} from 'react-notifications';
 import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
@@ -66,6 +67,11 @@ class FileExplorer extends React.Component {
         };
     }
 
+
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return !equal(this.props, nextProps) || !equal(this.state, nextState);
+    }
+
     static sortFiles(slimFiles, options) {
         return slimFiles ? Util.sortFiles(slimFiles, options).map(f => f.hash) : null;
     };
@@ -90,7 +96,7 @@ class FileExplorer extends React.Component {
     static getDerivedStateFromProps(props, state) {
         const {slimFiles} = props;
 
-        if (slimFiles !== state.slimFiles) {
+        if (!equal(slimFiles, state.slimFiles)) {
             const sortedHashes = FileExplorer.sortFiles(slimFiles, state.options);
             let fuse = null;
             let filteredHashes = sortedHashes;

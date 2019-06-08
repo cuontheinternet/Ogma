@@ -7,6 +7,7 @@
 import md5 from 'md5';
 import _ from 'lodash';
 import Promise from 'bluebird';
+import {detailedDiff} from 'deep-object-diff';
 
 import {ExplorerOptions, SortOrder} from './typedef';
 
@@ -78,6 +79,28 @@ export default class Util {
             obj[keyFunc(elem)] = elem;
         }
         return obj;
+    }
+
+    static getShallowDiffKeys(a, b) {
+        const diffKeys = Object.keys(a).filter(key => a[key] !== b[key]);
+        return diffKeys;
+    }
+
+    static printObjectDiffs(a, b, id = '') {
+        Object.keys(a)
+            .filter(key => a[key] !== b[key])
+            .map(key => {
+                const diff = detailedDiff(a[key], b[key]);
+                console.log(
+                    id,
+                    'Changed property:', key,
+                    'updated:', diff.updated,
+                    'added:', diff.added,
+                    'deleted:', diff.deleted,
+                )
+                ;
+                return null;
+            });
     }
 
     static sortFiles(unsortedFiles, options) {
