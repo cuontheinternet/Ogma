@@ -27,6 +27,9 @@ import ErrorHandler, {UserFriendlyError} from './util/ErrorHandler';
 
 Promise.config({
     cancellation: true,
+    warnings: {
+        wForgottenReturn: false,
+    },
 });
 
 // Init basic window params

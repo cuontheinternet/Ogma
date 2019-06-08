@@ -9,7 +9,12 @@ import * as PropTypes from 'prop-types';
 
 import Icon from '../Icon';
 import FileEntry from './FileEntry';
-import {EnvSummaryPropType} from '../../../util/typedef';
+import {EnvSummaryPropType, FileView} from '../../../util/typedef';
+
+// const FileViewConfigs = {
+//     [FileView.MediumThumb]: {columnWidth: 256, rowHeight: 156},
+//     [FileView.LargeThumb]: {columnWidth: 406, rowHeight: 306},
+// };
 
 class FileList extends React.Component {
 
@@ -57,7 +62,7 @@ class FileList extends React.Component {
 
     render() {
         const {view} = this.props;
-        
+
         return <div className={`file-list ${view}`}>
             {this.renderFiles()}
         </div>;

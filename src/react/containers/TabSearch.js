@@ -19,7 +19,7 @@ import {
 import Tabs from '../components/Tabs';
 import Icon from '../components/Icon';
 import TagGroup from '../components/TagGroup';
-import NewFileExplorer from '../components/files/FileExplorer';
+import FileExplorer from '../components/files/FileExplorer';
 
 const SearchConditionOptions = [
     {id: TagSearchCondition.All, name: 'All'},
@@ -76,8 +76,8 @@ class TabSearch extends React.Component {
         const {tagFilter: propTagFilter} = this.props;
         const {tagFilter} = this.state;
 
-        return <div className="env-browse-available">
-            <div className="title is-size-5">Available tags:</div>
+        return <div className="env-search-available">
+            <div className="title is-size-6">Available tags:</div>
             <div className="field has-addons">
                 <p className="control">
                     <button className="button is-static"><Icon name="search"/></button>
@@ -95,8 +95,8 @@ class TabSearch extends React.Component {
     renderSelectedTags(selectedTags) {
         const {tagSearchCondition} = this.props;
 
-        return <div className="env-browse-selected">
-            <div className="title is-size-5">
+        return <div className="env-search-selected">
+            <div className="title is-size-6">
                 Selected tags (require
                 <div style={{display: 'inline-block'}}>
                     <Tabs options={SearchConditionOptions} className="is-toggle" activeOption={tagSearchCondition}
@@ -135,7 +135,7 @@ class TabSearch extends React.Component {
         return <React.Fragment>
             <Helmet><title>Search</title></Helmet>
 
-            <div className="columns env-browse-top">
+            <div className="columns env-search-top">
                 <div className="column">
                     {this.renderAvailableTags(availableTags)}
                 </div>
@@ -145,7 +145,7 @@ class TabSearch extends React.Component {
                 </div>
             </div>
 
-            <NewFileExplorer summary={this.summary} fileHashes={hashes} changePath={this.changePath}
+            <FileExplorer summary={this.summary} fileHashes={hashes} changePath={this.changePath}
                              contextMenuId={MenuIds.TabSearch}/>
         </React.Fragment>;
     };

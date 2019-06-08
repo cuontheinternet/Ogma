@@ -264,7 +264,8 @@ class FileExplorer extends React.Component {
             if (changePath) changePath(file.nixPath);
         } else {
             if (window.dataManager.isLocalClient()) {
-                return window.ipcModule.openFile({id: this.summary.id, path: file.nixPath})
+                Promise.resolve()
+                    .then(() => window.ipcModule.openFile({id: this.summary.id, path: file.nixPath}))
                     .catch(window.handleError);
             } else {
                 NotificationManager.warning('Opening files in the browser is not supported yet.');

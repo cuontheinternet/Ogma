@@ -109,6 +109,7 @@ class FileEntry extends React.PureComponent {
     loadThumbnail = () => {
         const {file} = this.props;
         const url = `${window.serverHost}/static/env/${this.summary.slug}/thumbs/${file.hash}.jpg`;
+        if (this.imageLoadPromise) return;
 
         if (file.thumbLoaded) {
             this.setState({thumbBgImage: `url('${url}')`});
@@ -166,7 +167,6 @@ class FileEntry extends React.PureComponent {
     render() {
         const {selected, view, showExtension, collapseLongNames} = this.props;
         const file = this.props.file;
-        // console.log(`Re-rendered ${file.name}`);
 
         // Prepare file name
         let name = file.name;
