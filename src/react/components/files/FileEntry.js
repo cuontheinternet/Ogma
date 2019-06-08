@@ -12,7 +12,6 @@ import {prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
 import Icon from '../Icon';
 import TagGroup from '../TagGroup';
-import Util from '../../../util/Util';
 import {FolderIconData, getIconData} from '../../../util/IconUtil';
 import {
     FileView,
@@ -21,7 +20,7 @@ import {
     ThumbnailState,
     EnvironmentContext,
     EnvSummaryPropType,
-    FilePropType, ReduxActions,
+    FilePropType,
 } from '../../../util/typedef';
 
 class FileEntry extends React.PureComponent {
@@ -185,11 +184,19 @@ class FileEntry extends React.PureComponent {
                                   onChange={this.handleVisibilityChange}>
                     <button {...this.handlers} className={className} onClick={this.handleClick}>
 
+                        {<div className={`file-entry-thumbnail ${thumbBgImage ? 'loaded' : ''}`} style={thumbStyle}/>}
+
                         <div className="file-entry-name">
                             <span className="file-entry-name-icon" style={iconStyle}>{this.renderIcon(false)}</span>
                             {name}
                             {showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
+
+                            {file.entityId && <div className="file-entry-tags">
+                                <TagGroup summary={this.summary} entityId={file.entityId}
+                                          showEllipsis={collapseLongNames}/>
+                            </div>}
                         </div>
+
 
                     </button>
                 </VisibilitySensor>

@@ -47,6 +47,9 @@
             padding: 3px;
             height: 0;
             &.list {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                margin: 0 !important;
                 padding: 0;
             }
             &-text {
@@ -68,18 +71,46 @@
 
 .list {
     .file-entry {
+        border: none;
+        border-bottom: solid 1px #efefef;
+
+        box-sizing: border-box;
+        padding-left: 3.2rem;
+        position: relative;
         font-size: 0.9rem;
-        padding: 4px 8px;
         border-radius: 0;
+        overflow: hidden;
         text-align: left;
         display: block;
         color: #2f2f2f;
         width: 100%;
         margin: 0;
 
+        &.selected {
+          background-color: #ecedff;
+        }
+
+        &-thumbnail, &-name, &-tags  {
+            vertical-align: center;
+            display: inline-block;
+        }
+
+        &-thumbnail {
+            border-right: solid 1px #efefef;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: #fafafa;
+            background-size: contain;
+            position: absolute;
+            height: 100%;
+            width: 3rem;
+            z-index: 1;
+            left: 0;
+            top: 0;
+        }
+
         &-name {
-            width: 100%;
-            z-index: 5;
+            padding: 4px 4px 4px 8px;
             top: 0;
 
             &-icon {
@@ -92,6 +123,12 @@
             &-ext {
                 color: #aaa;
             }
+        }
+
+        &-tags {
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            padding: 2px;
         }
     }
 }
