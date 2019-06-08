@@ -5,17 +5,13 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 
 export default class FilePreview extends React.Component {
 
     static propTypes = {
-        // string: PropTypes.string.isRequired,
+        string: PropTypes.string,
     };
-
-    constructor(props) {
-        super(props);
-    }
 
     render() {
         return <h1>FilePreview component</h1>;

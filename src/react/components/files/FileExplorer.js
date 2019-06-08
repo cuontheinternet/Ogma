@@ -8,15 +8,19 @@ import _ from 'lodash';
 import path from 'path';
 import React from 'react';
 import Fuse from 'fuse.js';
+import Promise from 'bluebird';
 import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
+import {createSelector} from 'reselect';
+import {NotificationManager} from 'react-notifications';
+import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import FileList from './FileList';
 import Util from '../../../util/Util';
 import FilePreview from './FilePreview';
-import {createSelector} from 'reselect';
 import FileStatusBar from './FileStatusBar';
+import TagContextMenu from '../TagContextMenu';
 import {createDeepEqualSelector} from '../../../redux/Selector';
 import {EnvSummaryPropType, ExplorerOptions, ExplorerOptionsDefaults, KeyCode} from '../../../util/typedef';
 
@@ -26,7 +30,7 @@ const FuseOptions = {
     threshold: 0.4,
 };
 
-class NewFileExplorer extends React.Component {
+class FileExplorer extends React.Component {
 
     static propTypes = {
         // Props used in redux.connect
@@ -41,6 +45,7 @@ class NewFileExplorer extends React.Component {
         // Props passed by parent
         changePath: PropTypes.func,
         showPreview: PropTypes.bool,
+        contextMenuId: PropTypes.string,
     };
 
     static defaultProps = {
@@ -54,6 +59,7 @@ class NewFileExplorer extends React.Component {
         this.state = {
             filter: '',
             selection: {},
+            contextFileHash: null,
             options: {...ExplorerOptionsDefaults},
 
             showPreview: props.showPreview,
@@ -85,7 +91,7 @@ class NewFileExplorer extends React.Component {
         const {slimFiles} = props;
 
         if (slimFiles !== state.slimFiles) {
-            const sortedHashes = NewFileExplorer.sortFiles(slimFiles, state.options);
+            const sortedHashes = FileExplorer.sortFiles(slimFiles, state.options);
             let fuse = null;
             let filteredHashes = sortedHashes;
             if (slimFiles && state.filter) {
@@ -97,19 +103,27 @@ class NewFileExplorer extends React.Component {
                 slimFiles,
                 sortedHashes,
                 filteredHashes,
-                fileHashes: NewFileExplorer.combineHashes(sortedHashes, filteredHashes),
+                fileHashes: FileExplorer.combineHashes(sortedHashes, filteredHashes),
             };
         }
         return null;
     }
 
     componentDidMount() {
-        const {path} = this.props;
+        const {path, badHashes} = this.props;
         const {slimFiles} = this.state;
+        const dm = window.dataManager;
         if (path) {
             const selection = {};
             this.setState({selection});
-            window.dataManager.requestDirectoryContent({id: this.summary.id, path, wasCached: !!slimFiles})
+            Promise.resolve()
+                .then(() => dm.requestDirectoryContent({id: this.summary.id, path, wasCached: !!slimFiles}))
+                .catch(window.handleError);
+        }
+
+        if (badHashes && badHashes.length !== 0) {
+            Promise.resolve()
+                .then(() => dm.getEntityFiles({id: this.summary.id, hashes: badHashes}))
                 .catch(window.handleError);
         }
 
@@ -177,7 +191,7 @@ class NewFileExplorer extends React.Component {
             return {
                 filter,
                 filteredHashes,
-                fileHashes: NewFileExplorer.combineHashes(sortedHashes, filteredHashes),
+                fileHashes: FileExplorer.combineHashes(sortedHashes, filteredHashes),
             };
         });
     };
@@ -186,11 +200,11 @@ class NewFileExplorer extends React.Component {
         if (sort === this.state.options[ExplorerOptions.SortOrder]) return;
         this.setState(prevState => {
             const options = {...prevState.options, [ExplorerOptions.SortOrder]: sort};
-            const sortedHashes = NewFileExplorer.sortFiles(prevState.slimFiles, options);
+            const sortedHashes = FileExplorer.sortFiles(prevState.slimFiles, options);
             return {
                 options,
                 sortedHashes,
-                fileHashes: NewFileExplorer.combineHashes(sortedHashes, prevState.filteredHashes),
+                fileHashes: FileExplorer.combineHashes(sortedHashes, prevState.filteredHashes),
             };
         });
     };
@@ -248,15 +262,38 @@ class NewFileExplorer extends React.Component {
         const {changePath} = this.props;
         if (file.isDir) {
             if (changePath) changePath(file.nixPath);
+        } else {
+            if (window.dataManager.isLocalClient()) {
+                return window.ipcModule.openFile({id: this.summary.id, path: file.nixPath})
+                    .catch(window.handleError);
+            } else {
+                NotificationManager.warning('Opening files in the browser is not supported yet.');
+            }
         }
     };
 
+    handleContextMenuShow = hash => {
+        this.setState(prevState => {
+            const newState = {contextFileHash: hash};
+
+            const oldSel = prevState.selection;
+            const oldSelSize = _.size(oldSel);
+            if (oldSelSize <= 1) {
+                newState.selection = {};
+                newState.selection[hash] = true;
+            }
+
+            return newState;
+        });
+    };
+
     render() {
-        const {badHashes} = this.props;
-        const {filter, slimFiles, fileHashes, selection, options, showPreview} = this.state;
+        const {badHashes, contextMenuId, changePath} = this.props;
+        const {filter, slimFiles, fileHashes, selection, options, showPreview, contextFileHash} = this.state;
 
         const fileListComp = <FileList summary={this.summary} fileHashes={fileHashes} badHashes={badHashes}
-                                       selection={selection} contextMenuId={null}
+                                       selection={selection} contextMenuId={contextMenuId}
+                                       view={options[ExplorerOptions.FileView]}
                                        showExtensions={options[ExplorerOptions.ShowExtensions]}
                                        collapseLongNames={options[ExplorerOptions.CollapseLongNames]}
                                        handleSingleClick={this.handleSingleClick}
@@ -268,7 +305,7 @@ class NewFileExplorer extends React.Component {
         const selectionSize = _.size(selection);
         const loadingCount = badHashes.length;
 
-        return <div className="new-file-explorer">
+        return <div className="file-explorer">
             <FileStatusBar filter={filter} onFilerChange={this.handleFilterChange}
                            fileCount={fileCount} hiddenCount={hiddenCount}
                            selectionSize={selectionSize} loadingCount={loadingCount}
@@ -277,6 +314,12 @@ class NewFileExplorer extends React.Component {
                            showPreview={showPreview} onPreviewToggle={this.handlePreviewToggle}/>
             {fileListComp}
             {showPreview && filePreviewComp}
+
+            <ContextMenuWrapper id={contextMenuId} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
+                <TagContextMenu id={contextMenuId} fileHash={contextFileHash} changePath={changePath}
+                                summary={this.summary} selection={selection}
+                                confirmDeletions={options[ExplorerOptions.ConfirmDeletions]}/>
+            </ContextMenuWrapper>
         </div>;
     };
 
@@ -313,5 +356,5 @@ const getSlimFilesDeep = createDeepEqualSelector([getSlimFiles], data => data);
 
 export default connect((state, ownProps) => {
     return {...getSlimFilesDeep(state, ownProps)};
-})(NewFileExplorer);
-// })(withPropChecker(NewFileExplorer, () => 'Expl'));
+})(FileExplorer);
+// })(withPropChecker(FileExplorer, () => 'Expl'));

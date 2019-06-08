@@ -1,5 +1,5 @@
 
-.new-file {
+.file {
     &-explorer {
         border: solid 1px #dbdbdb;
         -webkit-user-select: none;
@@ -16,6 +16,14 @@
 
             &, * {
                 font-size: 0.9rem;
+            }
+
+            .loading-count {
+                color: #999;
+            }
+
+            .selection-count {
+                color: #53a1ff;
             }
 
             .toggle-button {
@@ -43,66 +51,6 @@
                 padding: 50px;
             }
         }
-    }
-}
-
-.file {
-    &-explorer {
-        border: solid 1px #dbdbdb;
-        -webkit-user-select: none;
-        background-color: #fafafa;
-        -moz-user-select: none;
-        user-select: none;
-
-        &-bar {
-            padding: 6px 6px 0 6px;
-
-            &, .input, .button {
-                font-size: 0.9rem;
-            }
-            .icon {
-                height: 2rem;
-            }
-            .pagination-file-count {
-                color: #999;
-            }
-            .pagination-link, .pagination-next, .pagination-previous {
-                height: 2rem !important;
-                padding-right: 0.55rem;
-                padding-left: 0.55rem;
-                font-size: 0.9rem;
-                min-width: 2rem;
-                line-height: 1;
-            }
-            .selection-count {
-                color: #53a1ff;
-            }
-        }
-
-        &-list {
-            padding: 3px;
-            &-empty, &-loading {
-                text-align: center;
-                padding: 50px 0;
-                color: #999;
-            }
-        }
-
-    }
-    &-nothing {
-        text-align: center;
-        padding: 40px 0;
-        color: #999;
-    }
-    &-entry-bad {
-        background-color: #ddd;
-        border: solid 1px #ccc;
-        display: inline-block;
-        vertical-align: top;
-        position: relative;
-        font-size: 0.8rem;
-        overflow: hidden;
-        padding: 4px 8px 4px 4px;
     }
     &-entry {
         background-color: #999;

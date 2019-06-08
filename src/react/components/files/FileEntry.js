@@ -42,7 +42,7 @@ class FileEntry extends React.PureComponent {
 
         // Props passed by parent
         options: PropTypes.object,
-        view: PropTypes.oneOf(Object.values(FileView)),
+        view: PropTypes.string,
         showExtension: PropTypes.bool,
         collapseLongNames: PropTypes.bool,
         singleAndDoubleClickExclusive: PropTypes.bool,

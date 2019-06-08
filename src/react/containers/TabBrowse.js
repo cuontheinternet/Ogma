@@ -4,22 +4,18 @@
  * @licence GPL-3.0
  */
 
-import _ from 'lodash';
 import path from 'path';
 import upath from 'upath';
 import React from 'react';
 import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
-import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import Icon from '../components/Icon';
 import Checkbox from '../components/Checkbox';
 import Breadcrumbs from '../components/Breadcrumbs';
-import FileExplorer from '../components/FileExplorer';
-import TagContextMenu from '../components/TagContextMenu';
+import NewFileExplorer from '../components/files/FileExplorer';
 import {EnvironmentContext, MenuIds, ExplorerOptions, ExplorerOptionsDefaults, ReduxActions} from '../../util/typedef';
-import NewFileExplorer from '../components/files/NewFileExplorer';
 
 const Options = ExplorerOptions;
 
@@ -121,42 +117,6 @@ class TabBrowse extends React.Component {
         });
     };
 
-    handleSelectionChange = selection => {
-        this.setState({selection});
-    };
-
-    handleBackspace = nixPath => {
-        if (nixPath === '/') return;
-        const dirPath = path.dirname(nixPath);
-        this.changePath(dirPath);
-    };
-
-    // noinspection JSUnusedLocalSymbols
-    handleFileClick = (file, event, displayIndex) => {
-        // Nothing to do here... YET.
-    };
-
-    handleFileDoubleClick = file => {
-        if (file.isDir) {
-            this.changePath(file.nixPath);
-        }
-    };
-
-    handleContextMenuShow = data => {
-        this.setState(prevState => {
-            const newState = {contextFileHash: data};
-
-            const oldSel = prevState.selection;
-            const oldSelSize = _.size(oldSel);
-            if (oldSelSize <= 1) {
-                newState.selection = {};
-                newState.selection[data] = true;
-            }
-
-            return newState;
-        });
-    };
-
     renderOptionCheckboxes() {
         const checkboxes = this.optionCheckboxes;
         const comps = new Array(checkboxes.length);
@@ -188,7 +148,6 @@ class TabBrowse extends React.Component {
 
     render() {
         const state = this.state;
-        const options = state.optionState;
 
         return <React.Fragment>
             <Helmet><title>Browse</title></Helmet>
@@ -225,22 +184,8 @@ class TabBrowse extends React.Component {
                 </div>
             </div>
 
-            {/*<FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TabBrowse} path={state.path}*/}
-            {/*              selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}*/}
-            {/*              onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}*/}
-            {/*              onBackspace={this.handleBackspace}/>*/}
-
-            <ContextMenuWrapper id={MenuIds.TabBrowse} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={MenuIds.TabBrowse} fileHash={state.contextFileHash} changePath={this.changePath}
-                                summary={this.summary} selection={state.selection}
-                                confirmDeletions={options[Options.ConfirmDeletions]}/>
-            </ContextMenuWrapper>
-
-            <NewFileExplorer summary={this.summary} path={state.path} changePath={this.changePath}/>
-
-            {/*<br/>*/}
-            {/*<TagContextMenu id={TagContextMenuId} file={state.contextFile} changePath={this.changePath}*/}
-            {/*                envSummary={state.summary} selection={state.selection}/>*/}
+            <NewFileExplorer summary={this.summary} path={state.path} changePath={this.changePath}
+                             contextMenuId={MenuIds.TabBrowse}/>
 
         </React.Fragment>;
     }

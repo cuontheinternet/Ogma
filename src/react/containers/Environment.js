@@ -85,13 +85,16 @@ class Environment extends React.Component {
         return <div className="env force-fullheight">
             <Helmet titleTemplate={`%s | ${pageTitle} | Ogma`}><title>{pageTitle}</title></Helmet>
             <EnvironmentContext.Provider value={summary}>
-                <h1 className="title">
-                    <EnvIcon color={summary.color} icon={summary.icon}/>
-                    &nbsp;&nbsp;{summary.name}
-                </h1>
+                <div>
+                    <h1 className="title is-size-4 env-title">
+                        <EnvIcon color={summary.color} icon={summary.icon}/>
+                        &nbsp;&nbsp;{summary.name}
+                    </h1>
 
-                <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
-                      location={this.props.location} onOptionChange={this.handleRouteChange} className="is-boxed"/>
+                    <Tabs options={TabOptions} useLinks={true} basePath={this.props.match.url}
+                          className="is-boxed env-tabs"
+                          location={this.props.location} onOptionChange={this.handleRouteChange}/>
+                </div>
 
                 {this.renderRoutes()}
             </EnvironmentContext.Provider>

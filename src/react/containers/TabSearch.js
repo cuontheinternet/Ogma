@@ -9,11 +9,9 @@ import React from 'react';
 import {Helmet} from 'react-helmet';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
-import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
 import {
-    EnvSummaryPropType, ExplorerOptions as Options,
-    ExplorerOptionsDefaults,
+    EnvSummaryPropType,
     MenuIds,
     ReduxActions,
     TagSearchCondition,
@@ -21,8 +19,7 @@ import {
 import Tabs from '../components/Tabs';
 import Icon from '../components/Icon';
 import TagGroup from '../components/TagGroup';
-import FileExplorer from '../components/FileExplorer';
-import TagContextMenu from '../components/TagContextMenu';
+import NewFileExplorer from '../components/files/FileExplorer';
 
 const SearchConditionOptions = [
     {id: TagSearchCondition.All, name: 'All'},
@@ -51,7 +48,6 @@ class TabSearch extends React.Component {
             selection: {},
             contextFileHash: null,
             tagFilter: props.tagFilter,
-            options: ExplorerOptionsDefaults,
         };
         this.debouncedTagFilterDispatch = _.debounce(tagFilter =>
             window.dataManager.dispatch(ReduxActions.TabSearchChangeTagFilter, this.summary.id, tagFilter), 100);
@@ -76,44 +72,23 @@ class TabSearch extends React.Component {
         window.dataManager.dispatch(ReduxActions.TabSearchChangeTagSearchCondition, this.summary.id, conditionId);
     };
 
-    handleSelectionChange = selection => {
-        this.setState({selection});
-    };
-
-    handleContextMenuShow = data => {
-        this.setState(prevState => {
-            const newState = {contextFileHash: data};
-
-            const oldSel = prevState.selection;
-            const oldSelSize = _.size(oldSel);
-            if (oldSelSize <= 1) {
-                newState.selection = {};
-                newState.selection[data] = true;
-            }
-
-            return newState;
-        });
-    };
-
     renderAvailableTags(availableTags) {
         const {tagFilter: propTagFilter} = this.props;
         const {tagFilter} = this.state;
 
-        return <div className="card env-browse-available">
-            <div className="card-content">
-                <p className="title is-size-5">Available tags:</p>
-                <div className="field has-addons">
-                    <p className="control">
-                        <button className="button is-static"><Icon name="search"/></button>
-                    </p>
-                    <p className="control is-expanded">
-                        <input className="input" type="text" placeholder="Search tags" value={tagFilter}
-                               onChange={event => this.handleTagFilterChange(event.target.value)}/>
-                    </p>
-                </div>
-                <TagGroup tagIds={availableTags} summary={this.summary} onClick={this.selectTag}
-                          showPlaceHolderOnEmpty={true} nameFilter={propTagFilter}/>
+        return <div className="env-browse-available">
+            <p className="title is-size-5">Available tags:</p>
+            <div className="field has-addons">
+                <p className="control">
+                    <button className="button is-static"><Icon name="search"/></button>
+                </p>
+                <p className="control is-expanded">
+                    <input className="input" type="text" placeholder="Search tags" value={tagFilter}
+                           onChange={event => this.handleTagFilterChange(event.target.value)}/>
+                </p>
             </div>
+            <TagGroup tagIds={availableTags} summary={this.summary} onClick={this.selectTag}
+                      showPlaceHolderOnEmpty={true} nameFilter={propTagFilter}/>
         </div>;
     }
 
@@ -121,22 +96,21 @@ class TabSearch extends React.Component {
         const {tagSearchCondition} = this.props;
 
         return <div className="env-browse-selected">
-            <div className="env-browse-selected-text">
-                Showing files with
+            <p className="title is-size-5">
+                Selected tags (require
                 <div style={{display: 'inline-block'}}>
                     <Tabs options={SearchConditionOptions} className="is-toggle" activeOption={tagSearchCondition}
                           onOptionChange={this.handleTagSearchConditionChange}/>
                 </div>
-                of the following tags:
-            </div>
+                ):
+            </p>
             <TagGroup tagIds={selectedTags} summary={this.summary} onClick={this.deselectTag}
                       showPlaceHolderOnEmpty={true}/>
         </div>;
     }
 
     render() {
-        const {tagIds, entityMap, selectedTagsMap, tagSearchCondition, history} = this.props;
-        const {options, contextFileHash, selection} = this.state;
+        const {tagIds, entityMap, selectedTagsMap, tagSearchCondition} = this.props;
         const [selectedTags, availableTags] = _.partition(tagIds, id => !!selectedTagsMap[id]);
         const selectedTagCount = _.size(selectedTagsMap);
 
@@ -156,23 +130,24 @@ class TabSearch extends React.Component {
             }
             relevantEntityIds = relevantEntities.map(e => e.id);
         }
-        return <div className="columns">
+        const hashes = relevantEntityIds.map(id => entityMap[id].hash);
+
+        return <React.Fragment>
             <Helmet><title>Search</title></Helmet>
-            <div className="column is-narrow" style={{width: 360}}>
-                {this.renderAvailableTags(availableTags)}
-            </div>
-            <div className="column">
-                {this.renderSelectedTags(selectedTags)}
-                <FileExplorer summary={this.summary} entityIds={relevantEntityIds} selectedFileHash={contextFileHash}
-                              onSelectionChange={this.handleSelectionChange} contextMenuId={MenuIds.TabSearch}/>
+
+            <div className="columns env-browse-top">
+                <div className="column">
+                    {this.renderAvailableTags(availableTags)}
+                </div>
+                <div className="is-divider-vertical"/>
+                <div className="column">
+                    {this.renderSelectedTags(selectedTags)}
+                </div>
             </div>
 
-            <ContextMenuWrapper id={MenuIds.TabSearch} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
-                <TagContextMenu id={MenuIds.TabSearch} fileHash={contextFileHash}
-                                summary={this.summary} selection={selection} allowShowInBrowseTab={true}
-                                confirmDeletions={options[Options.ConfirmDeletions]} history={history}/>
-            </ContextMenuWrapper>
-        </div>;
+            <NewFileExplorer summary={this.summary} fileHashes={hashes} changePath={this.changePath}
+                             contextMenuId={MenuIds.TabSearch}/>
+        </React.Fragment>;
     };
 
 }

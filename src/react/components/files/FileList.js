@@ -15,6 +15,7 @@ class FileList extends React.Component {
 
     static propTypes = {
         // Props passed by parent
+        view: PropTypes.string.isRequired,
         summary: EnvSummaryPropType.isRequired,
         fileHashes: PropTypes.arrayOf(PropTypes.string),
         badHashes: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -34,7 +35,7 @@ class FileList extends React.Component {
     renderFiles() {
         const {
             fileHashes, badHashes, showExtensions, collapseLongNames, selection, contextMenuId,
-            handleSingleClick, handleDoubleClick,
+            handleSingleClick, handleDoubleClick, view,
         } = this.props;
 
         const empty = fileHashes && fileHashes.length === 0;
@@ -46,7 +47,7 @@ class FileList extends React.Component {
         const comps = new Array(fileHashes.length);
         for (let i = 0; i < comps.length; ++i) {
             const hash = fileHashes[i];
-            comps[i] = <FileEntry key={hash} hash={hash} summary={this.summary} displayIndex={i}
+            comps[i] = <FileEntry key={hash} hash={hash} summary={this.summary} displayIndex={i} view={view}
                                   showExtension={showExtensions} collapseLongNames={collapseLongNames}
                                   selected={!!selection[hash]} contextMenuId={contextMenuId}
                                   onSingleClick={handleSingleClick} onDoubleClick={handleDoubleClick}/>;
