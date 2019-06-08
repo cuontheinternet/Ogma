@@ -82,7 +82,7 @@ class Environment extends React.Component {
         if (!summary) return <Redirect to={IndexRoutePath}/>;
 
         const pageTitle = `${summary.name} collection`;
-        return <div className="env">
+        return <div className="env force-fullheight">
             <Helmet titleTemplate={`%s | ${pageTitle} | Ogma`}><title>{pageTitle}</title></Helmet>
             <EnvironmentContext.Provider value={summary}>
                 <h1 className="title">

@@ -12,19 +12,15 @@ $radius-large: 3px;
 @import 'context-menu';
 @import 'tags';
 
-#root > ._loading_overlay_wrapper {
-    height: 100%;
-}
-
-.app-wrapper {
-    background-color: #f2f2f2;
-    padding: 20px;
-}
-
 .text-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+}
+
+.force-fullheight {
+    position: relative;
+    height: 100%;
 }
 
 .sidebar {

@@ -1,5 +1,8 @@
 
 .env {
+    flex-direction: column;
+    display: flex;
+
     &-icon {
         display: inline-block;
         padding: 0.2em 0.4em;

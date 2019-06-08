@@ -10,10 +10,10 @@ import * as PropTypes from 'prop-types';
 import VisibilitySensor from 'react-visibility-sensor';
 import {prepareContextMenuHandlers} from 'react-context-menu-wrapper';
 
-import Icon from './Icon';
-import TagGroup from './TagGroup';
-import Util from '../../util/Util';
-import {FolderIconData, getIconData} from '../../util/IconUtil';
+import Icon from '../Icon';
+import TagGroup from '../TagGroup';
+import Util from '../../../util/Util';
+import {FolderIconData, getIconData} from '../../../util/IconUtil';
 import {
     FileView,
     ColorsLight,
@@ -24,7 +24,7 @@ import {
     EnvironmentContext,
     EnvSummaryPropType,
     FilePropType, ReduxActions,
-} from '../../util/typedef';
+} from '../../../util/typedef';
 
 class FileEntry extends React.PureComponent {
 

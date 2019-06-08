@@ -23,7 +23,6 @@ import Icon from '../components/Icon';
 import TagGroup from '../components/TagGroup';
 import FileExplorer from '../components/FileExplorer';
 import TagContextMenu from '../components/TagContextMenu';
-import withPropChecker from '../components/PropChecker';
 
 const SearchConditionOptions = [
     {id: TagSearchCondition.All, name: 'All'},
@@ -185,4 +184,4 @@ export default connect((state, ownProps) => {
         entityMap,
         ...tabSearch,
     };
-})(withPropChecker(TabSearch));
+})(TabSearch);

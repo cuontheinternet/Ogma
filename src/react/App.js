@@ -37,18 +37,16 @@ class App extends React.Component {
         return (
             <Router>
                 <Helmet titleTemplate="%s | Ogma" defaultTite="Ogma"/>
-                <div className="app-wrapper">
-                    <div className="columns">
-                        <div className="column is-narrow"><Sidebar summaries={summaries}/></div>
-                        <div className="column">
-                            <div className="box">
-                                <Switch>
-                                    <Route path="/" exact component={AppDashboard}/>
-                                    <Route path="/settings" component={AppSettings}/>
-                                    {envRoutes}
-                                    <Route component={AppNotFound}/>
-                                </Switch>
-                            </div>
+                <div className="columns force-fullheight">
+                    <div className="column is-narrow"><Sidebar summaries={summaries}/></div>
+                    <div className="column force-fullheight">
+                        <div className="box force-fullheight">
+                            <Switch>
+                                <Route path="/" exact component={AppDashboard}/>
+                                <Route path="/settings" component={AppSettings}/>
+                                {envRoutes}
+                                <Route component={AppNotFound}/>
+                            </Switch>
                         </div>
                     </div>
                 </div>

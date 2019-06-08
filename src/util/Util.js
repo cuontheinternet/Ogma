@@ -8,7 +8,7 @@ import md5 from 'md5';
 import _ from 'lodash';
 import Promise from 'bluebird';
 
-import {ExplorerOptions} from './typedef';
+import {ExplorerOptions, SortOrder} from './typedef';
 
 export default class Util {
 
@@ -91,7 +91,11 @@ export default class Util {
                 if (!fileA.isDir && fileB.isDir) return 1;
             }
 
-            return fileA.base.localeCompare(fileB.base);
+            if (options[ExplorerOptions.SortOrder] === SortOrder.NameAsc) {
+                return fileA.base.localeCompare(fileB.base);
+            } else {
+                return fileA.base.localeCompare(fileB.base) * -1;
+            }
         };
         files.sort(compare);
         return files;

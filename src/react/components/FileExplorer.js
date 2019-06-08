@@ -15,7 +15,7 @@ import {NotificationManager} from 'react-notifications';
 
 import Icon from './Icon';
 import Util from '../../util/Util';
-import FileEntry from './FileEntry';
+import FileEntry from './files/FileEntry';
 import {
     EnvSummaryPropType,
     ExplorerOptions,

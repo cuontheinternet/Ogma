@@ -19,6 +19,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import FileExplorer from '../components/FileExplorer';
 import TagContextMenu from '../components/TagContextMenu';
 import {EnvironmentContext, MenuIds, ExplorerOptions, ExplorerOptionsDefaults, ReduxActions} from '../../util/typedef';
+import NewFileExplorer from '../components/files/NewFileExplorer';
 
 const Options = ExplorerOptions;
 
@@ -189,7 +190,7 @@ class TabBrowse extends React.Component {
         const state = this.state;
         const options = state.optionState;
 
-        return <div>
+        return <React.Fragment>
             <Helmet><title>Browse</title></Helmet>
 
             <div className="level env-tag-top-bar">
@@ -224,10 +225,10 @@ class TabBrowse extends React.Component {
                 </div>
             </div>
 
-            <FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TabBrowse} path={state.path}
-                          selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}
-                          onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}
-                          onBackspace={this.handleBackspace}/>
+            {/*<FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TabBrowse} path={state.path}*/}
+            {/*              selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}*/}
+            {/*              onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}*/}
+            {/*              onBackspace={this.handleBackspace}/>*/}
 
             <ContextMenuWrapper id={MenuIds.TabBrowse} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
                 <TagContextMenu id={MenuIds.TabBrowse} fileHash={state.contextFileHash} changePath={this.changePath}
@@ -235,11 +236,13 @@ class TabBrowse extends React.Component {
                                 confirmDeletions={options[Options.ConfirmDeletions]}/>
             </ContextMenuWrapper>
 
+            <NewFileExplorer summary={this.summary} path={state.path} changePath={this.changePath}/>
+
             {/*<br/>*/}
             {/*<TagContextMenu id={TagContextMenuId} file={state.contextFile} changePath={this.changePath}*/}
             {/*                envSummary={state.summary} selection={state.selection}/>*/}
 
-        </div>;
+        </React.Fragment>;
     }
 
 }

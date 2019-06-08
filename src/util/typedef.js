@@ -85,6 +85,11 @@ export const FileView = {
     LargeThumb: 'large-thumb',
 };
 
+export const SortOrder = {
+    NameAsc: 'name-asc',
+    NameDesc: 'name-desc',
+};
+
 export const ExplorerOptions = {
     SortOrder: 'sort-order',
     FileView: 'file-view',
@@ -103,7 +108,7 @@ export const ExplorerOptionsThatAffectSort = [
 ];
 
 export const ExplorerOptionsDefaults = {
-    [ExplorerOptions.SortOrder]: 'name-asc',
+    [ExplorerOptions.SortOrder]: SortOrder.NameAsc,
     [ExplorerOptions.FileView]: FileView.MediumThumb,
     [ExplorerOptions.CollapseLongNames]: false,
     [ExplorerOptions.CollapseLongTags]: true,

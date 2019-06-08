@@ -12,6 +12,10 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+    padding: 20px;
+}
+
 .app-loader {
     position: relative;
     text-align: center;
