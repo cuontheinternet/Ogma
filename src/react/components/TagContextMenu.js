@@ -20,8 +20,8 @@ import Tabs from './Tabs';
 import Icon from './Icon';
 import Util from '../../util/Util';
 import ModalUtil from '../../util/ModalUtil';
-import {EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 import {createDeepEqualSelector} from '../../redux/Selector';
+import {EnvironmentContext, EnvRoutePaths} from '../../util/typedef';
 
 const ContextTabs = {
     Tag: 0,

@@ -58,7 +58,7 @@ class Sidebar extends React.Component {
         const collections = new Array(summaries.length);
         for (let i = 0; i < summaries.length; ++i) {
             const s = summaries[i];
-            const key = `sidebar-coll-${s.id}`;
+            const key = `sidebar-env-${s.id}`;
             const url = `/env/${s.slug}`;
             const props = {
                 activeClassName: 'is-active disabled-link',

@@ -14,6 +14,7 @@ import {NotificationManager} from 'react-notifications';
 import EnvIcon from '../components/EnvIcon';
 import ErrorHandler from '../../util/ErrorHandler';
 import Icon from '../components/Icon';
+import {NavLink} from 'react-router-dom';
 
 const BrowserIcons = {
     'b:chrome': ['Chrome'],
@@ -53,7 +54,31 @@ class AppDashboard extends React.Component {
     };
 
     renderCollections() {
-        return <button className="button" onClick={this.handleCreateEnvClick}>Create collection</button>;
+        const {summaries} = this.props;
+        const comps = new Array(summaries.length);
+        for (let i = 0; i < summaries.length; ++i) {
+            const summary = summaries[i];
+            const key = `dashboard-env-${summary.id}`;
+            const url = `/env/${summary.slug}`;
+            const style = {
+                backgroundColor: summary.color,
+            };
+            comps[i] = <NavLink to={url} className="env-list-item env-list-item-env" key={key} style={style}>
+                <div className="env-list-item-content">
+                    <div className="env-list-item-icon"><Icon name={summary.icon}/></div>
+                    <div className="env-list-item-name">{summary.name}</div>
+                </div>
+            </NavLink>;
+        }
+        return <div className="env-list">
+            {comps}
+            <button className="env-list-item env-list-item-button" onClick={this.handleCreateEnvClick}>
+                <div className="env-list-item-content">
+                    <div className="env-list-item-icon"><Icon name="plus-square"/></div>
+                    <div className="env-list-item-name">Create collection</div>
+                </div>
+            </button>
+        </div>;
     }
 
     renderActiveConnections() {
@@ -112,8 +137,10 @@ class AppDashboard extends React.Component {
 }
 
 export default connect(state => {
+    const {client, envIds, envMap} = state;
     return {
-        client: state.client,
+        client,
+        summaries: envIds.map(id => envMap[id].summary),
         connections: Object.values(state.connectionMap),
     };
 })(AppDashboard);
