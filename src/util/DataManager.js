@@ -37,6 +37,8 @@ export default class DataManager {
 
         // Setup listeners
         const listenerMap = {
+            [BackendEvents.AddConnection]: client => this.dispatch(ReduxActions.AddConnection, client),
+            [BackendEvents.RemoveConnection]: clientId => this.dispatch(ReduxActions.RemoveConnection, clientId),
             [BackendEvents.UpdateEnvSummaries]: summaries => this.dispatch(ReduxActions.UpdateSummaries, summaries),
             [BackendEvents.UpdateEnvSummary]: summary => this.dispatch(ReduxActions.UpdateSummary, summary.id, summary),
             [BackendEvents.EnvRemoveFiles]: data => this.dispatch(ReduxActions.RemoveMultipleFiles, data.id, data.hashes),
@@ -71,14 +73,22 @@ export default class DataManager {
 
     _syncBaseState() {
         return Promise.resolve()
-            .then(() => this._fetchClientDetails())
-            .then(() => this._fetchEnvSummaries())
+            .then(() => Promise.all([
+                this._fetchClientDetails(),
+                this._fetchConnectionList(),
+                this._fetchEnvSummaries(),
+            ]))
             .then(() => Promise.all([this._fetchAllTags(), this._fetchAllEntities()]));
     }
 
     _fetchClientDetails() {
         return window.ipcModule.getClientDetails()
             .then(client => this.dispatch(ReduxActions.SetClientDetails, client));
+    }
+
+    _fetchConnectionList() {
+        return window.ipcModule.getConnectionList()
+            .then(connections => this.dispatch(ReduxActions.SetConnectionList, connections));
     }
 
     _fetchEnvSummaries() {

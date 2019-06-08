@@ -14,6 +14,7 @@ const initialGlobalState = {
         id: null,
         localClient: false,
     },
+    connectionMap: {},
 
     envIds: [],
     envMap: {},
@@ -35,6 +36,29 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
                 ...state.client,
                 ...data,
             },
+        };
+    } else if (type === ReduxActions.SetConnectionList) {
+        const connectionMap = {};
+        for (const conn of data) {
+            connectionMap[conn.id] = conn;
+        }
+        return {
+            ...state,
+            connectionMap,
+        };
+    } else if (type === ReduxActions.AddConnection) {
+        const connectionMap = {...state.connectionMap};
+        connectionMap[data.id] = data;
+        return {
+            ...state,
+            connectionMap,
+        };
+    } else if (type === ReduxActions.RemoveConnection) {
+        const connectionMap = {...state.connectionMap};
+        delete connectionMap[data];
+        return {
+            ...state,
+            connectionMap,
         };
     } else if (type === ReduxActions.UpdateSummaries) {
         const newSummaries = data;
@@ -58,7 +82,7 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
         }
 
         return {
-            client: state.client,
+            ...state,
             envIds: newEnvIds,
             envMap: newEnvMap,
         };

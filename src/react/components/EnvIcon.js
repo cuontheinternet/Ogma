@@ -12,9 +12,9 @@ import Icon from './Icon';
 export default class EnvIcon extends React.Component {
 
     static propTypes = {
+        color: PropTypes.string,
         background: PropTypes.bool,
         icon: PropTypes.string.isRequired,
-        color: PropTypes.string.isRequired,
     };
 
     static defaultProps = {
@@ -25,7 +25,7 @@ export default class EnvIcon extends React.Component {
         const style = {};
         if (this.props.background) {
             style.color = '#fff';
-            style.backgroundColor = this.props.color;
+            style.backgroundColor = this.props.color || '#999';
         } else {
             style.color = this.props.color;
         }

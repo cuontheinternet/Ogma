@@ -29,7 +29,10 @@ for (const option of TabOptions) option.id = option.path;
 class Environment extends React.Component {
 
     static propTypes = {
+        // Props used in redux.connect
         summary: PropTypes.object.isRequired,
+
+        // Props provided by redux.connect
         subRoute: PropTypes.string.isRequired,
     };
 

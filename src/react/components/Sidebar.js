@@ -90,7 +90,7 @@ class Sidebar extends React.Component {
                     <p className="menu-label">General</p>
                     <ul className="menu-list">
                         <li><NavLink activeClassName="is-active" to="/" exact>
-                            <Icon name="home"/>&nbsp; Dashboard
+                            <Icon name="tachometer-alt"/>&nbsp; Dashboard
                         </NavLink></li>
                         <li><NavLink activeClassName="is-active" to="/settings">
                             <Icon name="cog"/>&nbsp; Settings

@@ -20,6 +20,9 @@ import PropTypes from 'prop-types';
  */
 export const ReduxActions = {
     SetClientDetails: 'set-client-details',
+    SetConnectionList: 'set-conn-list',
+    AddConnection: 'add-conn',
+    RemoveConnection: 'remove-conn',
 
     UpdateSummaries: 'update-summaries',
     UpdateSummary: 'update-summary',
