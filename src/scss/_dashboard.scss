@@ -34,6 +34,9 @@
             &-env {
                 box-shadow: inset rgba(0, 0, 0, 0.05) 0 500px 0, inset rgba(0, 0, 0, 0.1) 0 0 0 1px;
                 color: #fff;
+                &:focus {
+                    box-shadow: inset rgba(0, 0, 0, 0.3) 0 500px 0, inset rgba(0, 0, 0, 0.1) 0 0 0 1px;
+                }
             }
             &-button {
                 border: dashed 1px #ccc;

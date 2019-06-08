@@ -64,7 +64,15 @@
         vertical-align: top;
         position: relative;
         font-size: 0.8rem;
+        text-align: left;
         overflow: hidden;
+
+        &:focus &-name {
+            text-decoration: underline;
+        }
+        &:focus &-icon-content {
+            border: solid 2px rgba(255, 255, 255, 0.6);
+        }
 
         &.medium-thumb {
             display: inline-block;
@@ -76,10 +84,11 @@
 
         &-thumbnail, &-selected, &-tags, &-icon {
             position: absolute;
+            top: 0;
         }
 
         &.medium-thumb:hover &-tags {
-           opacity: 0.6;
+            opacity: 0.6;
         }
 
         &-thumbnail, &-selected, &-icon {
@@ -119,6 +128,7 @@
             max-width: 100%;
             z-index: 3;
             bottom: 0;
+            top: auto;
             left: 0;
             .tag-group-tag {
                 max-width: calc(100% - 2px);
@@ -167,10 +177,12 @@
 
         &-name {
             background-color: rgba(0, 0, 0, 0.8);
-            position: relative;
+            position: absolute;
             padding: 4px 8px;
             color: #fff;
+            width: 100%;
             z-index: 5;
+            top: 0;
 
             &-icon {
                 margin-right: 5px;

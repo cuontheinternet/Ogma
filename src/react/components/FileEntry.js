@@ -198,7 +198,7 @@ class FileEntry extends React.PureComponent {
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
                               onChange={this.handleVisibilityChange}>
-                <div {...this.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
+                <button {...this.handlers} className={className} onClick={this.handleClick} style={wrapperStyle}>
 
                     {<div className={`file-entry-thumbnail ${thumbBgImage ? 'loaded' : ''}`} style={thumbStyle}/>}
 
@@ -219,7 +219,7 @@ class FileEntry extends React.PureComponent {
                         {options[Options.ShowExtensions] && <span className="file-entry-name-ext">{file.ext}</span>}
                     </div>
 
-                </div>
+                </button>
             </VisibilitySensor>
         );
     };

@@ -74,10 +74,12 @@ class TagGroup extends React.Component {
             }
             const style = {background: tag.color};
             const title = showEllipsis ? tag.name : null;
-            comps[i] = <div key={tag.id} className={className} style={style}
-                            title={title} onClick={() => onClick(tag.id)}>
+            const clickFunc = onClick ? () => onClick(tag.id) : null;
+            const HtmlTagToUse = onClick ? 'button' : 'div';
+            comps[i] = <HtmlTagToUse key={tag.id} className={className} style={style}
+                            title={title} onClick={clickFunc}>
                 {tag.name}
-            </div>;
+            </HtmlTagToUse>;
         }
 
         if (hiddenTagCount > 0) {

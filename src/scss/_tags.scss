@@ -17,6 +17,10 @@
         padding: 1px 4px;
         margin: 1px;
         color: #fff;
+        
+        &:focus {
+            text-decoration: underline;
+        }
 
         &-empty {
             $color1: #c0c0c0;
