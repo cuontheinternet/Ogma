@@ -77,7 +77,7 @@ class TabSearch extends React.Component {
         const {tagFilter} = this.state;
 
         return <div className="env-browse-available">
-            <p className="title is-size-5">Available tags:</p>
+            <div className="title is-size-5">Available tags:</div>
             <div className="field has-addons">
                 <p className="control">
                     <button className="button is-static"><Icon name="search"/></button>
@@ -96,14 +96,14 @@ class TabSearch extends React.Component {
         const {tagSearchCondition} = this.props;
 
         return <div className="env-browse-selected">
-            <p className="title is-size-5">
+            <div className="title is-size-5">
                 Selected tags (require
                 <div style={{display: 'inline-block'}}>
                     <Tabs options={SearchConditionOptions} className="is-toggle" activeOption={tagSearchCondition}
                           onOptionChange={this.handleTagSearchConditionChange}/>
                 </div>
                 ):
-            </p>
+            </div>
             <TagGroup tagIds={selectedTags} summary={this.summary} onClick={this.deselectTag}
                       showPlaceHolderOnEmpty={true}/>
         </div>;

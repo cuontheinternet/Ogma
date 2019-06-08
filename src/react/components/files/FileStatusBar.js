@@ -125,11 +125,11 @@ export default class FileStatusBar extends React.Component {
                 </div>
 
                 <div className="level-right">
-                    <p className="level-item">{sortButtons}</p>
-                    <p className="level-item">{viewButtons}</p>
-                    <p className="level-item">
+                    <div className="level-item">{sortButtons}</div>
+                    <div className="level-item">{viewButtons}</div>
+                    <div className="level-item">
                         <button className={previewButtonClasses} onClick={onPreviewToggle}><Icon name="info"/></button>
-                    </p>
+                    </div>
                 </div>
             </nav>
         </div>;

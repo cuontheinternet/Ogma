@@ -122,7 +122,7 @@ class AppDashboard extends React.Component {
     render() {
         return <div className="dashboard">
             <Helmet><title>Dashboard</title></Helmet>
-            <h1 className="title"><EnvIcon icon="tachometer-alt"/>&nbsp;&nbsp; Dashboard</h1>
+            <h1 className="title is-size-4"><EnvIcon icon="tachometer-alt"/>&nbsp;&nbsp; Dashboard</h1>
 
             <h1 className="title is-size-5">Your collections</h1>
             {this.renderCollections()}

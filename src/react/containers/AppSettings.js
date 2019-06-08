@@ -14,7 +14,7 @@ class AppSettings extends React.Component {
     render() {
         return <div>
             <Helmet><title>Settings</title></Helmet>
-            <h1 className="title"><EnvIcon icon="cog"/>&nbsp;&nbsp; Settings</h1>
+            <h1 className="title is-size-4"><EnvIcon icon="cog"/>&nbsp;&nbsp; Settings</h1>
         </div>;
     };
 

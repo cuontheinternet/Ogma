@@ -58,6 +58,10 @@
 
     &-browse {
         &-top {
+            .column {
+                padding-bottom: 0 !important;
+                padding-top: 0 !important;
+            }
             .title {
                 margin-bottom: 0.5rem !important;
             }

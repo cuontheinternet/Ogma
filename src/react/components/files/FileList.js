@@ -56,7 +56,9 @@ class FileList extends React.Component {
     }
 
     render() {
-        return <div className="file-list">
+        const {view} = this.props;
+        
+        return <div className={`file-list ${view}`}>
             {this.renderFiles()}
         </div>;
     };

@@ -14,7 +14,7 @@ class AppNotFound extends React.Component {
     render() {
         return <div>
             <Helmet><title>Page not found</title></Helmet>
-            <h1 className="title">404 - Page not found</h1>
+            <h1 className="title is-size-4">404 - Page not found</h1>
             <div className="content has-text-centered">
                 <p className="subtitle" style={{maxWidth: 600, margin: 'auto'}}>
                     The page you requested could not be found. If you had a collection bookmarked, you might need to

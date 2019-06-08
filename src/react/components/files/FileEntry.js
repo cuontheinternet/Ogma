@@ -19,8 +19,6 @@ import {
     ColorsLight,
     ColorsDark,
     ThumbnailState,
-    ExplorerOptions as Options,
-    ExplorerOptionsDefaults,
     EnvironmentContext,
     EnvSummaryPropType,
     FilePropType, ReduxActions,
@@ -41,7 +39,6 @@ class FileEntry extends React.PureComponent {
         file: FilePropType.isRequired,
 
         // Props passed by parent
-        options: PropTypes.object,
         view: PropTypes.string,
         showExtension: PropTypes.bool,
         collapseLongNames: PropTypes.bool,
@@ -54,7 +51,6 @@ class FileEntry extends React.PureComponent {
     };
 
     static defaultProps = {
-        options: ExplorerOptionsDefaults,
         selected: false,
         view: FileView.MediumThumb,
         showExtension: true,
@@ -168,15 +164,15 @@ class FileEntry extends React.PureComponent {
     }
 
     render() {
-        const {options, selected} = this.props;
+        const {selected, view, showExtension, collapseLongNames} = this.props;
         const file = this.props.file;
         // console.log(`Re-rendered ${file.name}`);
 
         // Prepare file name
         let name = file.name;
-        if (options[Options.CollapseLongNames]) {
+        if (collapseLongNames) {
             const length = name.length;
-            const extLength = options[Options.ShowExtensions] ? file.ext.length : 0;
+            const extLength = showExtension ? file.ext.length : 0;
             if (length + extLength > 65) {
                 // TODO: Improve this code.
                 const collapse = <span className="file-entry-name-collapse">&lt;...&gt;</span>;
@@ -188,12 +184,31 @@ class FileEntry extends React.PureComponent {
             }
         }
 
-        const wrapperStyle = {backgroundColor: ColorsDark[this.state.icon.colorCode]};
 
         const thumbBgImage = this.state.thumbBgImage;
         const thumbStyle = {backgroundImage: thumbBgImage};
 
-        const className = `file-entry ${options[Options.FileView]} ${selected ? 'selected' : ''}`;
+        const className = `file-entry ${view} ${selected ? 'selected' : ''}`;
+        if (view === FileView.List) {
+            const iconStyle = {color: ColorsDark[this.state.icon.colorCode]};
+            return (
+                <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
+                                  intervalDelay={500}
+                                  onChange={this.handleVisibilityChange}>
+                    <button {...this.handlers} className={className} onClick={this.handleClick}>
+
+                        <div className="file-entry-name">
+                            <span className="file-entry-name-icon" style={iconStyle}>{this.renderIcon(false)}</span>
+                            {name}
+                            {showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
+                        </div>
+
+                    </button>
+                </VisibilitySensor>
+            );
+        }
+
+        const wrapperStyle = {backgroundColor: ColorsDark[this.state.icon.colorCode]};
         return (
             <VisibilitySensor partialVisibility={true} offset={{top: -150, bottom: -150}}
                               intervalDelay={500}
@@ -206,7 +221,7 @@ class FileEntry extends React.PureComponent {
 
                     {file.entityId && <div className="file-entry-tags">
                         <TagGroup summary={this.summary} entityId={file.entityId}
-                                  showEllipsis={options[Options.CollapseLongTags]}/>
+                                  showEllipsis={collapseLongNames}/>
                     </div>}
 
                     <div className="file-entry-icon">
@@ -216,7 +231,7 @@ class FileEntry extends React.PureComponent {
                     <div className="file-entry-name">
                         <span className="file-entry-name-icon">{this.renderIcon(false)}</span>
                         {name}
-                        {options[Options.ShowExtensions] && <span className="file-entry-name-ext">{file.ext}</span>}
+                        {showExtension && <span className="file-entry-name-ext">{file.ext}</span>}
                     </div>
 
                 </button>
