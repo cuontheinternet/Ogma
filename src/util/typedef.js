@@ -92,8 +92,8 @@ export const SortOrder = {
 export const ExplorerOptions = {
     SortOrder: 'sort-order',
     FileView: 'file-view',
+    ShowPreview: 'show-preview',
     CollapseLongNames: 'collapse-names',
-    CollapseLongTags: 'collapse-tags',
     FoldersFirst: 'folders-first',
     ShowExtensions: 'show-exts',
     ShowHidden: 'show-hidden',
@@ -109,8 +109,8 @@ export const ExplorerOptionsThatAffectSort = [
 export const ExplorerOptionsDefaults = {
     [ExplorerOptions.SortOrder]: SortOrder.NameAsc,
     [ExplorerOptions.FileView]: FileView.MediumThumb,
+    [ExplorerOptions.ShowPreview]: false,
     [ExplorerOptions.CollapseLongNames]: false,
-    [ExplorerOptions.CollapseLongTags]: true,
     [ExplorerOptions.FoldersFirst]: true,
     [ExplorerOptions.ShowExtensions]: true,
     [ExplorerOptions.ShowHidden]: true,

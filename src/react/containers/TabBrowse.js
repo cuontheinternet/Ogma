@@ -12,12 +12,9 @@ import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
 
 import Icon from '../components/Icon';
-import Checkbox from '../components/Checkbox';
 import Breadcrumbs from '../components/Breadcrumbs';
 import NewFileExplorer from '../components/files/FileExplorer';
-import {EnvironmentContext, MenuIds, ExplorerOptions, ExplorerOptionsDefaults, ReduxActions} from '../../util/typedef';
-
-const Options = ExplorerOptions;
+import {EnvironmentContext, MenuIds, ExplorerOptionsDefaults, ReduxActions} from '../../util/typedef';
 
 class TabBrowse extends React.Component {
 
@@ -43,18 +40,6 @@ class TabBrowse extends React.Component {
 
             optionState: ExplorerOptionsDefaults,
         };
-        this.optionCheckboxes = [
-            {id: Options.CollapseLongNames, name: 'Collapse long names'},
-            {id: Options.CollapseLongTags, name: 'Collapse long tags'},
-            {id: Options.FoldersFirst, name: 'Show folders first'},
-            {id: Options.ShowExtensions, name: 'Show extensions'},
-            {id: Options.ShowHidden, name: 'Show hidden files'},
-            {id: Options.ConfirmDeletions, name: 'Confirm deletions'},
-        ];
-        this.optionButtons = [
-            {icon: 'sync-alt', name: 'Refresh directory', callback: () => null},
-            {icon: 'folder-minus', name: 'Clear file cache', callback: () => null},
-        ];
     }
 
     static getDerivedStateFromProps(props, state) {
@@ -108,44 +93,6 @@ class TabBrowse extends React.Component {
         return breadcrumbs;
     }
 
-    handleCheckboxChange = (id, value) => {
-        this.setState({
-            optionState: {
-                ...this.state.optionState,
-                [id]: value,
-            },
-        });
-    };
-
-    renderOptionCheckboxes() {
-        const checkboxes = this.optionCheckboxes;
-        const comps = new Array(checkboxes.length);
-        for (let i = 0; i < checkboxes.length; i++) {
-            const checkbox = checkboxes[i];
-            const key = `${this.summary.id}-${checkbox.id}`;
-            comps[i] = <div key={key} className="dropdown-item">
-                <div className="field">
-                    <Checkbox id={checkbox.id} name={checkbox.name} checked={this.state.optionState[checkbox.id]}
-                              onChange={this.handleCheckboxChange}/>
-                </div>
-            </div>;
-        }
-        return comps;
-    }
-
-    renderOptionButtons() {
-        const buttons = this.optionButtons;
-        const comps = new Array(buttons.length);
-        for (let i = 0; i < buttons.length; i++) {
-            const button = buttons[i];
-            const key = `${this.summary.id}-${button.name}`;
-            comps[i] = <button key={key} className="dropdown-item" onClick={button.callback}>
-                <Icon name={button.icon} wrapper={false}/>&nbsp;&nbsp;&nbsp;<span>{button.name}</span>
-            </button>;
-        }
-        return comps;
-    }
-
     render() {
         const state = this.state;
 
@@ -165,22 +112,6 @@ class TabBrowse extends React.Component {
                     </div>
                 </div>
                 <div className="level-right">
-                    <div className="level-item">
-                        <div className="dropdown is-right is-hoverable">
-                            <div className="dropdown-trigger">
-                                <button className="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                                    <span>Options</span><Icon name="angle-down"/>
-                                </button>
-                            </div>
-                            <div className="dropdown-menu" id="dropdown-menu" role="menu">
-                                <div className="dropdown-content">
-                                    {this.renderOptionCheckboxes()}
-                                    <hr className="dropdown-divider"/>
-                                    {this.renderOptionButtons()}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 

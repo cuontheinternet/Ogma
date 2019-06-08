@@ -24,11 +24,13 @@ class Icon extends React.Component {
         wrapper: PropTypes.bool,
         style: PropTypes.any,
         animation: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
+        iconModifier: PropTypes.string,
     };
 
     static defaultProps = {
         wrapper: true, // Enables Bulma wrapper for the icon
         animation: false, // Enables animations, use `true` for standard `spin` animation or custom string
+        iconModifier: '', // Arbitrary fontawesome classes, e.g. `fa-fw`
     };
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -37,7 +39,7 @@ class Icon extends React.Component {
 
     render() {
         let {name} = this.props;
-        const {size, wrapper, style, animation} = this.props;
+        const {size, wrapper, style, animation, iconModifier} = this.props;
 
         let iconClass = 's';
         if (name.charAt(1) === ':') {
@@ -57,7 +59,7 @@ class Icon extends React.Component {
             else animationModifier = `fa-${animation}`;
         }
 
-        const iconClassName = `fa${iconClass} fa-${name} ${sizeModifier} ${animationModifier}`;
+        const iconClassName = `fa${iconClass} fa-${name} ${sizeModifier} ${animationModifier} ${iconModifier}`;
 
         if (wrapper) {
             let className = 'icon';

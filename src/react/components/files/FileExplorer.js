@@ -13,7 +13,6 @@ import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
 import * as PropTypes from 'prop-types';
 import {createSelector} from 'reselect';
-import shallowEqual from 'is-equal-shallow';
 import {NotificationManager} from 'react-notifications';
 import {ContextMenuWrapper} from 'react-context-menu-wrapper';
 
@@ -95,12 +94,13 @@ class FileExplorer extends React.Component {
 
     static getDerivedStateFromProps(props, state) {
         const {slimFiles} = props;
+        const {filter, options} = state;
 
         if (!equal(slimFiles, state.slimFiles)) {
-            const sortedHashes = FileExplorer.sortFiles(slimFiles, state.options);
+            const sortedHashes = FileExplorer.sortFiles(slimFiles, options);
             let fuse = null;
             let filteredHashes = sortedHashes;
-            if (slimFiles && state.filter) {
+            if (slimFiles && filter) {
                 let fuse = new Fuse(slimFiles, FuseOptions);
                 filteredHashes = fuse.search(state.filter);
             }
@@ -202,26 +202,41 @@ class FileExplorer extends React.Component {
         });
     };
 
-    handleSortChange = sort => {
-        if (sort === this.state.options[ExplorerOptions.SortOrder]) return;
-        this.setState(prevState => {
-            const options = {...prevState.options, [ExplorerOptions.SortOrder]: sort};
-            const sortedHashes = FileExplorer.sortFiles(prevState.slimFiles, options);
-            return {
-                options,
-                sortedHashes,
-                fileHashes: FileExplorer.combineHashes(sortedHashes, prevState.filteredHashes),
-            };
-        });
+    handleOptionChange = (optionId, value) => {
+        console.log('Option change:', optionId, value);
+
+        if (optionId === ExplorerOptions.SortOrder || optionId === ExplorerOptions.FoldersFirst) {
+            this.setState(prevState => {
+                const options = {...prevState.options, [optionId]: value};
+                const sortedHashes = FileExplorer.sortFiles(prevState.slimFiles, options);
+                return {
+                    options,
+                    sortedHashes,
+                    fileHashes: FileExplorer.combineHashes(sortedHashes, prevState.filteredHashes),
+                };
+            });
+        } else if (optionId === ExplorerOptions.ShowHidden) {
+            this.setState(prevState => {
+                const options = {...prevState.options, [optionId]: value};
+                const sortedHashes = FileExplorer.sortFiles(prevState.slimFiles, options);
+                return {
+                    options,
+                    sortedHashes,
+                    fileHashes: FileExplorer.combineHashes(sortedHashes, prevState.filteredHashes),
+                };
+            });
+        } else {
+            // For all other options, just update the `options` state
+            this.setState(prevState => ({options: {...prevState.options, [optionId]: value}}));
+        }
+
+        // TODO: Update global Redux options snapshot.
     };
 
-    handleViewChange = view => {
-        if (view === this.state.options[ExplorerOptions.FileView]) return;
-        this.setState(prevState => ({options: {...prevState.options, [ExplorerOptions.FileView]: view}}));
-    };
-
-    handlePreviewToggle = () => {
-        this.setState(prevState => ({showPreview: !prevState.showPreview}));
+    onOptionChange = (optionId, value) => {
+        const {options} = this.state;
+        if (value === options[optionId]) return;
+        this.handleOptionChange(optionId, value);
     };
 
     handleSingleClick = (file, event, displayIndex) => {
@@ -316,9 +331,7 @@ class FileExplorer extends React.Component {
             <FileStatusBar filter={filter} onFilerChange={this.handleFilterChange}
                            fileCount={fileCount} hiddenCount={hiddenCount}
                            selectionSize={selectionSize} loadingCount={loadingCount}
-                           sort={options[ExplorerOptions.SortOrder]} onSortChange={this.handleSortChange}
-                           view={options[ExplorerOptions.FileView]} onViewChange={this.handleViewChange}
-                           showPreview={showPreview} onPreviewToggle={this.handlePreviewToggle}/>
+                           options={options} onOptionChange={this.onOptionChange}/>
             {fileListComp}
             {showPreview && filePreviewComp}
 

@@ -10,17 +10,18 @@ import c from 'classnames';
 import * as PropTypes from 'prop-types';
 
 import Icon from '../Icon';
-import {FileView, SortOrder} from '../../../util/typedef';
+import {FileView, SortOrder, ExplorerOptions as Options} from '../../../util/typedef';
+import Checkbox from '../Checkbox';
 
 const SortOrderOptions = [
-    {id: SortOrder.NameAsc, icon: 'sort-alpha-down'},
-    {id: SortOrder.NameDesc, icon: 'sort-alpha-up'},
+    {id: SortOrder.NameAsc, icon: 'sort-alpha-down', name: 'Names ascending'},
+    {id: SortOrder.NameDesc, icon: 'sort-alpha-up', name: 'Names descending'},
 ];
 
 const FileViewOptions = [
-    {id: FileView.List, icon: 'list-ul'},
-    {id: FileView.MediumThumb, icon: 'th'},
-    {id: FileView.LargeThumb, icon: 'th-large'},
+    {id: FileView.List, icon: 'list-ul', name: 'List view'},
+    {id: FileView.MediumThumb, icon: 'th', name: 'Medium thumbnails'},
+    {id: FileView.LargeThumb, icon: 'th-large', name: 'Large thumbnails'},
 ];
 
 export default class FileStatusBar extends React.Component {
@@ -33,12 +34,8 @@ export default class FileStatusBar extends React.Component {
         hiddenCount: PropTypes.number.isRequired,
         selectionSize: PropTypes.number.isRequired,
         loadingCount: PropTypes.number.isRequired,
-        sort: PropTypes.string.isRequired,
-        onSortChange: PropTypes.func.isRequired,
-        view: PropTypes.string.isRequired,
-        onViewChange: PropTypes.func.isRequired,
-        showPreview: PropTypes.bool.isRequired,
-        onPreviewToggle: PropTypes.func.isRequired,
+        options: PropTypes.object.isRequired,
+        onOptionChange: PropTypes.func.isRequired,
     };
 
     static defaultProps = {
@@ -51,6 +48,15 @@ export default class FileStatusBar extends React.Component {
         this.state = {
             filter: props.filter,
         };
+
+        this.optionCheckboxes = [
+            {id: Options.CollapseLongNames, name: 'Collapse long names'},
+            {id: Options.FoldersFirst, name: 'Show folders first'},
+            {id: Options.ShowExtensions, name: 'Show extensions'},
+            {id: Options.ShowHidden, name: 'Show hidden files'},
+            {id: Options.ConfirmDeletions, name: 'Confirm deletions'},
+        ];
+
         if (props.onFilerChange) this.debouncedOnFilterChange = _.debounce(props.onFilerChange, 200);
     }
 
@@ -59,46 +65,68 @@ export default class FileStatusBar extends React.Component {
         if (this.debouncedOnFilterChange) this.debouncedOnFilterChange(filter);
     };
 
+    renderButtons(key, options, current, onClick) {
+        const buttons = new Array(options.length);
+        for (let i = 0; i < buttons.length; ++i) {
+            const option = options[i];
+            const active = option.id === current;
+            const props = {
+                key: `bar-${key}-${option.id}`,
+                onClick: () => onClick(option.id),
+                className: c({
+                    'button': true,
+                    'toggle-button': true,
+                    'is-info': active,
+                    'is-outlined': active,
+                    'tooltip': option.name,
+                }),
+                'data-tooltip': option.name,
+            };
+            buttons[i] = <button {...props}><Icon name={option.icon}/></button>;
+        }
+        return <div className="level-item">
+            {buttons}
+        </div>;
+    }
+
+    renderButton(icon, active, onClick, tooltip = '') {
+        const buttonClasses = c({
+            'button': true,
+            'is-info': active,
+            'is-outlined': active,
+            'tooltip': tooltip,
+        });
+        return <div className="level-item">
+            <button className={buttonClasses} onClick={() => onClick(!active)} data-tooltip={tooltip}>
+                <Icon name={icon}/>
+            </button>
+        </div>;
+    }
+
     render() {
         const {
-            fileCount, hiddenCount, selectionSize, loadingCount,
-            sort, onSortChange, view, onViewChange, showPreview, onPreviewToggle,
+            fileCount, hiddenCount, selectionSize, loadingCount, options, onOptionChange,
         } = this.props;
         const {filter} = this.state;
-
-        const previewButtonClasses = c({
-            'button': true,
-            'is-info': showPreview,
-            'is-outlined': showPreview,
-        });
-
-        const sortButtons = new Array(FileViewOptions.length);
-        for (let i = 0; i < SortOrderOptions.length; ++i) {
-            const option = SortOrderOptions[i];
-            const active = option.id === sort;
-            const props = {
-                key: `bar-order-${option.id}`,
-                onClick: () => onSortChange(option.id),
-                className: c({'button': true, 'toggle-button': true, 'is-info': active, 'is-outlined': active}),
-            };
-            sortButtons[i] = <button {...props}><Icon name={option.icon}/></button>;
-        }
-
-        const viewButtons = new Array(FileViewOptions.length);
-        for (let i = 0; i < FileViewOptions.length; ++i) {
-            const option = FileViewOptions[i];
-            const active = option.id === view;
-            const props = {
-                key: `bar-view-${option.id}`,
-                onClick: () => onViewChange(option.id),
-                className: c({'button': true, 'toggle-button': true, 'is-info': active, 'is-outlined': active}),
-            };
-            viewButtons[i] = <button {...props}><Icon name={option.icon}/></button>;
-        }
 
         const bracketCounts = [];
         if (hiddenCount !== 0) bracketCounts.push(`${hiddenCount} hidden`);
         if (loadingCount !== 0) bracketCounts.push(`${loadingCount} loading`);
+
+        const checkboxes = this.optionCheckboxes;
+        const comps = new Array(checkboxes.length);
+        for (let i = 0; i < checkboxes.length; i++) {
+            const checkbox = checkboxes[i];
+            const key = `checkbox-${checkbox.id}`;
+            comps[i] = <div key={key} className="dropdown-item">
+                <div className="field">
+                    <Checkbox id={checkbox.id} name={checkbox.name} checked={options[checkbox.id]}
+                              onChange={onOptionChange}/>
+                </div>
+            </div>;
+        }
+
+        const prepHandler = id => (value => onOptionChange(id, value));
 
         return <div className="status-bar">
             <nav className="level">
@@ -116,7 +144,7 @@ export default class FileStatusBar extends React.Component {
                     {fileCount !== -1 &&
                     <div className="level-item"><p>
                         {fileCount} file{fileCount !== 1 ? 's' : ''}
-                        {bracketCounts.length !== 0 && 
+                        {bracketCounts.length !== 0 &&
                         <span className="loading-count"> ({bracketCounts.join(', ')})</span>}
                     </p></div>}
 
@@ -125,10 +153,22 @@ export default class FileStatusBar extends React.Component {
                 </div>
 
                 <div className="level-right">
-                    <div className="level-item">{sortButtons}</div>
-                    <div className="level-item">{viewButtons}</div>
+                    {this.renderButtons('order', SortOrderOptions, options[Options.SortOrder], prepHandler(Options.SortOrder))}
+                    {this.renderButtons('view', FileViewOptions, options[Options.FileView], prepHandler(Options.FileView))}
+                    {this.renderButton('info', options[Options.ShowPreview], prepHandler(Options.ShowPreview), 'Show file' +
+                        ' preview')}
+
                     <div className="level-item">
-                        <button className={previewButtonClasses} onClick={onPreviewToggle}><Icon name="info"/></button>
+                        <div className="dropdown is-right is-hoverable">
+                            <div className="dropdown-trigger">
+                                <button className="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                                    <span>Options</span><Icon name="angle-down" size="small"/>
+                                </button>
+                            </div>
+                            <div className="dropdown-menu" id="dropdown-menu" role="menu">
+                                <div className="dropdown-content">{comps}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>

@@ -148,7 +148,7 @@ class FileEntry extends React.PureComponent {
         const style = {
             color: color ? ColorsLight[icon.colorCode] : 'inherit',
         };
-        return <Icon name={icon.name} wrapper={false} style={style}/>;
+        return <Icon name={icon.name} wrapper={false} style={style} iconModifier="fa-fw"/>;
     }
 
     render() {

@@ -106,7 +106,7 @@ export default class Util {
     static sortFiles(unsortedFiles, options) {
         let files = unsortedFiles;
         if (!options[ExplorerOptions.ShowHidden]) {
-            files = _.filter(files, f => !f.name.startsWith('.'));
+            files = _.filter(files, f => !f.base.startsWith('.'));
         }
         const compare = (fileA, fileB) => {
             if (options[ExplorerOptions.FoldersFirst]) {
