@@ -17,6 +17,7 @@ import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 import './scss/index.scss';
 import App from './react/App';
+import Util from './util/Util';
 import baseConfig from '../../base-config';
 import DataManager from './util/DataManager';
 import IpcModule from '../../shared/IpcModule';
@@ -39,13 +40,24 @@ if (window.isDevelopment) console.log('Ogma app running in development mode.');
 // Initialize notification component (only need to do this once)
 ReactDOM.render(<NotificationContainer/>, document.getElementById('notif'));
 
-const socketIoLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('Could not download the Socket.io script from the server.'));
-    script.src = `${window.serverHost}/socket.io/socket.io.js`;
-    document.head.appendChild(script);
-});
+// Load Socket.IO scripts from the server
+const socketIoLoadPromise = Promise.resolve()
+    .then(() => {
+        const localUrl = `/socket.io/socket.io.js`;
+        const fullUrl = `${window.serverHost}${localUrl}`;
+        const errorString = 'Could not download the Socket.io script from the server.';
+        if (window.isDevelopment) {
+            return Util.loadScript(fullUrl)
+                .catch(() => {
+                    throw new Error(errorString);
+                });
+        } else {
+            return Util.loadScript(localUrl)
+                .catch(() => {
+                    throw new Error(errorString);
+                });
+        }
+    });
 
 // Socket.IO connection logic
 const socketInitPromise = socketIoLoadPromise.then(() => new Promise(resolve => {
@@ -74,8 +86,7 @@ const appLoaderDiv = $('#app-loader');
 
 // Initialize the rest of the app if socket connection succeeded
 socketInitPromise
-    .then(socket => new Promise((resolve, reject) => {
-
+    .then(socket => {
         // Setup the event emitter
         window.proxyEmitter = new EventEmitter2({wildcard: true, newListener: false, maxListeners: 20});
 
@@ -86,14 +97,11 @@ socketInitPromise
             message: `Server has encountered an error: "${errorMessage}"`,
         });
         window.ipcModule = new IpcModule({socket, eventHandler, errorHandler});
-        window.ipcModule.getConnectionDetails()
-            .then(connDetails => resolve({socket, connDetails}))
-            .catch(reject);
-    }))
-    .then(result => {
-        const {socket, connDetails} = result;
+        return socket;
+    })
+    .then(socket => {
         const store = configureStore({reducer: ogmaAppReducer});
-        window.dataManager = new DataManager({socket, store, connDetails});
+        window.dataManager = new DataManager({socket, store});
         return window.dataManager.init()
             .then(() => store);
     })

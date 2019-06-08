@@ -19,9 +19,10 @@ import PropTypes from 'prop-types';
  * @property {*} data
  */
 export const ReduxActions = {
+    SetClientDetails: 'set-client-details',
+
     UpdateSummaries: 'update-summaries',
     UpdateSummary: 'update-summary',
-
 
     SetAllTags: 'set-all-tags',
     AddNewTags: 'add-new-tags',

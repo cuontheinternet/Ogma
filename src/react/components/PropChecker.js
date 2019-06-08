@@ -17,7 +17,8 @@ export default function withPropChecker(WrappedComponent, getId = null) {
             let id = '[...]';
             if (getId) id = `[${getId(this.props)}]`;
 
-            Object.keys(prevProps).filter(key => prevProps[key] !== this.props[key])
+            Object.keys(prevProps)
+                .filter(key => prevProps[key] !== this.props[key])
                 .map(key => {
                     const diff = detailedDiff(prevProps[key], this.props[key]);
                     console.log(
@@ -26,6 +27,7 @@ export default function withPropChecker(WrappedComponent, getId = null) {
                         'added:', diff.added,
                         'deleted:', diff.deleted,
                     );
+                    return null;
                 });
         }
 

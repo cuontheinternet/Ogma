@@ -10,6 +10,11 @@ import {environmentReducer} from './EnvironmentReducer';
 import {DefaultEnvRoutePath, DefaultTagSearchCondition, ReduxActions} from '../util/typedef';
 
 const initialGlobalState = {
+    client: {
+        id: null,
+        localClient: false,
+    },
+
     envIds: [],
     envMap: {},
 };
@@ -21,8 +26,17 @@ const initialGlobalState = {
  */
 const ogmaAppReducer = (state = initialGlobalState, action) => {
     const {type, data} = action;
+    if (!action.envId && data && data.id) action.envId = data.id;
 
-    if (type === ReduxActions.UpdateSummaries) {
+    if (type === ReduxActions.SetClientDetails) {
+        return {
+            ...state,
+            client: {
+                ...state.client,
+                ...data,
+            },
+        };
+    } else if (type === ReduxActions.UpdateSummaries) {
         const newSummaries = data;
         const newEnvIds = _.map(newSummaries, s => s.id);
         const newEnvMap = {};
@@ -44,13 +58,11 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
         }
 
         return {
+            client: state.client,
             envIds: newEnvIds,
             envMap: newEnvMap,
         };
-    }
-
-    if (!action.envId && data && data.id) action.envId = data.id;
-    if (action.envId) {
+    } else if (action.envId) {
         const envId = action.envId;
         const newEnvMap = {
             ...state.envMap,
@@ -60,9 +72,7 @@ const ogmaAppReducer = (state = initialGlobalState, action) => {
             ...state,
             envMap: newEnvMap,
         };
-    }
-
-    if (window.isDevelopment && type !== '@@INIT') {
+    } else if (window.isDevelopment && type !== '@@INIT') {
         console.warn(`[Redux] Non-global action called without 'envId': ${type}`);
     }
     return state;

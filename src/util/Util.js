@@ -27,6 +27,20 @@ export default class Util {
         });
     }
 
+    static loadScript(url) {
+        return new Promise((resolve, reject) => {
+            try {
+                const script = document.createElement('script');
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Could not download script from "${url}".`));
+                script.src = url;
+                document.head.appendChild(script);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     /**
      * @param {string} string
      * @param {number} length
@@ -64,17 +78,6 @@ export default class Util {
             obj[keyFunc(elem)] = elem;
         }
         return obj;
-    }
-
-    static objectLength(object, keyCheck = null, valueCheck = null) {
-        const keys = Object.keys(object);
-        let length = 0;
-        for (const key of keys) {
-            if (keyCheck && !keyCheck(key)) continue;
-            if (valueCheck && !valueCheck(object[key])) continue;
-            ++length;
-        }
-        return length;
     }
 
     static sortFiles(unsortedFiles, options) {

@@ -17,13 +17,10 @@ export default class DataManager {
      * @param {object} data
      * @param {object} data.socket
      * @param {object} data.store
-     * @param {ConnectionDetails} data.connDetails
      */
     constructor(data) {
         this.socket = data.socket;
         this.store = data.store;
-        this.localClient = data.connDetails.localClient;
-
         this.emitter = window.proxyEmitter;
 
         this.lastThumbRequestEnvId = '';
@@ -40,9 +37,9 @@ export default class DataManager {
 
         // Setup listeners
         const listenerMap = {
-            [BackendEvents.UpdateEnvSummaries]: this._setEnvSummaries,
-            [BackendEvents.UpdateEnvSummary]: this._setEnvSummary,
-            [BackendEvents.EnvRemoveFiles]: this._removeFiles,
+            [BackendEvents.UpdateEnvSummaries]: summaries => this.dispatch(ReduxActions.UpdateSummaries, summaries),
+            [BackendEvents.UpdateEnvSummary]: summary => this.dispatch(ReduxActions.UpdateSummary, summary.id, summary),
+            [BackendEvents.EnvRemoveFiles]: data => this.dispatch(ReduxActions.RemoveMultipleFiles, data.id, data.hashes),
             [BackendEvents.EnvAddTags]: data => this.dispatch(ReduxActions.AddNewTags, data.id, data.tags),
             [BackendEvents.EnvTagFiles]: data => this.dispatch(ReduxActions.TagFiles, data.id, data),
             [BackendEvents.EnvUntagFiles]: data => this.dispatch(ReduxActions.UntagFiles, data.id, data),
@@ -74,48 +71,38 @@ export default class DataManager {
 
     _syncBaseState() {
         return Promise.resolve()
+            .then(() => this._fetchClientDetails())
             .then(() => this._fetchEnvSummaries())
             .then(() => Promise.all([this._fetchAllTags(), this._fetchAllEntities()]));
     }
 
-    _fetchEnvSummaries() {
-        return window.ipcModule.getSummaries()
-            .then(this._setEnvSummaries);
+    _fetchClientDetails() {
+        return window.ipcModule.getClientDetails()
+            .then(client => this.dispatch(ReduxActions.SetClientDetails, client));
     }
 
-    _setEnvSummaries = summaries => {
-        this.dispatch(ReduxActions.UpdateSummaries, summaries);
-    };
-
-    _setEnvSummary = summary => {
-        this.dispatch(ReduxActions.UpdateSummary, summary.id, summary);
-    };
-
-    _removeFiles = data => {
-        this.dispatch(ReduxActions.RemoveMultipleFiles, data.id, data.hashes);
-    };
+    _fetchEnvSummaries() {
+        return window.ipcModule.getSummaries()
+            .then(summaries => this.dispatch(ReduxActions.UpdateSummaries, summaries));
+    }
 
     _fetchAllTags() {
         const envIds = this.store.getState().envIds;
         const promises = _.map(envIds, id => window.ipcModule.getAllTags({id}));
-        return Promise.all(promises)
-            .then(allAllTags => _.zipWith(envIds, allAllTags, (envId, allTags) => this._setAllTags(envId, allTags)));
-    }
 
-    _setAllTags = (envId, allTags) => {
-        this.dispatch(ReduxActions.SetAllTags, envId, allTags);
-    };
+        const dispatchFunc = (envId, allTags) => this.dispatch(ReduxActions.SetAllTags, envId, allTags);
+        return Promise.all(promises)
+            .then(allAllTags => _.zipWith(envIds, allAllTags, dispatchFunc));
+    }
 
     _fetchAllEntities() {
         const envIds = this.store.getState().envIds;
         const promises = _.map(envIds, id => window.ipcModule.getAllEntities({id}));
-        return Promise.all(promises)
-            .then(allAllEntities => _.zipWith(envIds, allAllEntities, (envId, allEntities) => this._setAllEntities(envId, allEntities)));
-    }
 
-    _setAllEntities = (envId, allEntities) => {
-        this.dispatch(ReduxActions.SetAllEntities, envId, allEntities);
-    };
+        const dispatchFunc = (envId, allEntities) => this.dispatch(ReduxActions.SetAllEntities, envId, allEntities);
+        return Promise.all(promises)
+            .then(allAllEntities => _.zipWith(envIds, allAllEntities, dispatchFunc));
+    }
 
     /**
      * @param {object} data
@@ -187,7 +174,7 @@ export default class DataManager {
     }
 
     isLocalClient() {
-        return this.localClient;
+        return this.store.getState().client.localClient;
     }
 
     // noinspection JSMethodCanBeStatic
