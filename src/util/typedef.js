@@ -132,6 +132,7 @@ export const FilePropType = PropTypes.shape({
 });
 
 export const KeyCode = {
+    Backspace: 8,
     Enter: 13,
     Esc: 27,
     ArrowUp: 38,

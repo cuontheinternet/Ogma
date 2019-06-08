@@ -70,6 +70,7 @@ class TabBrowse extends React.Component {
         return null;
     }
 
+    // noinspection JSCheckFunctionSignatures
     componentDidUpdate(prevProps) {
         if (prevProps.path !== this.props.path) {
             const normPath = path.normalize(this.props.path);
@@ -121,6 +122,12 @@ class TabBrowse extends React.Component {
 
     handleSelectionChange = selection => {
         this.setState({selection});
+    };
+
+    handleBackspace = nixPath => {
+        if (nixPath === '/') return;
+        const dirPath = path.dirname(nixPath);
+        this.changePath(dirPath);
     };
 
     // noinspection JSUnusedLocalSymbols
@@ -219,7 +226,8 @@ class TabBrowse extends React.Component {
 
             <FileExplorer summary={this.summary} options={options} contextMenuId={MenuIds.TabBrowse} path={state.path}
                           selectedFileHash={state.contextFileHash} onSelectionChange={this.handleSelectionChange}
-                          onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}/>
+                          onFileSingleClick={this.handleFileClick} onFileDoubleClick={this.handleFileDoubleClick}
+                          onBackspace={this.handleBackspace}/>
 
             <ContextMenuWrapper id={MenuIds.TabBrowse} hideOnSelfClick={false} onShow={this.handleContextMenuShow}>
                 <TagContextMenu id={MenuIds.TabBrowse} fileHash={state.contextFileHash} changePath={this.changePath}

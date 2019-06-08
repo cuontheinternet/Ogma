@@ -51,6 +51,7 @@ class FileExplorer extends React.Component {
         onPageChange: PropTypes.func,
         filter: PropTypes.string,
         onFilterChange: PropTypes.func,
+        onBackspace: PropTypes.func,
         options: PropTypes.object,
         showStatusBar: PropTypes.bool,
         contextMenuId: PropTypes.string,
@@ -147,25 +148,27 @@ class FileExplorer extends React.Component {
     }
 
     handleKeydown = event => {
-        const {onSelectionChange} = this.props;
+        const {onSelectionChange, onBackspace, path} = this.props;
         const {files, selection: oldSelection} = this.state;
 
         const tagName = event.target.tagName.toUpperCase();
         const isInInput = tagName === 'INPUT' || tagName === 'TEXTAREA';
+        if (isInInput) return;
 
         switch (event.keyCode) {
             case KeyCode.A:
                 if (event.ctrlKey) {
-                    if (!isInInput) {
-                        event.preventDefault();
-                        const selection = {};
-                        if (_.size(oldSelection) !== files.length) {
-                            for (const file of files) selection[file.hash] = true;
-                        }
-                        this.setState({selection});
-                        if (onSelectionChange) onSelectionChange(selection);
+                    event.preventDefault();
+                    const selection = {};
+                    if (_.size(oldSelection) !== files.length) {
+                        for (const file of files) selection[file.hash] = true;
                     }
+                    this.setState({selection});
+                    if (onSelectionChange) onSelectionChange(selection);
                 }
+                break;
+            case KeyCode.Backspace:
+                if (onBackspace) onBackspace(path);
                 break;
             default:
             // Do nothing
@@ -178,7 +181,8 @@ class FileExplorer extends React.Component {
 
         const hash = file.hash;
 
-        const ctrlKey = event.ctrlKey;
+        const triggeredByKeyboard = event.detail === 0;
+        const multiSelection = event.ctrlKey || triggeredByKeyboard;
         const shiftKey = event.shiftKey;
         this.setState(prevState => {
             const oldSel = prevState.selection;
@@ -198,7 +202,7 @@ class FileExplorer extends React.Component {
                     selection[files[i].hash] = true;
                 }
             } else {
-                if (ctrlKey) selection = oldSel;
+                if (multiSelection) selection = oldSel;
                 if (oldSel[hash] && oldSelSize <= 1) {
                     delete selection[hash];
                 } else {
@@ -208,7 +212,7 @@ class FileExplorer extends React.Component {
 
             if (onSelectionChange) onSelectionChange(selection);
 
-            const updateSelectionIndex = (prevState.lastSelectionIndex === -1) || !(ctrlKey || shiftKey);
+            const updateSelectionIndex = (prevState.lastSelectionIndex === -1) || !(multiSelection || shiftKey);
             let newSelectionIndex = updateSelectionIndex ? displayIndex : prevState.lastSelectionIndex;
             return {selection, lastSelectionIndex: newSelectionIndex};
         });
