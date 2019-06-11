@@ -89,6 +89,18 @@ export const environmentReducer = createReducer({}, {
         }
         return {...state, entityMap};
     },
+    [ReduxActions.UpdateEntities]: (state, action) => {
+        const entities = action.data;
+        const entityMap = {...state.entityMap};
+        for (let i = 0; i < entities.length; ++i) {
+            const entity = entities[i];
+            entityMap[entity.id] = {
+                ...entityMap[entity.id],
+                ...entity,
+            };
+        }
+        return {...state, entityMap};
+    },
 
     [ReduxActions.SetDirectoryContent]: (state, action) => {
         const {directory: dir, files} = action.data;
@@ -125,6 +137,42 @@ export const environmentReducer = createReducer({}, {
             }
         }
         return {...state, fileMap, entityMap};
+    },
+    [ReduxActions.AddMultipleFiles]: (state, action) => {
+        const newFiles = action.data;
+        let {fileMap} = state;
+        fileMap = {...fileMap};
+
+        const dirHashMap = {};
+        for (const file of newFiles) {
+            fileMap[file.hash] = {
+                ...fileMap[file.hash],
+                ...file,
+            };
+
+            const nixPath = file.nixPath;
+            const dirPath = nixPath.substring(0, nixPath.length - file.base.length - 1);
+            const dirHash = Util.getFileHash(dirPath === '' ? '/' : dirPath);
+
+            if (dirHashMap[dirHash]) dirHashMap[dirHash].push(file.hash);
+            else dirHashMap[dirHash] = [file.hash];
+        }
+
+        // Update directory hashes
+        for (const dirHash in dirHashMap) {
+            if (!dirHashMap.hasOwnProperty(dirHash)) continue;
+            const directory = fileMap[dirHash];
+            if (!directory) continue;
+            const fileHashes = directory.fileHashes;
+            if (!fileHashes) continue;
+
+            fileMap[dirHash] = {
+                ...directory,
+                fileHashes: _.union(fileHashes, dirHashMap[dirHash]),
+            };
+        }
+
+        return {...state, fileMap};
     },
     [ReduxActions.RemoveMultipleFiles]: (state, action) => {
         const deletedHashes = action.data;

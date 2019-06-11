@@ -8,6 +8,7 @@ import _ from 'lodash';
 import path from 'path';
 import React from 'react';
 import Denque from 'denque';
+import Swal from 'sweetalert2';
 import Promise from 'bluebird';
 import equal from 'fast-deep-equal';
 import {connect} from 'react-redux';
@@ -236,7 +237,25 @@ class TagContextMenu extends React.Component {
                 };
             }
 
-            buttons[3] = {icon: 'i-cursor', name: 'Rename', onClick: null};
+            const renameClick = () => {
+                ModalUtil.fire({
+                    title: 'Rename file:',
+                    input: 'text',
+                    inputValue: file.base,
+                    inputAttributes: {autocapitalize: 'off'},
+                    showCancelButton: true,
+                    confirmButtonText: 'Rename',
+                    showLoaderOnConfirm: true,
+                    preConfirm: (newFileName) => {
+                        const oldPath = file.nixPath;
+                        const newPath = path.join(path.dirname(file.nixPath), newFileName);
+                        return window.ipcModule.renameFile({id: this.summary.id, oldPath, newPath})
+                            .catch(error => Swal.showValidationMessage(`Renaming failed: ${error}`));
+                    },
+                    allowOutsideClick: () => !Swal.isLoading(),
+                });
+            };
+            buttons[3] = {icon: 'i-cursor', name: 'Rename', onClick: this.getHandler(renameClick, true)};
         }
 
         if (window.dataManager.isLocalClient()) {

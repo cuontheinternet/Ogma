@@ -43,6 +43,8 @@ export default class DataManager {
             [BackendEvents.UpdateEnvSummary]: summary => this.dispatch(ReduxActions.UpdateSummary, summary.id, summary),
             [BackendEvents.EnvRemoveFiles]: data => this.dispatch(ReduxActions.RemoveMultipleFiles, data.id, data.hashes),
             [BackendEvents.EnvAddTags]: data => this.dispatch(ReduxActions.AddNewTags, data.id, data.tags),
+            [BackendEvents.EnvUpdateEntities]: data => this.dispatch(ReduxActions.UpdateEntities, data.id, data.entities),
+            [BackendEvents.EnvAddFiles]: data => this.dispatch(ReduxActions.AddMultipleFiles, data.id, data.files),
             [BackendEvents.EnvTagFiles]: data => this.dispatch(ReduxActions.TagFiles, data.id, data),
             [BackendEvents.EnvUntagFiles]: data => this.dispatch(ReduxActions.UntagFiles, data.id, data),
             [BackendEvents.EnvThumbUpdates]: data => this.dispatch(ReduxActions.UpdateThumbStates, data.id, data),

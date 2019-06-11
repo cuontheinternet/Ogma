@@ -33,9 +33,11 @@ export const ReduxActions = {
     UntagFiles: 'untag-files',
 
     SetAllEntities: 'set-all-entities',
+    UpdateEntities: 'update-entities',
 
     SetDirectoryContent: 'set-dir-contents',
     SetMultipleFileDetails: 'set-multi-file-details',
+    AddMultipleFiles: 'add-files',
     RemoveMultipleFiles: 'remove-files',
     UpdateThumbStates: 'update-thumb-state',
 

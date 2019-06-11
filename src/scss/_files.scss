@@ -66,6 +66,9 @@
                 color: #0089de !important;
             }
         }
+        &:focus &-name  {
+            text-decoration: underline !important;
+        }
     }
 }
 
@@ -87,10 +90,10 @@
         margin: 0;
 
         &.selected {
-          background-color: #ecedff;
+            background-color: #ecedff;
         }
 
-        &-thumbnail, &-name, &-tags  {
+        &-thumbnail, &-name, &-tags {
             vertical-align: center;
             display: inline-block;
         }

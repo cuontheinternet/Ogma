@@ -83,6 +83,7 @@ button {
 // Adjust Swal2 styling
 .swal2-popup {
     border-radius: 3px !important;
+    width: 40rem !important;
 }
 
 .modal-button {
@@ -92,4 +93,9 @@ button {
 .fadeIn {
     -webkit-animation-duration: 0.2s;
     animation-duration: 0.2s;
+}
+
+.swal2-input {
+    margin: 0.2rem 0 !important;
+    font-size: 1rem !important;
 }

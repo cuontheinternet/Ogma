@@ -11,9 +11,15 @@ const ogmaSwal = Swal.mixin({
     cancelButtonClass: 'modal-button button',
     buttonsStyling: false,
     animation: false,
+    scrollbarPadding: false,
+    reverseButtons: true,
+    heightAuto: false,
     // customClass: {
     //     popup: 'animated fadeIn'
     // }
+    customClass: {
+        input: 'input',
+    }
 });
 
 class ModalUtil {
@@ -30,7 +36,6 @@ class ModalUtil {
             showCancelButton: true,
             confirmButtonText: 'Confirm',
             cancelButtonText: 'Cancel',
-            reverseButtons: true,
             ...data,
         })
             .then(result => result.value);
@@ -49,6 +54,18 @@ class ModalUtil {
             type: 'error',
             confirmButtonText: 'Cool',
         });
+    }
+
+    /**
+     * @param {SweetAlertOptions} data
+     * @returns {Promise<SweetAlertResult>}
+     */
+    static fire(data) {
+        const options = {
+            scrollbarPadding: false,
+            ...data,
+        };
+        return ogmaSwal.fire(options);
     }
 
 }
